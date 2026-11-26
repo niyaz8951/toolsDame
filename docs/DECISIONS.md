@@ -14,10 +14,10 @@
 | O3 | "Proceed with what works, optimise later." | The exact project address is written in each page's security policy and in `config.js`; `tests/phase0.mjs` fails if they differ. Changing the project means editing those lines; a helper script can come later. |
 | O4 | "Keep the default; IT will bring its own." | Supabase's default: a new account must open the link in a confirmation email before it can sign in, then waits for an IT admin. Limit: the built-in sender allows only a few emails an hour. |
 
-## Open with the owner
-| # | Question | Proposed |
-|---|---|---|
-| O1 | Not about tiles: all tiles are inside this one site, and that is right. The question is the owner's OTHER GitHub Pages sites (other repos of the same account). GitHub serves them all from one address, and a browser lets every page on one address read what the others keep. A signed-in DAME session is kept in the browser, so a script on any other Pages site of the account could read it and act as that user. | Serve the demo from a GitHub account or organisation that has no other Pages site. Or accept that every other Pages site of the account is trusted like DAME itself. Until answered: sample data only (already the rule in DEMO-STACK). |
+## Owner, 2026-11-26 (O1)
+- DAME is the single site: no other Pages site is to share its address.
+- To make that true, the owner checks every other repo of the account (Settings > Pages) and sets Pages to "None" where it is on. A repo served on its own custom domain is a different address and may stay.
+- Until that check is done: sample data only (already the rule in DEMO-STACK).
 
 ## Built in phase 1 (say if any should change)
 - A tool is named by its space and its id together: `core.require_tool(space, tool, level)`, `core.has_tool(user, space, tool, level)`. Tool ids are unique inside a space, not across the site.

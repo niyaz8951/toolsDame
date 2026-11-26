@@ -11,7 +11,7 @@
 What local tests cannot prove: that the real project answers like the stand-in. The owner's first sign-in is that proof (steps below). If a step fails, send the exact message on screen.
 
 ## The owner does now, in this order
-1. **GitHub Pages on:** repo Settings > Pages > Deploy from a branch > `main`, `/ (root)`.
+1. ~~GitHub Pages on.~~ Done 2026-11-26.
 2. **Supabase > Authentication > URL Configuration > Site URL:** the address Pages shows for this site (it ends in `/toolsDame/`). Without it the confirmation email links to the wrong place.
 3. **Supabase > Project Settings > Data API > Exposed schemas:** only `public`. Remove `graphql_public` if listed.
 4. **SQL editor:** paste all of `db/core/001_init.sql`, Run. The result must be an empty table.
@@ -23,7 +23,7 @@ What local tests cannot prove: that the real project answers like the stand-in. 
 10. MFA on GitHub and Supabase; secret scanning and push protection on for the repo.
 
 ## Still needed from the owner
-- O1 in `DECISIONS.md` (the other Pages sites of the account).
+- O1: in each other repo of the account, Settings > Pages > Source "None" (unless it has its own custom domain). Decision recorded in `DECISIONS.md`.
 - `docs/IT-GUIDE.md`.
 - A "go" for phase 2 after steps 1-9 pass.
 
