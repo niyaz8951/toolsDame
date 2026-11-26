@@ -345,3 +345,93 @@ html.hub-theme-fade, html.hub-theme-fade * { transition: background-color .35s v
   .hub-slide { padding: 4vh 6vw; }
   .hub-present-bar { padding: 10px 12px; gap: 6px; flex-wrap: wrap; }
 }
+
+/* ---------------------------------------------------------------------------
+ * Finish (2026-11-26): the small things, done once for every hub page.
+ * One line of bar at any width, fingers and notches, calm movement, a strip
+ * to move around a long page. Nothing here changes what a page does.
+ * ------------------------------------------------------------------------- */
+:root { --hub-bar-h: 60px; }
+html { -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--hub-bar-h) + env(safe-area-inset-top) + 16px); }
+html:has(body[data-sections]) { scroll-padding-top: calc(var(--hub-bar-h) + env(safe-area-inset-top) + 76px); }
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+h1, h2, h3 { letter-spacing: -.012em; text-wrap: balance; }
+p, li { text-wrap: pretty; }
+.dame-page > h1 { font-size: 1.9rem; font-weight: 750; margin: 0 0 14px; }
+.dame-page > p:has(> .hub-back) { margin: 0 0 10px; }
+.dame-table td, .hub-present-count { font-variant-numeric: tabular-nums; }
+.dame-btn, .hub-chip, .hub-section, .hub-account { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+:focus-visible { outline-width: 2px; outline-offset: 3px; }
+
+/* The bar: the notch and the round corners of a phone are left free. */
+.hub-bar {
+  padding-top: calc(8px + env(safe-area-inset-top)); min-height: calc(var(--hub-bar-h) + env(safe-area-inset-top));
+  padding-left: max(var(--dame-gap), env(safe-area-inset-left)); padding-right: max(var(--dame-gap), env(safe-area-inset-right));
+  border-bottom-color: color-mix(in srgb, var(--dame-line) 70%, transparent);
+}
+.dame-page { padding-left: max(var(--dame-gap), env(safe-area-inset-left)); padding-right: max(var(--dame-gap), env(safe-area-inset-right)); padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+
+/* The account button and its small menu. */
+.hub-user { position: relative; flex: none; }
+.hub-account { width: 40px; height: 40px; border-radius: 50%; border: 0; padding: 0; flex: none; cursor: pointer; color: #fff; font: 650 .86rem/1 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; letter-spacing: .02em; background: var(--dame-brand-grad); box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--dame-accent-2) 70%, transparent); transition: transform .2s var(--dame-ease), box-shadow .2s var(--dame-ease); }
+.hub-account:hover, .hub-account[aria-expanded="true"] { box-shadow: 0 0 0 4px var(--dame-soft); }
+.hub-account:active { transform: scale(.92); }
+.hub-menu { position: absolute; right: 0; top: calc(100% + 10px); z-index: 30; width: max-content; min-width: 220px; max-width: min(300px, calc(100vw - 24px)); padding: 14px; border-radius: 18px; background: var(--dame-surface); border: 1px solid var(--dame-line); box-shadow: var(--dame-shadow-lg); transform-origin: top right; animation: hub-menu .18s var(--dame-ease); }
+.hub-menu-name { margin: 0; max-width: none; color: var(--dame-text); font-weight: 650; }
+.hub-menu-sub { margin: 0; color: var(--dame-muted); font-size: .88rem; overflow-wrap: anywhere; }
+.hub-menu .hub-signout { width: 100%; margin-top: 12px; min-height: 40px; }
+@keyframes hub-menu { from { opacity: 0; transform: scale(.94) translateY(-4px); } }
+
+/* The sections strip of a long page. */
+.hub-sections { position: sticky; top: calc(var(--hub-bar-h) + env(safe-area-inset-top) + 8px); z-index: 15; display: flex; gap: 4px; width: fit-content; max-width: 100%; margin: 0 0 var(--dame-gap); padding: 4px; overflow-x: auto; scrollbar-width: none; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--dame-line) 70%, transparent); background: var(--dame-glass); -webkit-backdrop-filter: saturate(1.8) blur(18px); backdrop-filter: saturate(1.8) blur(18px); box-shadow: var(--dame-shadow), 0 -10px 0 0 var(--dame-bg); }
+.hub-sections::-webkit-scrollbar { display: none; }
+.hub-section { flex: none; min-height: 34px; padding: 4px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--dame-muted); font: inherit; font-size: .92rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background .2s var(--dame-ease), color .2s var(--dame-ease); }
+.hub-section:hover { color: var(--dame-text); }
+.hub-section[aria-current="true"] { background: var(--dame-accent); color: var(--dame-on-accent); }
+.hub-tile .hub-pill { align-self: flex-start; }
+
+/* Fields: a quiet arrow on every list, a colour as a swatch, a soft ring when in use. */
+select.dame-input { -webkit-appearance: none; appearance: none; padding-right: 34px; background-image: url("icons/chevron.svg"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; text-overflow: ellipsis; }
+input[type="color"].dame-input { width: 72px; min-height: 40px; padding: 4px; cursor: pointer; }
+.dame-input { transition: border-color .2s var(--dame-ease), box-shadow .2s var(--dame-ease); }
+.dame-input:focus { outline: 0; border-color: var(--dame-accent); box-shadow: 0 0 0 4px var(--dame-soft); }
+.dame-btn { transition: transform .15s var(--dame-ease), background .2s var(--dame-ease), border-color .2s var(--dame-ease), box-shadow .2s var(--dame-ease); }
+.dame-btn:not(:disabled):active { transform: scale(.97); }
+
+/* A window is open: the page behind it stays still. */
+html:has(.hub-sheet-back, .hub-focus-back, .hub-present) { overflow: hidden; }
+.hub-sheet, .hub-focus-back, .hub-slide { overscroll-behavior: contain; }
+.hub-sheet { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+.hub-present-bar { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+
+/* A finger: targets of 44 px, and nothing that stays "hovered" after a tap. */
+@media (pointer: coarse) {
+  .dame-btn, .dame-input, .hub-small, .hub-person .dame-input, .hub-chip, .hub-section, .hub-trail a { min-height: 44px; }
+  .hub-theme, .hub-info, .hub-account { width: 44px; height: 44px; }
+  .hub-check input, .hub-option input { width: 22px; height: 22px; }
+}
+@media (hover: none) {
+  .hub-tile:hover, .hub-choice:hover { transform: none; box-shadow: var(--dame-shadow); }
+  .hub-choice:hover { box-shadow: none; }
+  .hub-tile:hover::before, .hub-tile:hover::after { opacity: 0; }
+  .hub-tile:hover .hub-tile-icon, .hub-brand:hover .hub-mark { transform: none; }
+  .hub-tile:active { transform: scale(.975); }
+  .hub-book-link:hover { transform: none; }
+}
+
+@media (max-width: 640px) {
+  .hub-brand { margin-right: auto; }
+  .hub-user { flex: none; }
+  .hub-bar { gap: 8px; }
+  .hub-bar .hub-tag { display: none; }
+  .dame-page > h1 { font-size: 1.6rem; }
+  .hub-sections { width: auto; margin-left: -4px; margin-right: -4px; }
+  /* The panel from below: a handle, and never taller than the screen that is really there. */
+  .hub-sheet { max-height: 88dvh; }
+  .hub-sheet-head::before { content: ""; position: absolute; top: 8px; left: 50%; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--dame-line); }
+  .hub-sheet-head { padding-top: 26px; }
+  /* The front door and the book card: one button per line, the main one first. */
+  .hub-narrow .dame-row > .dame-btn, .hub-book-card .dame-row > .dame-btn { flex: 1 1 100%; }
+  .hub-scroll .dame-table td[data-label]::before { display: inline-block; min-width: 5.5em; }
+  .hub-scroll .dame-table tr:last-child { border-bottom: 0; }
+}

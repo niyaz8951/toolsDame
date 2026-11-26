@@ -221,11 +221,15 @@ async function run(width, height, label) {
     check(/session has ended/.test(await owner.textContent('#notice')), T + 'signing in elsewhere ends the older session');
 
     // --- sign out
-    await owner2.waitForSelector('.hub-user button');
+    await owner2.waitForSelector('.hub-account');
     const stored = await owner2.evaluate(() => JSON.stringify(Object.keys(localStorage)) + JSON.stringify(Object.keys(sessionStorage)) + localStorage.getItem('dame.session'));
     check(stored.startsWith('["dame.session"][]') && !stored.includes(PW), T + 'the browser keeps one session entry and no password');
     const before = await owner2.evaluate(() => JSON.parse(localStorage.getItem('dame.session')).access_token);
-    await owner2.click('.hub-user button');
+    const barLine = await owner2.evaluate(() => { const b = document.querySelector('.hub-bar'); return b.getBoundingClientRect().height <= 64 && b.scrollWidth <= b.clientWidth; });
+    check(barLine, T + 'the bar stays on one line');
+    await owner2.click('.hub-account');
+    check(/Olga Owner/.test(await owner2.textContent('.hub-menu')), T + 'the account button opens the name and Sign out');
+    await owner2.click('.hub-signout');
     await owner2.waitForURL(SITE + 'index.html');
     await owner2.waitForSelector('#panel-signin:not([hidden])');
     check((await owner2.evaluate(() => localStorage.getItem('dame.session'))) === null, T + 'sign out clears the session');

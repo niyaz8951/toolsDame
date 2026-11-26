@@ -11,7 +11,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; base-uri 'none'; form-action 'none'">
 <meta charset="utf-8">
 <link rel="preconnect" href="https://ggpwitbuhxqgcfexsnbf.supabase.co" crossorigin>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>IT admin - DAME</title>
@@ -24,14 +24,14 @@
 <script src="../kit/v1/shell.js" defer></script>
 <script src="../pages/admin-it.js" defer></script>
 </head>
-<body data-page="admin-it" data-title="IT admin">
+<body data-page="admin-it" data-sections data-title="IT admin">
 <main class="dame-page" id="main" hidden>
-  <h1>IT admin</h1>
   <p><a class="dame-btn hub-small hub-back" href="../hub.html">Back to the hub</a></p>
+  <h1>IT admin</h1>
   <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
 
   <div id="body" hidden>
-    <section class="dame-card">
+    <section class="dame-card" data-nav="Approvals">
       <h2>Waiting for approval</h2>
       <p class="dame-muted">Approve only people you know. Check the email address.</p>
       <div class="hub-scroll">
@@ -43,7 +43,7 @@
       <p class="dame-empty" id="waiting-empty" hidden>Nobody is waiting.</p>
     </section>
 
-    <section class="dame-card" id="add-card">
+    <section class="dame-card" id="add-card" data-nav="Add a person">
       <h2>Add a person</h2>
       <p class="dame-muted">Make an account with a username and a temporary password. The person signs in with them and must choose his own password at the first sign-in. No email is needed.</p>
       <div class="dame-row">
@@ -78,7 +78,7 @@
       <p class="dame-empty" id="people-empty" hidden>No accounts yet.</p>
     </section>
 
-    <section class="dame-card">
+    <section class="dame-card" data-nav="Settings">
       <h2>Site settings</h2>
       <label class="hub-field">AI prompt button
         <select class="dame-input" id="ai-mode">

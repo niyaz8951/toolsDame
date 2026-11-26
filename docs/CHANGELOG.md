@@ -2,6 +2,22 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - Finish: the site used as a careful phone user would
+Changed (owner asked for a review of the whole site and a streamlined result)
+- **The bar is one line at any width.** The name and "Sign out" moved into one round account button (the person's initials); a press opens name, email and Sign out. On a phone the name was cut and "Sign out" wrapped onto two lines.
+- **Long admin pages have a strip of their parts** under the bar (IT admin, space admin, tool admin). A press goes to the part; the strip lights the part on screen. On a phone these pages are 3,500 to 5,000 px long.
+- **Fingers:** every button, field and chip is at least 44 px on a touch screen; nothing stays "hovered" after a tap; a pressed button gives a little.
+- **Phones with a notch:** the bar and page keep clear of the notch and the home line; the phone's browser frame takes the colour of day or night.
+- **Fields:** one quiet arrow on every list, a colour is a swatch (not a full-width bar), a soft ring on the field in use.
+- **Windows:** the page behind an open panel no longer scrolls; the panel from below has a handle; Tab stays inside the information panel.
+- **Dates read as people say them:** "Today, 8:15 PM", "Yesterday, 4:02 PM", then the date, the year only when it is not this year.
+- **Same order on every page:** the back button above the title. On the front door and the book card of a phone, one button per line.
+- Type: tighter headings that break evenly, numbers in tables line up.
+- Tests: the bar is one line and the account button works (`phase1`), the strip goes to a part (`phase2`). All SQL, browser and hostile-tool tests pass.
+
+Files: `kit/v1/shell.css`, `kit/v1/shell.js`, `kit/v1/icons/chevron.svg`, the hub pages (viewport line, `data-sections`, `data-nav`), `admin/it.html`.
+SQL to paste: none. The tool kit (`dame.css`, `dame.js`) is untouched: nothing changes for a tool.
+
 ## 2026-11-26 - The site book
 Added (owner's decision)
 - `book.html`, `pages/book.js`, `book/index.json`, `book/01..10-*.md`: the whole site explained in ten chapters, to read (chapters on the left) or to present (one part per slide; Next/Back, arrow keys, full screen, Esc).

@@ -116,6 +116,10 @@
 - Kept up to date with every delivery (chapter touched + "Notes and changes").
 - Only signed-in, approved people can open it. It holds no key, address or personal data.
 
+## Owner, 2026-11-26 (the finish)
+- The look and feel is judged as a careful phone user would: one-line bar, finger-sized targets, notch-safe, calm movement. These live in `kit/v1/shell.css` only; contract 4 (`dame.css`, `dame.js`) is not touched by look-and-feel work on hub pages.
+- Long admin pages keep everything on one page, with a strip of parts. Tabs (one part at a time) are noted as an idea, not decided.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

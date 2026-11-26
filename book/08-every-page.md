@@ -3,7 +3,9 @@
 Things the site gives every page and every tool, with no work by the builder.
 
 ## The bar
-- The mark and name, the page title, the information button, day and night, the person and Sign out.
+- The mark and name, the page title, the information button, day and night, and one round account button: the person's initials, a press shows the name and Sign out.
+- One line at any width, on a phone too.
+- On a long admin page: a strip of the page's parts under the bar. A press goes to the part.
 - In a tool: a trail back to the hub and the space, and "Tool admin" for its managers.
 
 ## The information button
@@ -25,6 +27,12 @@ Things the site gives every page and every tool, with no work by the builder.
 - Messages say what to do next, in plain words.
 - Everything that is clicked looks like a button.
 - Anything that cannot be undone is pressed twice, or needs the name typed.
+
+## Made for a phone as well
+- Every button and field is big enough for a finger (44 px).
+- The page keeps clear of the notch; the browser frame follows day and night.
+- A panel opens from below with a handle; the page behind it stays still.
+- Dates read as people say them: "Today, 8:15 PM".
 
 ## Speed
 - A page asks the database everything it needs at once, not one question after another.

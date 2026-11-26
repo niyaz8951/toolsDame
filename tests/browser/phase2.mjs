@@ -125,6 +125,10 @@ async function run(width, height, label) {
     check(await ben.locator('#empty').isVisible(), T + 'a new space says it has no tools yet');
     await ben.click('#admin-link');
     await ben.waitForSelector('#body:not([hidden])');
+    await ben.click('.hub-section:text-is("Audit")');
+    await ben.waitForSelector('.hub-section[aria-current="true"]:text-is("Audit")');
+    check((await ben.locator('.hub-section').count()) >= 3, T + 'a long admin page has a strip of its parts; a press goes to the part and lights its name');
+    await ben.evaluate(() => window.scrollTo(0, 0));
     await ben.fill('#tl-name', 'Bid Tracker');
     check((await ben.inputValue('#tl-id')) === 'bid-tracker', T + 'the tool id is suggested from the name');
     await ben.fill('#tl-icon', 'B');

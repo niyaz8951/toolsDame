@@ -11,7 +11,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; base-uri 'none'; form-action 'none'">
 <meta charset="utf-8">
 <link rel="preconnect" href="https://ggpwitbuhxqgcfexsnbf.supabase.co" crossorigin>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Space admin - DAME</title>
@@ -24,7 +24,7 @@
 <script src="../kit/v1/shell.js" defer></script>
 <script src="../pages/admin-space.js" defer></script>
 </head>
-<body data-page="admin-space" data-title="Space admin">
+<body data-page="admin-space" data-sections data-title="Space admin">
 <main class="dame-page" id="main" hidden>
   <p><a class="dame-btn hub-small hub-back" id="back" href="../hub.html">Back to the space</a></p>
   <h1 id="title">Space admin</h1>
@@ -70,7 +70,7 @@
       </div>
     </section>
 
-    <section class="dame-card">
+    <section class="dame-card" data-nav="People">
       <h2>People in this space</h2>
       <p class="dame-muted">Members see the space on their hub and get every tool that is open to the space. Nothing else.</p>
       <ul class="hub-list" id="members"></ul>
@@ -84,7 +84,7 @@
       <div id="admin-picker"></div>
     </section>
 
-    <section class="dame-card">
+    <section class="dame-card" data-nav="Name and look">
       <h2>Name, description and look of the space</h2>
       <form id="form-space" method="post" novalidate>
         <label class="hub-field">Name

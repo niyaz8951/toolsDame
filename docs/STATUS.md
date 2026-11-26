@@ -21,6 +21,7 @@
 - The information button on every page, a usage guide per tool (`006_help.sql`), IT adds a person by email (`007_add_people.sql`).
 - A review window for the database tables of an uploaded page (add columns before they are made); colour and icon of a space (`008_space_look.sql`).
 - New user with username and temporary password (`009_new_user.sql`); the site book (`book.html`).
+- The finish: one-line bar with an account button, a strip of parts on the admin pages, finger-sized targets, notch-safe pages, plain dates. No SQL.
 - Tests, all passing locally: nine SQL test files, six browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.

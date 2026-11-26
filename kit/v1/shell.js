@@ -182,6 +182,16 @@
     sheet.appendChild(body);
     sheetBack.appendChild(sheet);
     sheetBack.addEventListener('click', function (ev) { if (ev.target === sheetBack) { closeInfo(); } });
+    // Tab stays inside the panel while it is open.
+    sheet.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Tab') { return; }
+      var stops = sheet.querySelectorAll('button, a[href], input, select, textarea');
+      if (!stops.length) { return; }
+      var first = stops[0];
+      var last = stops[stops.length - 1];
+      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    });
     document.body.appendChild(sheetBack);
     close.focus();
     var mine = sheetBack;
@@ -256,17 +266,48 @@
     document.body.insertBefore(header, document.body.firstChild);
   }
 
+  // The account button: the person's initials; a press opens his name and "Sign out".
+  // One round button keeps the bar on one line at any width.
+  function initials(name) {
+    var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    var a = parts[0] ? Array.from(parts[0])[0] : '';
+    var b = parts.length > 1 ? Array.from(parts[parts.length - 1])[0] : '';
+    return ((a + b) || '?').toUpperCase();
+  }
+
   function showUser(me) {
     clear(userBox);
-    userBox.appendChild(el('span', 'hub-user-name', me.name));
-    var out = el('button', 'dame-btn hub-small', 'Sign out');
+    var btn = el('button', 'hub-account', initials(me.name));
+    var menu = el('div', 'hub-menu');
+    var out = el('button', 'dame-btn hub-small hub-signout', 'Sign out');
+    btn.type = 'button';
+    btn.title = 'Your account';
+    btn.setAttribute('aria-label', 'Your account: ' + me.name);
+    btn.setAttribute('aria-haspopup', 'true');
+    btn.setAttribute('aria-expanded', 'false');
+    menu.hidden = true;
+    menu.appendChild(el('p', 'hub-menu-name hub-user-name', me.name));
+    if (me.email) { menu.appendChild(el('p', 'hub-menu-sub', me.email)); }
+    menu.appendChild(el('p', 'hub-menu-sub', 'Demo site'));
     out.type = 'button';
+    function shut() { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+    btn.addEventListener('click', function () {
+      menu.hidden = !menu.hidden;
+      btn.setAttribute('aria-expanded', String(!menu.hidden));
+      if (!menu.hidden) { out.focus(); }
+    });
+    document.addEventListener('click', function (ev) { if (!userBox.contains(ev.target)) { shut(); } });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape' && !menu.hidden) { shut(); btn.focus(); }
+    });
     out.addEventListener('click', async function () {
       out.disabled = true;
       await api.signOut();
       leave('You are signed out.');
     });
-    userBox.appendChild(out);
+    menu.appendChild(out);
+    userBox.appendChild(btn);
+    userBox.appendChild(menu);
   }
 
   // For pages that need a signed-in, approved user. Returns who he is, or
@@ -314,11 +355,18 @@
     return btn;
   }
 
+  // "Today, 8:15 PM", "Yesterday, 4:02 PM", otherwise the date. The year only when it is not this year.
   function when(iso) {
     var d = new Date(iso);
     if (isNaN(d.getTime())) { return ''; }
-    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' +
-      d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    var now = new Date();
+    var day0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    var day = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    var days = Math.round((day0 - day) / 86400000);
+    var date = days === 0 ? 'Today' : days === 1 ? 'Yesterday'
+      : d.toLocaleDateString(undefined, d.getFullYear() === now.getFullYear()
+        ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
+    return date + ', ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   }
 
   // A space or tool id from the page address, or '' when it is not a valid id.
@@ -497,7 +545,80 @@
     return function () { return load(false); };
   }
 
+  // ---- the sections strip: on a long page (body data-sections), one button per card, under the bar.
+  // A press scrolls to the card; the strip shows which card is on screen. A card may give a short
+  // name with data-nav; a hidden card has no button.
+  function sections() {
+    var host = document.getElementById('body');
+    if (!host || document.body.dataset.sections === undefined) { return; }
+    var cards = Array.prototype.filter.call(host.children, function (c) { return c.matches('section.dame-card') && c.querySelector('h2'); });
+    if (cards.length < 3) { return; }
+    var nav = el('nav', 'hub-sections');
+    nav.setAttribute('aria-label', 'Parts of this page');
+    var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var pinned = -1;
+    var chips = cards.map(function (card) {
+      var chip = el('button', 'hub-section', card.dataset.nav || card.querySelector('h2').textContent);
+      chip.type = 'button';
+      chip.addEventListener('click', function () {
+        // The pressed name stays lit until the person scrolls himself: a short last part can never reach the top.
+        pinned = cards.indexOf(card);
+        mark(pinned);
+        card.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+      });
+      nav.appendChild(chip);
+      return chip;
+    });
+    function mark(i) {
+      chips.forEach(function (chip, n) {
+        if (n === i) { chip.setAttribute('aria-current', 'true'); } else { chip.removeAttribute('aria-current'); }
+      });
+      // Keep the lit button in view inside the strip, without moving the page.
+      var c = chips[i];
+      if (c && nav.scrollWidth > nav.clientWidth) { nav.scrollLeft = c.offsetLeft - (nav.clientWidth - c.offsetWidth) / 2; }
+    }
+    function sync() {
+      var line = nav.getBoundingClientRect().bottom + 40;
+      var at = -1;
+      cards.forEach(function (card, i) {
+        chips[i].hidden = card.hidden;
+        if (!card.hidden && card.getBoundingClientRect().top <= line) { at = i; }
+      });
+      if (at === -1) { at = cards.findIndex(function (c) { return !c.hidden; }); }
+      if (pinned !== -1 && !cards[pinned].hidden) { at = pinned; }
+      mark(at);
+    }
+    var waiting = false;
+    function soon() {
+      if (waiting) { return; }
+      waiting = true;
+      requestAnimationFrame(function () { waiting = false; sync(); });
+    }
+    host.parentNode.insertBefore(nav, host);
+    nav.hidden = host.hidden;
+    ['wheel', 'touchmove', 'keydown'].forEach(function (name) { window.addEventListener(name, function () { pinned = -1; }, { passive: true }); });
+    window.addEventListener('scroll', soon, { passive: true });
+    window.addEventListener('resize', soon, { passive: true });
+    new MutationObserver(function () { nav.hidden = host.hidden; soon(); })
+      .observe(host, { attributes: true, attributeFilter: ['hidden'], subtree: true });
+    sync();
+  }
+
+  // The colour the phone's browser paints around the page follows day and night.
+  function tint() {
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) { meta = document.createElement('meta'); meta.name = 'theme-color'; document.head.appendChild(meta); }
+    meta.content = getComputedStyle(root).getPropertyValue('--dame-bg').trim() || '#F3F7FA';
+  }
+  window.addEventListener('dame-theme', tint);
+  if (window.matchMedia) {
+    var scheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (scheme.addEventListener) { scheme.addEventListener('change', tint); }
+  }
+
   bar();
+  sections();
+  tint();
 
   window.DameShell = Object.freeze({
     el: el, clear: clear, say: say, sayError: sayError, guard: guard,
