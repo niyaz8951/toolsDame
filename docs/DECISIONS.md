@@ -111,6 +111,11 @@
 - What limits it: only IT admins can call it; the password is stored only as a one-way hash and is never in the audit; the database itself refuses the account everywhere until the password was replaced, and checks that by looking at the stored hash; the sign-in service refuses re-using the temporary password.
 - Not part of the target: with company sign-in, IT's directory makes accounts.
 
+## Owner, 2026-11-26 (the site book)
+- The site explains itself: a site book on the site, to read or to present, so no separate presentation is needed. Notes, logic and decisions are written there as the work goes on.
+- Kept up to date with every delivery (chapter touched + "Notes and changes").
+- Only signed-in, approved people can open it. It holds no key, address or personal data.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

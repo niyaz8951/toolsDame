@@ -2,6 +2,15 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - The site book
+Added (owner's decision)
+- `book.html`, `pages/book.js`, `book/index.json`, `book/01..10-*.md`: the whole site explained in ten chapters, to read (chapters on the left) or to present (one part per slide; Next/Back, arrow keys, full screen, Esc).
+- The hub has a "Site book" card with the chapters as shortcuts.
+- The small text format of the help panel learned steps in a row (`=> a | b`), notes (`> text`) and tables.
+- Rule from now on: every delivery that changes the site updates the chapter it touches and adds a line to `book/10-notes.md`.
+
+SQL to paste: none.
+
 ## 2026-11-26 - New user: username and temporary password, as in the DAME hub
 Added (owner's decision, see DECISIONS)
 - `db/core/009_new_user.sql`: `dame_user_create(username, name, temporary password)`, `dame_password_done()`. `core.require_user` refuses an account everywhere until its temporary password is replaced; `dame_request_access` tells the start page.

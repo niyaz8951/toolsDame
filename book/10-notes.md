@@ -1,0 +1,30 @@
+# Notes and changes
+
+The running log of the site. Newest first. Every change to the site adds a line here and updates the chapter it touches.
+
+## 2026-11-26
+- **Site book** added: this book, to read or to present.
+- **New user** as in the earlier hub: username and temporary password, own password at the first sign-in.
+- **Review window** for a page's database tables: see the columns read from the page, add more, then create. It opens after every check.
+- An empty form field is saved as "no value" instead of being refused.
+- **Colour and icon of a space** can be changed after it is made.
+- **Information button** on every page; **usage guide** per tool; a tool that is not live explains how to build it.
+- **Add by work email**: an address approved in advance is in at once.
+- The **look** of the earlier hub: palette, mark, movement, day and night.
+- The builder became a **guide**: three ways, one step at a time; the database question in plain words.
+- Pages load about **twice as fast**.
+- **Hardening** after playing seven departments: email domains, sign-ins in the audit, file saves through the site, a request limit.
+- Phases 0 to 4 built: skeleton, sign-in, spaces and tools, sealed frame and versions, tables and data.
+
+## Decisions worth remembering
+- Uploaded code is never trusted. The frame and the database are the wall; the upload check is help.
+- Tile admins never paste SQL and never touch the repository.
+- IT admin does not see department data by being IT admin.
+- The look follows the earlier DAME hub; no code or data was taken from it.
+- Accounts made by IT with a temporary password are a demo stand-in, by the owner's decision; company sign-in replaces them.
+- Charts will be a building block of the kit, not a second library.
+
+## Ideas noted, not decided
+- Tell the people of a space when a new tool goes live.
+- Show the table list in the review window in even plainer words.
+- A button in each tool to report a problem to its manager.

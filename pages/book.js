@@ -1,0 +1,166 @@
+/*
+ * pages/book.js - the site book: chapters to read, and the same text as a
+ * presentation (one part of a chapter per slide).
+ * Serves: "On every page" (help). Must not change: chapters come from
+ * book/index.json and book/*.md of this site only; their text is written to
+ * the page with DameShell.rich (as text, never as HTML).
+ */
+(function () {
+  'use strict';
+
+  var api = window.DameApi;
+  var ui = window.DameShell;
+  if (!ui) { return; }
+
+  var chapters = [];       // { file, title, text, body } in reading order
+  var at = 0;
+  var show = null;         // the presentation, while it runs: { slides, i, node }
+
+  function $(id) { return document.getElementById(id); }
+
+  async function text(path) {
+    var res = await fetch(api.href(path), { cache: 'no-cache', credentials: 'omit' });
+    if (!res.ok) { throw new Error('The site could not load ' + path + '. Reload the page.'); }
+    return res.text();
+  }
+
+  function open(i, quiet) {
+    at = Math.max(0, Math.min(chapters.length - 1, i));
+    var c = chapters[at];
+    ui.clear($('page')).appendChild(ui.rich(c.body));
+    Array.prototype.forEach.call($('chapters').children, function (li, n) {
+      li.firstChild.setAttribute('aria-current', n === at ? 'true' : 'false');
+    });
+    $('prev').hidden = at === 0;
+    $('next').hidden = at === chapters.length - 1;
+    document.title = c.title + ' - Site book - DAME';
+    if (!quiet) {
+      history.replaceState(null, '', '#' + c.file.replace(/\.md$/, ''));
+      $('page').scrollIntoView({ block: 'start' });
+    }
+  }
+
+  // A chapter as slides: its title with the opening lines, then one slide per "## " part.
+  function slidesOf(c, n) {
+    var parts = c.body.split(/\n(?=## )/);
+    var head = parts.shift().replace(/^# .*\n?/, '').trim();
+    var out = [{ kind: 'title', chapter: n + 1, title: c.title, body: head || c.text }];
+    parts.forEach(function (p) {
+      var title = (/^## (.*)/.exec(p) || [])[1] || '';
+      out.push({ kind: 'part', chapter: n + 1, of: c.title, title: title, body: p.replace(/^## .*\n?/, '') });
+    });
+    return out;
+  }
+
+  function draw() {
+    var s = show.slides[show.i];
+    var stage = ui.clear(show.stage);
+    stage.className = 'hub-slide' + (s.kind === 'title' ? ' hub-slide-title' : '');
+    stage.appendChild(ui.el('p', 'hub-kicker', s.kind === 'title' ? 'Chapter ' + s.chapter : s.chapter + '. ' + s.of));
+    stage.appendChild(ui.el(s.kind === 'title' ? 'h1' : 'h2', null, s.title));
+    stage.appendChild(ui.rich(s.body));
+    show.count.textContent = (show.i + 1) + ' of ' + show.slides.length;
+    show.back.disabled = show.i === 0;
+    show.next.textContent = show.i === show.slides.length - 1 ? 'End' : 'Next';
+    stage.scrollTop = 0;
+  }
+
+  function step(by) {
+    if (!show) { return; }
+    if (by > 0 && show.i === show.slides.length - 1) { stop(); return; }
+    show.i = Math.max(0, Math.min(show.slides.length - 1, show.i + by));
+    draw();
+  }
+
+  function stop() {
+    if (!show) { return; }
+    if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen().catch(function () {}); }
+    show.node.remove();
+    show = null;
+  }
+
+  function present(list) {
+    stop();
+    var node = ui.el('div', 'hub-present');
+    node.setAttribute('role', 'dialog');
+    node.setAttribute('aria-modal', 'true');
+    node.setAttribute('aria-label', 'Presentation');
+    var stage = ui.el('div', 'hub-slide');
+    var bar = ui.el('div', 'hub-present-bar');
+    var back = ui.el('button', 'dame-btn', 'Back');
+    var next = ui.el('button', 'dame-btn dame-btn-primary', 'Next');
+    var count = ui.el('span', 'hub-present-count');
+    var full = ui.el('button', 'dame-btn', 'Full screen');
+    var close = ui.el('button', 'dame-btn', 'Close');
+    [back, next, full, close].forEach(function (b) { b.type = 'button'; });
+    back.addEventListener('click', function () { step(-1); });
+    next.addEventListener('click', function () { step(1); });
+    close.addEventListener('click', stop);
+    full.addEventListener('click', function () {
+      if (document.fullscreenElement) { document.exitFullscreen().catch(function () {}); }
+      else if (node.requestFullscreen) { node.requestFullscreen().catch(function () {}); }
+    });
+    bar.appendChild(back);
+    bar.appendChild(next);
+    bar.appendChild(count);
+    bar.appendChild(full);
+    bar.appendChild(close);
+    node.appendChild(stage);
+    node.appendChild(bar);
+    document.body.appendChild(node);
+    show = { slides: list, i: 0, node: node, stage: stage, count: count, back: back, next: next };
+    draw();
+    next.focus();
+  }
+
+  function all() {
+    return chapters.reduce(function (out, c, n) { return out.concat(slidesOf(c, n)); }, []);
+  }
+
+  async function start() {
+    var asked = text('book/index.json');
+    asked.catch(function () {});
+    await ui.guard();
+    $('main').hidden = false;
+    var index = JSON.parse(await asked);
+    var bodies = await Promise.all(index.chapters.map(function (c) { return text('book/' + c.file); }));
+    chapters = index.chapters.map(function (c, i) { return { file: String(c.file), title: String(c.title), text: String(c.text || ''), body: bodies[i] }; });
+
+    var list = ui.clear($('chapters'));
+    chapters.forEach(function (c, i) {
+      var li = ui.el('li');
+      var b = ui.el('button', 'hub-book-link');
+      b.type = 'button';
+      b.appendChild(ui.el('strong', null, (i + 1) + '. ' + c.title));
+      b.appendChild(ui.el('span', null, c.text));
+      b.addEventListener('click', function () { open(i); });
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+
+    var wanted = location.hash.slice(1);
+    var first = chapters.map(function (c) { return c.file.replace(/\.md$/, ''); }).indexOf(wanted);
+    open(first < 0 ? 0 : first, true);
+
+    window.addEventListener('hashchange', function () {
+      var i = chapters.map(function (c) { return c.file.replace(/\.md$/, ''); }).indexOf(location.hash.slice(1));
+      if (i >= 0 && i !== at) { open(i, true); }
+    });
+    $('prev').addEventListener('click', function () { open(at - 1); });
+    $('next').addEventListener('click', function () { open(at + 1); });
+    $('present-all').addEventListener('click', function () { present(all()); });
+    $('present-one').addEventListener('click', function () { present(slidesOf(chapters[at], at)); });
+    document.addEventListener('keydown', function (ev) {
+      if (!show) { return; }
+      if (ev.key === 'Escape') { stop(); }
+      else if (ev.key === 'ArrowRight' || ev.key === 'PageDown' || ev.key === ' ') { ev.preventDefault(); step(1); }
+      else if (ev.key === 'ArrowLeft' || ev.key === 'PageUp') { ev.preventDefault(); step(-1); }
+    });
+    if (new URLSearchParams(location.search).get('present') === '1') { present(all()); }
+  }
+
+  start().catch(function (err) {
+    $('main').hidden = false;
+    ui.sayError($('msg'), err);
+  });
+})();

@@ -109,10 +109,41 @@
       });
       return node;
     }
+    var table = null;
     String(text || '').split('\n').forEach(function (raw) {
       var line = raw.trim();
       var m;
+      if (!/^\|.*\|$/.test(line)) { table = null; }
       if (!line) { list = null; return; }
+      // "=> a | b | c": steps in a row with arrows between them.
+      if (/^=>\s+/.test(line)) {
+        list = null;
+        var flow = el('div', 'hub-flow');
+        line.replace(/^=>\s+/, '').split('|').forEach(function (step) { flow.appendChild(inline(el('span'), step.trim())); });
+        box.appendChild(flow);
+        return;
+      }
+      // "> text": a note that stands out.
+      if (/^>\s+/.test(line)) { list = null; box.appendChild(inline(el('p', 'hub-callout'), line.replace(/^>\s+/, ''))); return; }
+      // "| a | b |": a table; the first row is its head, a row of dashes is skipped.
+      if (/^\|.*\|$/.test(line)) {
+        list = null;
+        var cells = line.slice(1, -1).split('|').map(function (c) { return c.trim(); });
+        if (cells.every(function (c) { return /^:?-{2,}:?$/.test(c); })) { return; }
+        var first = !table;
+        if (first) {
+          var wrap = el('div', 'hub-scroll');
+          table = el('table', 'dame-table hub-book-table');
+          table.appendChild(el('thead'));
+          table.appendChild(el('tbody'));
+          wrap.appendChild(table);
+          box.appendChild(wrap);
+        }
+        var tr = el('tr');
+        cells.forEach(function (c) { tr.appendChild(inline(el(first ? 'th' : 'td'), c)); });
+        table.children[first ? 0 : 1].appendChild(tr);
+        return;
+      }
       if ((m = /^(#{1,3})\s+(.*)$/.exec(line))) { list = null; box.appendChild(inline(el(m[1].length === 1 ? 'h2' : 'h3'), m[2])); return; }
       if ((m = /^(-|\d+[.)])\s+(.*)$/.exec(line))) {
         var kind = m[1] === '-' ? 'UL' : 'OL';

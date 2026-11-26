@@ -20,7 +20,8 @@
 - The look of the DAME hub: palette, mark, movement, a day and night button that tools follow.
 - The information button on every page, a usage guide per tool (`006_help.sql`), IT adds a person by email (`007_add_people.sql`).
 - A review window for the database tables of an uploaded page (add columns before they are made); colour and icon of a space (`008_space_look.sql`).
-- Tests, all passing locally: eight SQL test files, six browser tests, the hostile-tool test (33 attempts).
+- New user with username and temporary password (`009_new_user.sql`); the site book (`book.html`).
+- Tests, all passing locally: nine SQL test files, six browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
@@ -39,6 +40,9 @@
 10. **Supabase > Advisors > Security:** no errors. Send any warning text.
 
 If a step fails, send the exact message on screen.
+
+## With every delivery
+Besides this file and the changelog: update the chapter of the site book the change touches (`book/*.md`) and add a line to `book/10-notes.md`.
 
 ## Still needed from the owner
 - `docs/IT-GUIDE.md`.

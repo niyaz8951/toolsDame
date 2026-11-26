@@ -1,0 +1,15 @@
+{
+  "note": "The site book. One entry per chapter, in reading order. Every delivery that changes the site also changes the chapter it touches and adds a line to 10-notes.md.",
+  "chapters": [
+    { "file": "01-what.md", "title": "What DAME is", "text": "One site for the tools of every department, and why it exists." },
+    { "file": "02-structure.md", "title": "How the site is organised", "text": "Hub, spaces, tools, and who may do what." },
+    { "file": "03-people.md", "title": "People and sign-in", "text": "How a person gets in, and how a leaver gets out." },
+    { "file": "04-building.md", "title": "Building a tool", "text": "From an idea to a live tool, one step at a time, with no programming." },
+    { "file": "05-data.md", "title": "Tools that save data", "text": "The database, tables made by the site, and who sees which rows." },
+    { "file": "06-security.md", "title": "Security", "text": "Why code from many teams cannot harm the site or each other." },
+    { "file": "07-it.md", "title": "For IT: demo and target", "text": "What the demo runs on, what IT would run, and what is still open." },
+    { "file": "08-every-page.md", "title": "On every page", "text": "The look, day and night, the information button, speed." },
+    { "file": "09-status.md", "title": "Where we are", "text": "What is built, what is proven, what comes next." },
+    { "file": "10-notes.md", "title": "Notes and changes", "text": "The running log: what changed, and what was decided." }
+  ]
+}

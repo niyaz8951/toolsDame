@@ -14,14 +14,16 @@ import { start } from '../tools/serve.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8137;
 const SITE = 'http://127.0.0.1:' + PORT + '/toolsDame/';
-const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.html', 'pack.html', 'blocks.html',
+const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.html', 'pack.html', 'blocks.html', 'book.html',
   'admin/it.html', 'admin/space.html', 'admin/tool.html'];
 const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1/shell.js',
   'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'pages/space.js', 'pages/admin-space.js', 'pages/admin-tool.js', 'pages/tool.js', 'pages/blocks.js', 'kit/v1/pack.js', 'kit/v1/lib/index.json', 'kit/v1/lib/exceljs.js', 'kit/starter/index.html', 'kit/starter/tracker.html', 'examples/converter/index.html',
   'examples/parts-extractor/index.html',
   'examples/hello-tool/index.html', 'examples/hello-tool/about.html', 'examples/hello-tool/style.css', 'examples/hello-tool/app.js', 'kit/v1/icon.svg', 'kit/ai-prompt.md', 'kit/dame.schema.json',
   'help/index.md', 'help/hub.md', 'help/space.md', 'help/tool.md',
-  'help/admin-it.md', 'help/admin-space.md', 'help/admin-tool.md'];
+  'help/admin-it.md', 'help/admin-space.md', 'help/admin-tool.md', 'help/book.md', 'pages/book.js', 'kit/v1/theme.js',
+  'book/index.json', 'book/01-what.md', 'book/02-structure.md', 'book/03-people.md', 'book/04-building.md', 'book/05-data.md',
+  'book/06-security.md', 'book/07-it.md', 'book/08-every-page.md', 'book/09-status.md', 'book/10-notes.md'];
 
 let failed = 0;
 function check(ok, what) {

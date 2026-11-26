@@ -277,6 +277,28 @@ try {
   check(/Each tile is a space/.test(await DEPTS[0].user.page.textContent('.hub-sheet')), 'every hub page has the information button with its own steps');
   await DEPTS[0].user.page.keyboard.press('Escape');
 
+  // ------------------------------------------------------------------ the site book: read it, or present it
+  const reader = DEPTS[0].user.page;
+  await reader.goto(SITE + 'hub.html');
+  await reader.waitForSelector('#book-chapters a');
+  check((await reader.locator('#book-chapters a').count()) === 10, 'the hub offers the site book with its ten chapters');
+  await reader.click('a:has-text("Read the site book")');
+  await reader.waitForSelector('#chapters button');
+  check(/What DAME is/.test(await reader.textContent('#page')) && (await reader.locator('#page script, #page img, #page a').count()) === 0, 'the book opens on its first chapter, written to the page as text');
+  await reader.click('#chapters li:nth-child(6) button');
+  check(/sealed frame/.test(await reader.textContent('#page')) && (await reader.locator('#page table').count()) === 1 && (await reader.locator('#page .hub-flow span').count()) === 4, 'a chapter shows its steps, lists and tables (Security)');
+  await reader.click('#present-one');
+  await reader.waitForSelector('.hub-present');
+  check(/Chapter 6/.test(await reader.textContent('.hub-slide')) && /^1 of \d+$/.test(await reader.textContent('.hub-present-count')), 'a chapter can be shown as a presentation, starting with its title slide');
+  await reader.keyboard.press('ArrowRight');
+  check(/The sealed frame/.test(await reader.textContent('.hub-slide h2')) && /^2 of/.test(await reader.textContent('.hub-present-count')), 'the arrow key goes to the next slide');
+  await reader.keyboard.press('Escape');
+  check((await reader.locator('.hub-present').count()) === 0, 'Esc closes the presentation');
+  await reader.goto(SITE + 'book.html?present=1');
+  await reader.waitForSelector('.hub-present');
+  check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 50, 'the whole book as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
+  await reader.keyboard.press('Escape');
+
   // ------------------------------------------------------------------ one department against another: 7 x 6 pairs
   let memberProbes = 0;
   let memberHoles = [];
