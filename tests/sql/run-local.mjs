@@ -27,13 +27,15 @@ for (const name of (await readdir(CORE)).filter((f) => /^\d{3}_.+\.sql$/.test(f)
   for (const p of problems) { failed += 1; console.log('        ' + p.problem + ': ' + p.object); }
 }
 
-// Running 001 a second time must change nothing and say why.
-try {
-  await db.exec(await readFile(join(CORE, '001_init.sql'), 'utf8'));
-  failed += 1; console.log('FAIL  001 can be run twice');
-} catch (err) {
-  await db.exec('rollback');
-  console.log('ok    001 refuses to run twice (' + err.message + ')');
+// Running a core file a second time must change nothing and say why.
+for (const name of (await readdir(CORE)).filter((f) => /^\d{3}_.+\.sql$/.test(f)).sort()) {
+  try {
+    await db.exec(await readFile(join(CORE, name), 'utf8'));
+    failed += 1; console.log('FAIL  ' + name + ' can be run twice');
+  } catch (err) {
+    await db.exec('rollback');
+    console.log('ok    ' + name + ' refuses to run twice (' + err.message + ')');
+  }
 }
 
 for (const name of (await readdir(HERE)).filter((f) => /_test\.sql$/.test(f)).sort()) {
@@ -46,7 +48,7 @@ for (const name of (await readdir(HERE)).filter((f) => /_test\.sql$/.test(f)).so
     for (const r of bad) { console.log('        ' + r.test + ' | expected ' + r.expected + ' | got ' + r.got); }
     if (process.argv.includes('--all') && round === 1) { for (const r of rows) { console.log('        ' + (r.pass ? 'ok   ' : 'FAIL ') + r.test); } }
   }
-  const left = await db.query("select (select count(*) from core.profiles) + (select count(*) from core.audit) + (select count(*) from core.sessions) + (select count(*) from core.spaces) as n, to_regnamespace('dame_test') is null as clean");
+  const left = await db.query("select (select count(*) from core.profiles) + (select count(*) from core.audit) + (select count(*) from core.sessions) + (select count(*) from core.spaces) + (select count(*) from core.retired_ids) as n, to_regnamespace('dame_test') is null as clean");
   const tidy = Number(left.rows[0].n) === 0 && left.rows[0].clean;
   if (!tidy) { failed += 1; }
   console.log((tidy ? 'ok    ' : 'FAIL  ') + name + ' leaves nothing behind');

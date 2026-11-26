@@ -21,6 +21,7 @@ npm install --no-save @electric-sql/pglite playwright-core     (once; test tools
 node tests/phase0.mjs
 node tests/sql/run-local.mjs
 node tests/browser/phase1.mjs
+node tests/browser/phase2.mjs
 ```
 
 ## Switch on GitHub Pages (once)

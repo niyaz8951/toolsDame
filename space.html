@@ -1,10 +1,10 @@
 <!doctype html>
 <!--
-  space.html - one space (a department) and the tools inside it.
+  space.html - one space (a department) and the tools the caller may open.
   Serves: contract 2 (Structure) and 3 (Access: a space does not open its
   tools; each tool is granted on its own). Must not change: the security
-  policy stays the first element of the head; no inline script.
-  Phase 0: placeholder. Built in phase 2.
+  policy stays the first element of the head; no inline script; the page shows
+  only what the database returns for this user.
 -->
 <html lang="en">
 <head>
@@ -20,13 +20,21 @@
 <script src="kit/v1/config.js" defer></script>
 <script src="kit/v1/api.js" defer></script>
 <script src="kit/v1/shell.js" defer></script>
+<script src="pages/space.js" defer></script>
 </head>
 <body data-page="space" data-title="Space">
-<main class="dame-page">
-  <h1>Space</h1>
-  <p class="dame-muted">A department's tools will show here as tiles.</p>
-  <p class="dame-empty">Not built yet. It arrives in phase 2.</p>
-  <p><a href="index.html">Back to start</a></p>
+<main class="dame-page" id="main" hidden>
+  <p class="dame-muted"><a href="hub.html">Back to the hub</a></p>
+  <h1 id="title">Space</h1>
+  <p class="dame-muted" id="text"></p>
+  <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
+  <div class="hub-tiles" id="tools"></div>
+  <p class="dame-empty" id="empty" hidden>No tools for you here yet. The space admin gives access to each tool.</p>
+  <div class="dame-card" id="admin-card" hidden>
+    <h2>Space admin</h2>
+    <p class="dame-muted">Create tools, name their managers, add people, give and take access.</p>
+    <a class="dame-btn dame-btn-primary" id="admin-link" href="hub.html">Open space admin</a>
+  </div>
 </main>
 </body>
 </html>

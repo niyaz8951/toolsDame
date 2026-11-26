@@ -1,10 +1,10 @@
 <!doctype html>
 <!--
-  admin/space.html - space admin: tools, admins, access and ideas of one space.
+  admin/space.html - space admin: people, admins and tools of one space.
   Serves: contract 2 (Structure) and 3 (Access: an admin acts alone inside his
   space and nowhere else). Must not change: every action is refused by the
-  database outside the admin's own space. The security policy stays the first
-  element of the head. Phase 0: placeholder. Built in phase 2.
+  database outside the admin's own space; a tool or space is deleted only
+  after its id is typed. The security policy stays the first element of the head.
 -->
 <html lang="en">
 <head>
@@ -20,13 +20,93 @@
 <script src="../kit/v1/config.js" defer></script>
 <script src="../kit/v1/api.js" defer></script>
 <script src="../kit/v1/shell.js" defer></script>
+<script src="../pages/admin-space.js" defer></script>
 </head>
 <body data-page="admin-space" data-title="Space admin">
-<main class="dame-page">
-  <h1>Space admin</h1>
-  <p class="dame-muted">Create tools, name their managers, give and take access, answer ideas.</p>
-  <p class="dame-empty">Not built yet. It arrives in phase 2.</p>
-  <p><a href="../index.html">Back to start</a></p>
+<main class="dame-page" id="main" hidden>
+  <p class="dame-muted"><a id="back" href="../hub.html">Back to the space</a></p>
+  <h1 id="title">Space admin</h1>
+  <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
+
+  <div id="body" hidden>
+    <section class="dame-card">
+      <h2>Tools</h2>
+      <p class="dame-muted">Each tool is a tile in this space. Its id is permanent. People get a tool by name, or everyone in the space gets it when it is "open to the space".</p>
+      <div id="tools"></div>
+      <p class="dame-empty" id="tools-empty" hidden>No tools yet. Create the first one below.</p>
+      <div class="hub-block">
+        <h3>New tool</h3>
+        <form id="form-tool" method="post" novalidate>
+          <div class="hub-two">
+            <label class="hub-field">Name
+              <input class="dame-input" id="tl-name" type="text" maxlength="80" autocomplete="off" required>
+            </label>
+            <label class="hub-field">Id (permanent, never reused)
+              <input class="dame-input" id="tl-id" type="text" maxlength="30" autocomplete="off" placeholder="bid-tracker" required>
+            </label>
+            <label class="hub-field">Icon (one or two characters, optional)
+              <input class="dame-input" id="tl-icon" type="text" maxlength="8" autocomplete="off">
+            </label>
+            <label class="hub-field">Colour
+              <input class="dame-input" id="tl-colour" type="color" value="#0b63ce">
+            </label>
+          </div>
+          <label class="hub-field">What it is for (optional)
+            <input class="dame-input" id="tl-desc" type="text" maxlength="400" autocomplete="off">
+          </label>
+          <label class="hub-check"><input id="tl-open" type="checkbox"> Open to everyone in this space</label>
+          <label class="hub-field">Level for everyone in the space
+            <select class="dame-input" id="tl-level">
+              <option value="read">Read: see the rows</option>
+              <option value="contribute">Contribute: add rows, change own</option>
+              <option value="edit">Edit: change anyone's rows</option>
+              <option value="approve">Approve: also delete</option>
+            </select>
+          </label>
+          <button class="dame-btn dame-btn-primary" type="submit">Create tool</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="dame-card">
+      <h2>People in this space</h2>
+      <p class="dame-muted">Members see the space on their hub and get every tool that is open to the space. Nothing else.</p>
+      <ul class="hub-list" id="members"></ul>
+      <div id="member-picker"></div>
+    </section>
+
+    <section class="dame-card">
+      <h2>Admins</h2>
+      <p class="dame-muted">Admins can do everything on this page. A space always has at least one.</p>
+      <ul class="hub-list" id="admins"></ul>
+      <div id="admin-picker"></div>
+    </section>
+
+    <section class="dame-card">
+      <h2>Name and description</h2>
+      <form id="form-space" method="post" novalidate>
+        <label class="hub-field">Name
+          <input class="dame-input" id="sp-name" type="text" maxlength="80" autocomplete="off" required>
+        </label>
+        <label class="hub-field">Description
+          <input class="dame-input" id="sp-desc" type="text" maxlength="400" autocomplete="off">
+        </label>
+        <button class="dame-btn" type="submit">Save</button>
+      </form>
+    </section>
+
+    <section class="dame-card">
+      <h2>Audit</h2>
+      <p class="dame-muted">Who did what in this space. Nothing here can be changed or deleted.</p>
+      <div class="hub-scroll">
+        <table class="dame-table">
+          <thead><tr><th>When</th><th>Who</th><th>What</th><th>Where</th><th>About</th></tr></thead>
+          <tbody id="audit"></tbody>
+        </table>
+      </div>
+      <button class="dame-btn" type="button" id="audit-more" hidden>Show older</button>
+    </section>
+  </div>
 </main>
 </body>
 </html>

@@ -27,6 +27,16 @@
 - The first IT admin is made once by the owner in the SQL editor: `select core.make_first_admin('email');`. It refuses when an IT admin exists.
 - Page scripts live in `pages/` (one per page), beside the planned layout.
 
+## Built in phase 2 (say if any should change)
+- **An IT admin may name himself admin of a space.** BEDROCK says nobody raises himself; an IT admin can already name anyone, and with one person on the site the demo could not start otherwise. It is written to the audit. Stricter choice for IT: forbid it, so two people are always needed.
+- A space id and a tool id together may have 59 characters at most, because the tool's database name (`t_<space>__<tool>`) may have 63.
+- "People in this space" (members) is its own list. A member sees the space and gets the tools marked "open to the space", nothing else. A person given one tool by name sees the space too, with that tool only.
+- A space switched off by IT stays open to its admins (to repair it) and closed to everyone else. A tool switched off stays open to its managers and the space admins.
+- "The last admin cannot be removed" counts only approved accounts: an admin whose account is switched off does not count.
+- Deleting needs the id typed in full, on the page and again in the database. Phase 2 deletes the core rows; files and tables are added to the same delete in phases 3 and 4.
+- People are looked up by name or email (at least 2 letters, 20 results, approved accounts only) by IT admins, space admins and tool managers. Members cannot look people up.
+- Not built yet from the Roles table: a space admin tightening site settings for his space. It belongs with the AI prompt in phase 5.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

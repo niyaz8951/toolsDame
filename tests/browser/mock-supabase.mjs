@@ -133,6 +133,13 @@ export async function startMock(port, { confirmEmail = true } = {}) {
   return {
     server, db, calls,
     confirm(email) { users.get(email.toLowerCase()).confirmed = true; },
+    // A confirmed sign-in account plus an approved profile, without clicking through sign-up.
+    async addUser(email, name, password, isIt = false) {
+      const id = randomUUID();
+      users.set(email, { id, password, name, confirmed: true });
+      await db.query('insert into core.profiles (id, email, name, status, is_it) values ($1, $2, $3, $4, $5)', [id, email, name, 'active', isIt]);
+      return id;
+    },
     expireTokens() { tokens.clear(); },   // access tokens run out; renewal tokens stay
     sql(text) { return db.query(text); }
   };

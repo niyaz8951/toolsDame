@@ -4,7 +4,7 @@
   Serves: contract 1 (Identity), 3 (Access) and 7 (Audit). Must not change:
   hiding this page protects nothing; every action is refused by the database
   unless the user is an IT admin. The security policy stays the first element
-  of the head. Spaces arrive in phase 2, health in phase 6.
+  of the head. Health arrives in phase 6.
 -->
 <html lang="en">
 <head>
@@ -68,7 +68,32 @@
 
     <section class="dame-card">
       <h2>Spaces</h2>
-      <p class="dame-empty">Creating spaces arrives in phase 2.</p>
+      <p class="dame-muted">A space is one department. You create it and name its first admin; the admin makes the tools and gives access. Being IT admin does not make you a member of a space.</p>
+      <div id="spaces"></div>
+      <p class="dame-empty" id="spaces-empty" hidden>No spaces yet. Create the first one below.</p>
+      <div class="hub-block">
+        <h3>New space</h3>
+        <form id="form-space" method="post" novalidate>
+          <div class="hub-two">
+            <label class="hub-field">Name
+              <input class="dame-input" id="sp-name" type="text" maxlength="80" autocomplete="off" required>
+            </label>
+            <label class="hub-field">Id (permanent, never reused)
+              <input class="dame-input" id="sp-id" type="text" maxlength="30" autocomplete="off" placeholder="sales-team" required>
+            </label>
+          </div>
+          <label class="hub-field">Description (optional)
+            <input class="dame-input" id="sp-desc" type="text" maxlength="400" autocomplete="off">
+          </label>
+          <p class="hub-sub">First admin</p>
+          <p class="hub-chosen" id="sp-admin">Nobody chosen yet. Find the person, or choose yourself.</p>
+          <div id="sp-picker"></div>
+          <div class="dame-row hub-delete">
+            <button class="dame-btn" type="button" id="sp-me">Choose myself</button>
+            <button class="dame-btn dame-btn-primary" type="submit">Create space</button>
+          </div>
+        </form>
+      </div>
     </section>
 
     <section class="dame-card">
@@ -76,7 +101,7 @@
       <p class="dame-muted">Who did what, when. Nothing here can be changed or deleted.</p>
       <div class="hub-scroll">
         <table class="dame-table">
-          <thead><tr><th>When</th><th>Who</th><th>What</th><th>About</th></tr></thead>
+          <thead><tr><th>When</th><th>Who</th><th>What</th><th>Where</th><th>About</th></tr></thead>
           <tbody id="audit"></tbody>
         </table>
       </div>

@@ -1,11 +1,11 @@
 <!doctype html>
 <!--
-  admin/tool.html - tool admin: Files, Data, access, help text and versions.
-  Serves: contract 5 (Data) and 6 (Releases). Must not change: tables are made
-  from this page with no SQL typed by anyone; nothing is dropped or altered
-  without a typed confirmation; versions are never edited after upload. The
-  security policy stays the first element of the head.
-  Phase 0: placeholder. Files and versions in phase 3, Data in phase 4.
+  admin/tool.html - tool admin: access now; Files, Data, help text and versions later.
+  Serves: contract 3 (Access: a tool's manager gives and takes access to his
+  tool), later 5 (Data) and 6 (Releases). Must not change: every action is
+  refused by the database unless the user is an admin of the space or a manager
+  of this tool. The security policy stays the first element of the head.
+  Files and versions arrive in phase 3, Data in phase 4.
 -->
 <html lang="en">
 <head>
@@ -21,13 +21,62 @@
 <script src="../kit/v1/config.js" defer></script>
 <script src="../kit/v1/api.js" defer></script>
 <script src="../kit/v1/shell.js" defer></script>
+<script src="../pages/admin-tool.js" defer></script>
 </head>
 <body data-page="admin-tool" data-title="Tool admin">
-<main class="dame-page">
-  <h1>Tool admin</h1>
-  <p class="dame-muted">Upload the tool's files, make its tables, preview, make live, roll back.</p>
-  <p class="dame-empty">Not built yet. Files and versions arrive in phase 3, tables in phase 4.</p>
-  <p><a href="../index.html">Back to start</a></p>
+<main class="dame-page" id="main" hidden>
+  <p class="dame-muted"><a id="back" href="../hub.html">Back to the space</a></p>
+  <h1 id="title">Tool admin</h1>
+  <p class="dame-muted" id="text"></p>
+  <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
+
+  <div id="body" hidden>
+    <section class="dame-card">
+      <h2>Access</h2>
+      <p class="dame-muted" id="open-text"></p>
+      <ul class="hub-list" id="access"></ul>
+      <div class="hub-block">
+        <h3>Give access</h3>
+        <label class="hub-field">Level
+          <select class="dame-input" id="new-level">
+            <option value="read">Read: see the rows</option>
+            <option value="contribute">Contribute: add rows, change own</option>
+            <option value="edit">Edit: change anyone's rows</option>
+            <option value="approve">Approve: also delete</option>
+          </select>
+        </label>
+        <div id="access-picker"></div>
+      </div>
+    </section>
+
+    <section class="dame-card">
+      <h2>Managers</h2>
+      <p class="dame-muted">Managers look after this tool and have the top level. The space admin names them on the space admin page.</p>
+      <ul class="hub-list" id="managers"></ul>
+    </section>
+
+    <section class="dame-card">
+      <h2>Files and versions</h2>
+      <p class="dame-empty">Uploading the tool, preview, Make live and roll back arrive in phase 3.</p>
+    </section>
+
+    <section class="dame-card">
+      <h2>Data</h2>
+      <p class="dame-empty">Making tables arrives in phase 4.</p>
+    </section>
+
+    <section class="dame-card">
+      <h2>Audit</h2>
+      <p class="dame-muted">Who did what on this tool. Nothing here can be changed or deleted.</p>
+      <div class="hub-scroll">
+        <table class="dame-table">
+          <thead><tr><th>When</th><th>Who</th><th>What</th><th>Where</th><th>About</th></tr></thead>
+          <tbody id="audit"></tbody>
+        </table>
+      </div>
+      <button class="dame-btn" type="button" id="audit-more" hidden>Show older</button>
+    </section>
+  </div>
 </main>
 </body>
 </html>

@@ -68,3 +68,22 @@ p.hub-msg:not(.dame-card) { margin: 0 0 14px; }
   .hub-title { display: none; }
   .hub-user { flex: 1; justify-content: flex-end; }
 }
+
+/* Phase 2: spaces, tools, people. */
+.hub-grow { flex: 1 1 180px; min-width: 0; }
+.hub-picker { margin: 8px 0 0; }
+.hub-person { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.hub-person .dame-input { width: auto; min-height: 34px; padding: 4px 8px; }
+.hub-danger:not(:disabled) { border-color: var(--dame-warn); color: var(--dame-warn); font-weight: 600; }
+.hub-delete, .hub-edit { margin-top: 12px; }
+.hub-block { border-top: 1px solid var(--dame-line); padding: 14px 0 6px; }
+.hub-block:first-child { border-top: 0; padding-top: 0; }
+.hub-block h3 { font-size: 1.05rem; margin: 0 0 6px; }
+.hub-sub { font-size: .9rem; font-weight: 600; color: var(--dame-muted); margin: 12px 0 4px; }
+.hub-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 var(--dame-gap); }
+.hub-check { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-weight: 600; font-size: .95rem; }
+.hub-check input { width: 18px; height: 18px; }
+.hub-tile-icon { font-size: 1.4rem; line-height: 1; }
+.hub-tile-off { opacity: .6; }
+.hub-chosen { margin: 6px 0 12px; }
+.hub-list .hub-person > .hub-grow { color: var(--dame-text); font-size: 1rem; }

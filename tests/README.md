@@ -4,8 +4,10 @@
 |---|---|---|
 | `phase0.mjs` | Every page opens; page rules hold; no key, password or account name in the repo | `node tests/phase0.mjs` |
 | `sql/001_core_test.sql` | Every `dame_*` function: allowed and refused cases (signed out, pending, disabled, no request, level too low, other session), audit append-only, security check | Paste into the Supabase SQL editor. Leaves nothing behind. |
+| `sql/002_spaces_tools_test.sql` | Phase 2: an admin acts alone inside his space; every action outside it, and every action above a manager's or member's role, is refused; last admin; ids never reused; delete with cleanup | Paste into the Supabase SQL editor. Leaves nothing behind. |
 | `sql/run-local.mjs` | The same SQL and tests on a throw-away database, twice | `node tests/sql/run-local.mjs` |
 | `browser/phase1.mjs` | Sign in, request access, approval, hub, IT admin in a real browser at desktop and 390 px, against `browser/mock-supabase.mjs` | `node tests/browser/phase1.mjs` |
+| `browser/phase2.mjs` | Spaces and tools in a real browser at desktop and 390 px: IT admin, space admin, manager, member, each refused outside his part | `node tests/browser/phase2.mjs` |
 
 The two Node tests need, once: `npm install --no-save @electric-sql/pglite playwright-core` (test tools only; the site itself uses no package). The stand-in server copies how Supabase answers; it is not proof that the real project is set up right.
 

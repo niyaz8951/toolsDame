@@ -2,6 +2,23 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - Phase 2: spaces and tools
+Added
+- `db/core/002_spaces_tools.sql`: 21 functions for spaces, tools, admins, members, managers, access, people lookup, audit by space and tool. `dame_audit_list` replaced (same rights) so it names people and places for the new actions.
+- `admin/it.html`: Spaces section (create with first admin, admins, switch off and on, delete by typing the id).
+- `space.html` + `pages/space.js`: the caller's tools as tiles with his level.
+- `admin/space.html` + `pages/admin-space.js`: tools (create, change, on/off, delete, managers), people, admins, name, audit.
+- `admin/tool.html` + `pages/admin-tool.js`: access list and audit of one tool; Files and Data still to come.
+- `kit/v1/shell.js`: person picker, people lists, typed delete, shared audit table, action runner.
+- Tests: `tests/sql/002_spaces_tools_test.sql` (131 cases), `tests/browser/phase2.mjs`.
+
+Changed
+- Audit tables have a "Where" column (space / tool).
+- `tests/sql/run-local.mjs` runs every core file and proves each refuses a second run.
+
+SQL to paste, in order: `db/core/002_spaces_tools.sql`, then `tests/sql/002_spaces_tools_test.sql`. `tests/sql/001_core_test.sql` may be run again: it now also covers the new functions (238 cases).
+Owner: the steps in `STATUS.md`.
+
 ## 2026-11-26 - Phase 1: sign-in, approval, hub, IT admin
 Added
 - `db/core/001_init.sql`: schema `core`, require-checks, security check, ten `dame_*` functions.
