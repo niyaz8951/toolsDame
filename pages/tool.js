@@ -55,7 +55,30 @@
     return new TextDecoder('utf-8').decode(bytes);
   }
 
-  // Puts the kit in place of the two kit lines and the policy at the very top.
+  var LIB_LINE = /<script\b[^>]*\bsrc=["']\/_dame\/v1\/lib\/([a-z0-9-]{2,30})\.js["'][^>]*>\s*<\/script>/gi;
+  var shelf = null;      // id -> file name, from kit/v1/lib/index.json
+  var libs = {};         // id -> the library's text, once fetched
+
+  // Fetches the shelf libraries this page asks for. Only ids listed on the shelf.
+  async function fetchLibs(html) {
+    var wanted = [];
+    html.replace(LIB_LINE, function (all, id) { if (wanted.indexOf(id) < 0) { wanted.push(id); } return all; });
+    if (!wanted.length) { return; }
+    if (!shelf) {
+      shelf = {};
+      JSON.parse(await kit('kit/v1/lib/index.json')).libraries.forEach(function (l) { shelf[l.id] = l.file; });
+    }
+    for (var i = 0; i < wanted.length; i += 1) {
+      var id = wanted[i];
+      if (!Object.prototype.hasOwnProperty.call(shelf, id)) {
+        throw { name: 'DameError', message: 'This tool asks for a library the site does not have: ' + id + '. Tell the tool\'s manager.' };
+      }
+      if (!libs[id]) { libs[id] = await kit('kit/v1/lib/' + shelf[id]); }
+    }
+  }
+
+  // Puts the kit in place of the two kit lines, shelf libraries in place of
+  // their lines, and the policy at the very top.
   function build(html) {
     html = html.replace(/^\s*<!doctype[^>]*>/i, '');
     html = html.replace(/<link\b[^>]*\bhref=["']\/_dame\/v1\/dame\.css["'][^>]*>/i, function () {
@@ -63,6 +86,9 @@
     });
     html = html.replace(/<script\b[^>]*\bsrc=["']\/_dame\/v1\/dame\.js["'][^>]*>\s*<\/script>/i, function () {
       return '<script>' + kitJs.replace(/<\/script/gi, '<\\/script') + '</script>';
+    });
+    html = html.replace(LIB_LINE, function (all, id) {
+      return libs[id] ? '<script>' + libs[id].replace(/<\/script/gi, '<\\/script') + '</script>' : '';
     });
     return '<!doctype html><meta http-equiv="Content-Security-Policy" content="' + POLICY + '">' + html;
   }
@@ -120,7 +146,9 @@
 
   async function show(name) {
     try {
-      var html = build(await page(name));
+      var source = await page(name);
+      await fetchLibs(source);
+      var html = build(source);
       var host = $('frame').contentDocument;
       if (inner) { inner.remove(); }
       inner = host.createElement('iframe');
@@ -156,8 +184,8 @@
     var spaceUrl = api.href('space.html') + '?space=' + encodeURIComponent(space);
     var adminUrl = api.href('admin/tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(tool);
     $('back').href = space ? spaceUrl : api.href('hub.html');
+    $('crumb-hub').href = api.href('hub.html');
     $('back2').href = $('back').href;
-    $('manage-link').href = adminUrl;
     if (!space || !tool) {
       $('main').hidden = false;
       ui.say($('msg'), 'This address names no tool. Go back to the hub and open the tool from its space.', 'warn');
@@ -168,14 +196,27 @@
       info = await api.rpc('dame_tool_open', { p_space: space, p_tool: tool, p_preview: preview });
     } catch (err) {
       $('main').hidden = false;
-      $('manage').hidden = !(err && err.code === 'not_live');
+      if (err && err.code === 'not_live' && !preview) {
+        // Not an error: the tile exists, the tool is not built yet.
+        var mine = null;
+        try { mine = await api.rpc('dame_tool_admin_get', { p_space: space, p_tool: tool }); } catch (e) { /* not its manager */ }
+        $('notbuilt-title').textContent = mine ? mine.name + ' is not built yet' : 'This tool is being prepared';
+        $('notbuilt-text').textContent = mine
+          ? 'You look after this tool. Building it takes five short steps and no programming: say what it should do, give the starter kit to the AI, paste the answer, let the site check it, make it live.'
+          : 'It will open here as soon as its manager makes it live.';
+        $('notbuilt-go').href = adminUrl;
+        $('notbuilt-go').hidden = !mine;
+        $('notbuilt').hidden = false;
+        return;
+      }
       ui.sayError($('msg'), err);
       return;
     }
     document.title = info.name + ' - DAME';
     var title = document.querySelector('.hub-title');
     if (title) { title.textContent = (info.icon ? info.icon + ' ' : '') + info.name; }
-    $('back').textContent = 'Back to ' + info.space_name;
+    $('back').textContent = info.space_name;
+    $('crumb-tool').textContent = info.name;
     $('admin').href = adminUrl;
     $('admin').hidden = !info.is_manager;
     $('preview-pill').textContent = 'Preview of version ' + info.version + ': only admins and managers see this';

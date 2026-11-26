@@ -25,7 +25,9 @@
 </head>
 <body class="hub-runner" data-page="tool" data-title="Tool">
 <div class="hub-strip" id="strip" hidden>
-  <a id="back" href="hub.html">Back to the space</a>
+  <nav class="hub-trail" aria-label="Where you are">
+    <a id="crumb-hub" href="hub.html">Hub</a><span aria-hidden="true">/</span><a id="back" href="hub.html">Space</a><span aria-hidden="true">/</span><b id="crumb-tool"></b>
+  </nav>
   <span class="hub-pill" id="preview-pill" hidden></span>
   <a id="admin" href="hub.html" hidden>Tool admin</a>
 </div>
@@ -37,7 +39,11 @@
 </div>
 <main class="dame-page" id="main" hidden>
   <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
-  <p class="dame-muted" id="manage" hidden>If you manage this tool: <a id="manage-link" href="hub.html">open its admin page</a>.</p>
+  <div class="dame-card" id="notbuilt" hidden>
+    <h1 id="notbuilt-title"></h1>
+    <p id="notbuilt-text"></p>
+    <a class="dame-btn dame-btn-primary" id="notbuilt-go" href="hub.html" hidden>Build this tool</a>
+  </div>
   <p><a id="back2" href="hub.html">Back to the space</a></p>
 </main>
 <iframe class="hub-frame" id="frame" title="Tool" hidden></iframe>

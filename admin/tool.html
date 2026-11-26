@@ -1,6 +1,7 @@
 <!doctype html>
 <!--
-  admin/tool.html - tool admin: access, files and versions; Data and help text later.
+  admin/tool.html - tool admin: the guided builder (starter kit, check, upload,
+  versions) and access; Data and help text later.
   Serves: contract 3 (Access: a tool's manager gives and takes access to his
   tool), later 5 (Data) and 6 (Releases). Must not change: every action is
   refused by the database unless the user is an admin of the space or a manager
@@ -32,36 +33,79 @@
 
   <div id="body" hidden>
     <section class="dame-card">
-      <h2>Files and versions</h2>
+      <h2>Build this tool</h2>
       <p id="ver-state"></p>
       <div class="dame-row">
         <a class="dame-btn dame-btn-primary" id="open-live" href="../hub.html" hidden>Open the tool</a>
         <a class="dame-btn" id="open-preview" href="../hub.html" hidden>Open the preview</a>
       </div>
+      <p class="dame-muted">Five steps, no programming. The site gives you a starter kit for the approved AI, checks what comes back and tells you what to fix. The look, the top bar, sign-in and security are already there: you bring only what the tool does.</p>
 
-      <div class="hub-block">
-        <h3>Upload a new version</h3>
-        <p class="dame-muted">Choose all the files of the tool together, or one zip. The site packs each page into one file, checks it and says what to fix. Nothing is sent until you press Upload. 20 MB a page, 200 MB a version.</p>
-        <label class="hub-field">The tool's files, or one zip
-          <input class="dame-input" id="up-files" type="file" multiple>
-        </label>
-        <ul class="hub-list hub-report" id="up-report"></ul>
-        <label class="hub-field">Note for this version (optional)
-          <input class="dame-input" id="up-note" type="text" maxlength="200" autocomplete="off">
-        </label>
-        <button class="dame-btn dame-btn-primary" type="button" id="up-send" disabled>Upload version</button>
-      </div>
+      <ol class="hub-steps">
+        <li id="step-1">
+          <h3>Say what the tool should do</h3>
+          <label class="hub-field">In your own words: who uses it, what goes in, what comes out
+            <textarea class="dame-input" id="brief" rows="5" maxlength="4000" placeholder="Example: A person chooses several Excel price lists. The tool finds the rows of one model, shows them in one table and lets him download that table as Excel."></textarea>
+          </label>
+          <div id="needs"></div>
+          <p class="dame-muted">Saving rows that people share arrives in phase 4. Until then a tool can calculate, read files the person chooses, and give files back.</p>
+        </li>
+
+        <li id="step-2">
+          <h3>Give the starter kit to the AI</h3>
+          <p id="kit-text">The starter kit is one text: the rules of this site, the building blocks, a starting page and your description. Copy it, paste it into the approved AI and send it. Put no real names, prices or customer data into the AI.</p>
+          <div class="dame-row" id="kit-buttons">
+            <button class="dame-btn dame-btn-primary" type="button" id="kit-copy">Copy the starter kit</button>
+            <button class="dame-btn" type="button" id="kit-save">Download it as a file</button>
+            <button class="dame-btn" type="button" id="kit-show">Show it</button>
+            <a class="dame-btn" href="../blocks.html" target="_blank" rel="noopener">See the building blocks</a>
+          </div>
+          <pre class="hub-pre" id="kit-pre" hidden></pre>
+        </li>
+
+        <li id="step-3">
+          <h3>Bring the answer here</h3>
+          <label class="hub-field">The AI answers with one file, index.html. Paste all of its code here
+            <textarea class="dame-input hub-code" id="code" rows="8" spellcheck="false" autocomplete="off" placeholder="Paste the code of index.html here, from &lt;!doctype html&gt; to &lt;/html&gt;"></textarea>
+          </label>
+          <div class="dame-row">
+            <button class="dame-btn dame-btn-primary" type="button" id="code-check">Check the code</button>
+            <button class="dame-btn" type="button" id="code-starter">Use the starter page as it is</button>
+          </div>
+          <label class="hub-field hub-delete">Or, for a tool made of several files: choose all of them together, or one zip
+            <input class="dame-input" id="up-files" type="file" multiple>
+          </label>
+        </li>
+
+        <li id="step-4">
+          <h3>See what the site found</h3>
+          <p class="dame-muted" id="report-empty">Nothing checked yet. The result of the check shows here.</p>
+          <ul class="hub-list hub-report" id="up-report"></ul>
+          <div class="dame-row">
+            <button class="dame-btn dame-btn-primary" type="button" id="fix-copy" hidden>Copy a fix request for the AI</button>
+          </div>
+          <p class="dame-muted" id="fix-text" hidden>Paste the fix request into the same AI chat, then bring the new answer to step 3.</p>
+        </li>
+
+        <li id="step-5">
+          <h3>Upload, try, make live</h3>
+          <label class="hub-field">Note for this version (optional)
+            <input class="dame-input" id="up-note" type="text" maxlength="200" autocomplete="off">
+          </label>
+          <button class="dame-btn dame-btn-primary" type="button" id="up-send" disabled>Upload as a new version</button>
+          <p class="dame-muted">The upload becomes the preview: only admins and managers see it. Open the preview, try it, then press Make live in the list below. An older version can be brought back at any time.</p>
+        </li>
+      </ol>
 
       <div class="hub-block">
         <h3>Versions</h3>
-        <p class="dame-muted">A version never changes after upload. Make live gives it to everyone; an older version can be brought back at any time.</p>
         <div class="hub-scroll">
           <table class="dame-table">
             <thead><tr><th>Version</th><th>Uploaded</th><th>By</th><th>Pages</th><th>State</th><th>Do</th></tr></thead>
             <tbody id="versions"></tbody>
           </table>
         </div>
-        <p class="dame-empty" id="versions-empty" hidden>No version yet. Upload the first one above.</p>
+        <p class="dame-empty" id="versions-empty" hidden>No version yet.</p>
       </div>
     </section>
 

@@ -59,7 +59,7 @@
       t.people + (t.people === 1 ? ' person' : ' people') + ' named.'));
 
     var row = ui.el('div', 'dame-row');
-    var access = ui.el('a', 'dame-btn dame-btn-primary hub-small', 'Access and files');
+    var access = ui.el('a', 'dame-btn dame-btn-primary hub-small', 'Build and access');
     access.href = api.href('admin/tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(t.id);
     row.appendChild(access);
     var edit = ui.el('button', 'dame-btn hub-small', 'Change');
@@ -183,7 +183,7 @@
       var before = $('tools').children.length;
       await act('dame_tool_create', { p_space: space, p_id: $('tl-id').value.trim(), p_name: name, p_description: $('tl-desc').value,
         p_icon: $('tl-icon').value, p_colour: $('tl-colour').value, p_open_to_space: $('tl-open').checked, p_open_level: $('tl-level').value },
-        'Tool ' + name + ' is created. Next: Access and files.');
+        'Tool ' + name + ' is created. Next: press "Build and access" on it. The site walks you through five steps.');
       if ($('tools').children.length > before) {
         form.reset();
         idTouched = false;

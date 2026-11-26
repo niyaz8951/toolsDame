@@ -14,10 +14,11 @@ import { start } from '../tools/serve.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8137;
 const SITE = 'http://127.0.0.1:' + PORT + '/toolsDame/';
-const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.html', 'pack.html',
+const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.html', 'pack.html', 'blocks.html',
   'admin/it.html', 'admin/space.html', 'admin/tool.html'];
 const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1/shell.js',
-  'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'pages/space.js', 'pages/admin-space.js', 'pages/admin-tool.js', 'pages/tool.js', 'kit/v1/pack.js',
+  'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'pages/space.js', 'pages/admin-space.js', 'pages/admin-tool.js', 'pages/tool.js', 'pages/blocks.js', 'kit/v1/pack.js', 'kit/v1/lib/index.json', 'kit/v1/lib/exceljs.js', 'kit/starter/index.html',
+  'examples/parts-extractor/index.html',
   'examples/hello-tool/index.html', 'examples/hello-tool/about.html', 'examples/hello-tool/style.css', 'examples/hello-tool/app.js', 'kit/v1/icon.svg', 'kit/ai-prompt.md', 'kit/dame.schema.json',
   'help/index.md', 'help/hub.md', 'help/space.md', 'help/tool.md',
   'help/admin-it.md', 'help/admin-space.md', 'help/admin-tool.md'];
@@ -41,6 +42,7 @@ const CONFIG_URL = ((await readFile(join(ROOT, 'kit/v1/config.js'), 'utf8')).mat
 const TOOL_JS = await readFile(join(ROOT, 'pages/tool.js'), 'utf8');
 const SEALED = new Function('return ' + TOOL_JS.slice(TOOL_JS.indexOf('var POLICY = ') + 13, TOOL_JS.indexOf(";\n  var SANDBOX")))();
 check(/var SANDBOX = 'allow-scripts allow-forms allow-modals allow-downloads';/.test(TOOL_JS), 'the sealed frame has no same-origin, no pop-up and no top-navigation right');
+const SHELF_FILE = /^kit\/v1\/lib\/[^/]+\.js$/;   // library files from their publishers, kept byte for byte
 const server = await start(PORT);
 try {
   // 1. Every page opens and carries the page rules.
@@ -90,7 +92,7 @@ try {
   const TEXT = /\.(html|css|js|mjs|json|md|sql|svg|txt)$/;
   for (const full of await files(ROOT)) {
     const rel = relative(ROOT, full).split('\\').join('/');
-    if (!TEXT.test(rel) || rel === 'tests/phase0.mjs') { continue; }
+    if (!TEXT.test(rel) || rel === 'tests/phase0.mjs' || SHELF_FILE.test(rel)) { continue; }
     const text = await readFile(full, 'utf8');
     for (const [pattern, what] of BAD) {
       if (what.startsWith('the words') && !/\.(js|mjs|html|sql|json)$/.test(rel)) { continue; }
@@ -107,12 +109,50 @@ try {
   // 5. Every source file starts with its note.
   for (const full of await files(ROOT)) {
     const rel = relative(ROOT, full).split('\\').join('/');
-    if (!/\.(html|css|js|mjs)$/.test(rel)) { continue; }
+    if (!/\.(html|css|js|mjs)$/.test(rel) || SHELF_FILE.test(rel)) { continue; }
     const top = (await readFile(full, 'utf8')).slice(0, 400);
     check(/Must not change/.test(top) || /Must not change/.test((await readFile(full, 'utf8')).slice(0, 900)), rel + ' starts with its note');
   }
 } finally {
   server.close();
+}
+
+// 6. One look: every building block of dame.css is shown on blocks.html and given to the AI.
+{
+  const css = await readFile(join(ROOT, 'kit/v1/dame.css'), 'utf8');
+  const prompt = await readFile(join(ROOT, 'kit/ai-prompt.md'), 'utf8');
+  const blocks = await readFile(join(ROOT, 'blocks.html'), 'utf8');
+  const classes = [...new Set([...css.matchAll(/\.(dame-[a-z-]+)/g)].map((m) => m[1]))].filter((c) => c !== 'dame-toast');
+  const notInPrompt = classes.filter((c) => !new RegExp(c + '(?![a-z-])').test(prompt));
+  const notShown = classes.filter((c) => !new RegExp(c + '(?![a-z-])').test(blocks));
+  check(classes.length >= 30, 'dame.css has ' + classes.length + ' building-block classes');
+  check(notInPrompt.length === 0, 'every building block is in the starter kit for the AI' + (notInPrompt.length ? ' -> missing: ' + notInPrompt.join(', ') : ''));
+  check(notShown.length === 0, 'every building block is shown on blocks.html' + (notShown.length ? ' -> missing: ' + notShown.join(', ') : ''));
+  const used = [...new Set([...(prompt + blocks).matchAll(/class="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)).filter((c) => /^dame-/.test(c)))];
+  const unknown = used.filter((c) => !classes.includes(c));
+  check(unknown.length === 0, 'the starter kit and blocks.html name no block that does not exist' + (unknown.length ? ' -> ' + unknown.join(', ') : ''));
+  const kitJs = await readFile(join(ROOT, 'kit/v1/dame.js'), 'utf8');
+  check(!/<\/script/i.test(kitJs) && !/https?:\/\//.test(kitJs), 'the kit script holds no closing script tag and no address');
+  for (const name of ['ready', 'toast', 'drop', 'download', 'progress', 'pause']) {
+    check(new RegExp('Dame\\.' + name + '\\(').test(prompt) && new RegExp('\\b' + name + ': ').test(kitJs), 'Dame.' + name + ' exists in the kit and is explained to the AI');
+  }
+  for (const gap of ['{{TOOL}}', '{{BRIEF}}', '{{HEAD}}', '{{DATA}}', '{{LIBS}}', '{{STARTER}}']) {
+    check(prompt.includes(gap), 'the starter kit template has the gap ' + gap);
+  }
+}
+
+// 7. The shelf: each library is the file its publisher made, and fits the sealed frame.
+{
+  const { createHash } = await import('node:crypto');
+  const shelf = JSON.parse(await readFile(join(ROOT, 'kit/v1/lib/index.json'), 'utf8')).libraries;
+  check(shelf.length >= 1, 'the shelf lists ' + shelf.length + ' library');
+  for (const lib of shelf) {
+    const bytes = await readFile(join(ROOT, 'kit/v1/lib', lib.file));
+    const text = bytes.toString('utf8');
+    check(createHash('sha256').update(bytes).digest('hex') === lib.sha256, lib.name + ' is byte for byte the recorded file');
+    check(!/<\/script/i.test(text) && !/\beval\(/.test(text), lib.name + ' holds no closing script tag and no eval');
+    check(lib.line === '<script src="/_dame/v1/lib/' + lib.id + '.js"></script>' && /^[a-z0-9-]{2,30}$/.test(lib.id) && lib.how.length > 0 && !!lib.licence, lib.name + ' has its line, licence and how-to');
+  }
 }
 
 console.log(failed ? '\n' + failed + ' check(s) FAILED' : '\nAll checks passed');

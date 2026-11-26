@@ -1,0 +1,23 @@
+{
+  "$comment": "kit/v1/lib/index.json - the shelf: libraries the platform provides to tools. Serves site rule 3 (nothing from outside). Must not change: only IT adds or updates a library here, after checking its licence and its file; a tool asks for one with the exact line given, and the shell puts the file in its place inside the sealed frame. A library gets no more rights than the tool that uses it.",
+  "libraries": [
+    {
+      "id": "exceljs",
+      "file": "exceljs.js",
+      "name": "ExcelJS",
+      "version": "4.4.0",
+      "licence": "MIT (kit/v1/lib/exceljs.LICENSE.txt)",
+      "source": "npm package exceljs 4.4.0, file dist/exceljs.bare.min.js, unchanged",
+      "sha256": "b039e32bfb7164dadd84a6973b30200dc07e1b58e1f21c546378fca6920a1f94",
+      "use": "read and write Excel files (.xlsx)",
+      "line": "<script src=\"/_dame/v1/lib/exceljs.js\"></script>",
+      "how": [
+        "It gives the global `ExcelJS`. It reads and writes .xlsx (and .xlsm) only; for an old .xls file tell the user to open it in Excel and save it as .xlsx.",
+        "Read: `const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await file.arrayBuffer());` then `for (const ws of wb.worksheets)`: `ws.name`, `ws.rowCount`, `ws.columnCount`, `ws.getRow(r).getCell(c).value` (rows and columns start at 1).",
+        "A cell value is a string, number, boolean, Date or null, or an object: `{ richText: [{ text }] }`, `{ formula, result }`, `{ text, hyperlink }`, `{ error }`. Turn every cell into plain text with one small function before using it.",
+        "Merged cells: `ws.model.merges` lists ranges like `\"A1:C1\"`; every cell of a merged range returns the value of its top-left cell.",
+        "Write: `const out = new ExcelJS.Workbook(); const ws = out.addWorksheet('Result'); ws.addRow(['A', 'B']); ws.addRows(arrayOfArrays); const bytes = await out.xlsx.writeBuffer(); Dame.download('result.xlsx', bytes);`"
+      ]
+    }
+  ]
+}

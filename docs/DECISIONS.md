@@ -47,6 +47,25 @@
 - `Dame.table` and `Dame.files` exist and answer "arrives in phase 4" until then.
 - `examples/hello-tool/` is a first tool to upload.
 
+## Owner, 2026-11-26 (phase 3b: one website from many teams)
+- A small shelf of approved libraries, provided by the platform. Yes.
+- Different teams and very basic users build tools with AI. The site must say exactly what is needed when a tile is made, hand out a starter kit for the AI, and do the hard work itself.
+- Security is never weakened for convenience.
+- A second person approving before "Make live": later.
+
+## Built in phase 3b (say if any should change)
+- **One file per tool.** A tool is one `index.html`. The person pastes the AI's answer into a box; the site makes the file. Several files or a zip remain possible for people who build that way.
+- **The starter kit** is one text made by the site for each tool: the rules, the building blocks, the kit's functions, the chosen libraries, a starting page with the tool's name, and the person's description. It holds no address, key, token or person. It is copied or downloaded and given to the approved AI.
+- **The site fixes what it can and explains the rest.** It adds the two kit lines itself, removes a page's own security policy and icons, and ignores the words an AI writes around the code. What it cannot fix it lists in plain words, and it writes the fix request for the AI.
+- **The checks hold the look:** a tool's own `<header>`, `<nav>`, `<footer>`, a password field, own fonts, outside files, frames, workers and unknown libraries stop the upload. Own colours and pop-up boxes are noted, not stopped.
+- **No background workers.** Not allowing them keeps the wall as it was. Long work is done in steps with `await Dame.pause()` and a progress bar. The reference tool was rewritten that way.
+- **The shelf** (`kit/v1/lib/`): first library ExcelJS 4.4.0 (MIT), the publisher's file byte for byte, fingerprint recorded and tested. It reads and writes `.xlsx`, not the old `.xls`. SheetJS was not used: its current version is not published where this build can fetch it, and the version that is has known flaws.
+- **Building blocks**: `dame.css` grew from 9 to about 40 classes (additions only). `blocks.html` shows each with its code. A test fails if a block is missing from the starter kit or from that page.
+- **Kit additions**: `Dame.drop`, `Dame.download`, `Dame.progress`, `Dame.pause`.
+- The description typed in step 1 is kept in the person's browser only (so a reload does not lose it). Keeping it in the database comes with the help text in phase 5.
+- A tile that is not built yet shows "being prepared" to people and "Build this tool" to its manager, not an error.
+- `examples/parts-extractor/` is the old hub's Parts List Extractor rewritten for this site: same extraction rules, one file, building blocks, shelf library, no worker.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

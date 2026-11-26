@@ -94,12 +94,14 @@
   }
 
   // Links: another page of this tool is opened by the shell; an outside link
-  // is opened only after the person confirms; anything else stays put.
+  // is opened only after the person confirms; a file the tool made itself is
+  // saved; anything else stays put.
   document.addEventListener('click', function (ev) {
     var a = ev.target && ev.target.closest ? ev.target.closest('a[href]') : null;
     if (!a) { return; }
     var href = a.getAttribute('href') || '';
     if (href.charAt(0) === '#') { return; }
+    if (a.hasAttribute('download') && /^(blob:|data:)/i.test(href)) { return; }
     ev.preventDefault();
     if (/^[a-z0-9][a-z0-9._-]{0,59}\.html$/.test(href)) {
       call('page', { name: href }).catch(function (e) { toast(e.message); });
@@ -109,6 +111,74 @@
       toast('This link cannot be opened from inside a tool.');
     }
   }, true);
+
+  // Saves a file the tool made (text, bytes or a Blob) to the person's computer.
+  function download(name, data, type) {
+    var blob = (typeof Blob !== 'undefined' && data instanceof Blob) ? data
+      : new Blob([data], { type: type || 'application/octet-stream' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = String(name || 'download').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').slice(0, 120);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+
+  // Lets the screen catch up during long work: await Dame.pause();
+  function pause() {
+    return new Promise(function (resolve) { setTimeout(resolve, 0); });
+  }
+
+  // Makes an element a place to drop files or press to choose them.
+  // options: { accept: ['.xlsx', '.csv'], multiple: true }; onFiles gets an array of File.
+  function drop(element, options, onFiles) {
+    if (typeof options === 'function') { onFiles = options; options = {}; }
+    options = options || {};
+    var accept = (options.accept || []).map(function (x) { return String(x).toLowerCase(); });
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.hidden = true;
+    input.multiple = options.multiple !== false;
+    if (accept.length) { input.accept = accept.join(','); }
+    element.parentNode.insertBefore(input, element.nextSibling);
+    if (!element.hasAttribute('tabindex')) { element.setAttribute('tabindex', '0'); }
+    if (!element.hasAttribute('role')) { element.setAttribute('role', 'button'); }
+
+    function give(list) {
+      var files = Array.prototype.filter.call(list || [], function (f) {
+        var name = f.name.toLowerCase();
+        return name.indexOf('~$') !== 0 && (!accept.length || accept.some(function (x) { return name.slice(-x.length) === x; }));
+      });
+      if (!input.multiple) { files = files.slice(0, 1); }
+      if (files.length) { onFiles(files); }
+      else if (list && list.length) { toast('Choose ' + (accept.join(', ') || 'a file') + '.'); }
+    }
+    element.addEventListener('click', function () { input.click(); });
+    element.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); input.click(); }
+    });
+    element.addEventListener('dragover', function (ev) { ev.preventDefault(); element.classList.add('is-over'); });
+    element.addEventListener('dragleave', function () { element.classList.remove('is-over'); });
+    element.addEventListener('drop', function (ev) {
+      ev.preventDefault();
+      element.classList.remove('is-over');
+      give(ev.dataTransfer && ev.dataTransfer.files);
+    });
+    input.addEventListener('change', function () { give(input.files); input.value = ''; });
+  }
+
+  // Sets a progress bar (<div class="dame-progress"><span></span></div>) to 0..1.
+  function progress(element, fraction) {
+    var f = Math.max(0, Math.min(1, Number(fraction) || 0));
+    var bar = element.firstElementChild;
+    if (bar) { bar.style.width = (f * 100).toFixed(1) + '%'; }
+    element.setAttribute('role', 'progressbar');
+    element.setAttribute('aria-valuemin', '0');
+    element.setAttribute('aria-valuemax', '100');
+    element.setAttribute('aria-valuenow', String(Math.round(f * 100)));
+  }
 
   window.Dame = Object.freeze({
     version: 1,
@@ -121,6 +191,10 @@
       upload: function (file) { return call('files.upload', { file: file }); },
       url: function (id) { return call('files.url', { id: id }); }
     }),
-    toast: toast
+    toast: toast,
+    download: download,
+    pause: pause,
+    drop: drop,
+    progress: progress
   });
 })();

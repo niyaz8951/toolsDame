@@ -1,10 +1,14 @@
 # Tool admin
 
-1. **Files.** Choose all the tool's files together, or one zip. The site packs each page into one file, checks it and says in plain words what to fix. Up to 20 MB a page, 200 MB a version. A first tool to try is in `examples/hello-tool/`.
-2. **Data.** Make a table: a name, its columns, and who shares the rows (private, team, reference). If the upload has a `dame.json`, the site lists its tables; read the list and press Create.
-3. **Preview.** Only admins and managers see it. Preview has its own empty tables.
-4. **Make live.** The older version is kept. Roll back brings it back.
-5. **Access.** Give or take a level per person.
-6. **Help text.** Write what the i icon shows: what the tool is for, how to use it, who to ask.
+**Build this tool** walks you through five steps, without programming:
+1. **Say what the tool should do**, in your own words. Tick what it needs.
+2. **Copy the starter kit** and give it to the approved AI. No real names, prices or customer data into the AI.
+3. **Paste the answer** (one file, index.html) and press Check the code. Or press "Use the starter page as it is".
+4. **Fix what the site found**: "Copy a fix request for the AI" writes the message for you.
+5. **Upload**, open the preview, then press Make live twice. The older version is kept; Roll back brings it back.
 
-Every table gets five columns by itself: id, owner, created_at, updated_at, updated_by. Nothing is deleted without typing its name to confirm.
+**Access.** Give or take a level per person: read, contribute, edit, approve.
+
+**Managers** are named by the space admin.
+
+The look, the top bar, sign-in and security come from the site. A tool brings only what it does. The building blocks are shown on the page "Building blocks".

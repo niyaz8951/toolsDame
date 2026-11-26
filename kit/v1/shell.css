@@ -101,3 +101,17 @@ body.hub-runner { display: flex; flex-direction: column; }
 .hub-report li.hub-warn { border-left-color: var(--dame-warn); font-weight: 400; }
 .hub-report li.hub-ok { border-left-color: var(--dame-ok); }
 input[type=file].dame-input { padding: 10px; }
+
+/* Phase 3b: the trail on the tool page, the guided builder, the blocks page. */
+.hub-trail { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.hub-trail span { color: var(--dame-muted); }
+.hub-steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+.hub-steps > li { counter-increment: step; position: relative; padding: 16px 0 12px 46px; border-top: 1px solid var(--dame-line); }
+.hub-steps > li::before { content: counter(step); position: absolute; left: 0; top: 14px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; background: var(--dame-accent); color: var(--dame-bg); }
+.hub-steps > li.hub-done::before { content: "\2713"; background: var(--dame-ok); }
+.hub-steps h3 { font-size: 1.05rem; margin: 0 0 6px; }
+.hub-code { width: 100%; min-height: 150px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; white-space: pre; }
+textarea.dame-input { resize: vertical; line-height: 1.4; }
+.hub-pre { max-height: 320px; overflow: auto; margin: 10px 0 0; padding: 12px; border: 1px solid var(--dame-line); border-radius: 8px; background: var(--dame-bg); font-family: ui-monospace, Consolas, monospace; font-size: .82rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.hub-block-demo { padding: 14px; border: 1px dashed var(--dame-line); border-radius: var(--dame-radius); margin: 0 0 8px; }
+@media (max-width: 640px) { .hub-steps > li { padding-left: 0; padding-top: 52px; } .hub-steps > li::before { top: 12px; } }

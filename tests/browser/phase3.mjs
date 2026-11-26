@@ -15,6 +15,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { deflateRawSync } from 'node:zlib';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { chromium } from 'playwright-core';
 import { start } from '../../tools/serve.mjs';
 import { startMock, KEY } from './mock-supabase.mjs';
@@ -30,6 +31,7 @@ const CONFIG = await readFile(join(ROOT, 'kit/v1/config.js'), 'utf8');
 const REAL = (CONFIG.match(/supabaseUrl:\s*'([^']*)'/) || [])[1];
 const REAL_KEY = (CONFIG.match(/publishableKey:\s*'([^']*)'/) || [])[1];
 const PW = 'correct horse battery 42';
+const ExcelJS = createRequire(import.meta.url)(join(ROOT, 'kit/v1/lib/exceljs.js'));   // the shelf file itself
 
 let failed = 0;
 function check(ok, what) {
@@ -155,16 +157,23 @@ async function run(width, height, label) {
     const zed = await person('zed@test.dame', 'Zed Outside');
     await mock.sql(`insert into core.spaces (id, name, created_by) values ('lab', 'Lab', '${ben.id}')`);
     await mock.sql(`insert into core.space_admins (space, user_id, added_by) values ('lab', '${ben.id}', '${ben.id}')`);
-    await mock.sql(`insert into core.tools (space, id, name, icon, created_by) values ('lab', 'hello', 'Hello', 'H', '${ben.id}'), ('lab', 'hostile', 'Hostile', '', '${ben.id}'), ('lab', 'secret', 'Secret', '', '${ben.id}')`);
-    await mock.sql(`insert into core.tool_managers (space, tool, user_id, added_by) values ('lab', 'hello', '${di.id}', '${ben.id}'), ('lab', 'hostile', '${di.id}', '${ben.id}')`);
-    await mock.sql(`insert into core.tool_access (space, tool, user_id, level, added_by) values ('lab', 'hello', '${cy.id}', 'read', '${ben.id}'), ('lab', 'hostile', '${cy.id}', 'read', '${ben.id}')`);
+    await mock.sql(`insert into core.tools (space, id, name, icon, created_by) values ('lab', 'hello', 'Hello', 'H', '${ben.id}'), ('lab', 'hostile', 'Hostile', '', '${ben.id}'), ('lab', 'secret', 'Secret Tool', '', '${ben.id}'), ('lab', 'parts', 'Parts', '', '${ben.id}')`);
+    await mock.sql(`insert into core.tool_managers (space, tool, user_id, added_by) values ('lab', 'hello', '${di.id}', '${ben.id}'), ('lab', 'hostile', '${di.id}', '${ben.id}'), ('lab', 'parts', '${di.id}', '${ben.id}')`);
+    await mock.sql(`insert into core.tool_access (space, tool, user_id, level, added_by) values ('lab', 'hello', '${cy.id}', 'read', '${ben.id}'), ('lab', 'hostile', '${cy.id}', 'read', '${ben.id}'), ('lab', 'parts', '${cy.id}', 'read', '${ben.id}')`);
 
     // --- nothing uploaded yet
     await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=hello');
     await di.page.waitForSelector('#body:not([hidden])');
-    check(/Nothing is live yet/.test(await di.page.textContent('#ver-state')) && await di.page.locator('#versions-empty').isVisible(), T + 'a new tool has no version and says so');
-    check(/not published yet/.test(await refused(cy.page, 'tool.html?space=lab&tool=hello')), T + 'a reader is told the tool is not published');
-    check(/Nothing is live yet/.test(await refused(di.page, 'tool.html?space=lab&tool=hello')), T + 'its manager is told what to do next');
+    check(/Not built yet/.test(await di.page.textContent('#ver-state')) && await di.page.locator('#versions-empty').isVisible(), T + 'a new tool has no version and says so');
+    await cy.page.goto(SITE + 'tool.html?space=lab&tool=hello');
+    await cy.page.waitForSelector('#notbuilt:not([hidden])');
+    check(/being prepared/.test(await cy.page.textContent('#notbuilt')) && !(await cy.page.locator('#notbuilt-go').isVisible()), T + 'a reader is told the tool is being prepared, with nothing to press');
+    await di.page.goto(SITE + 'tool.html?space=lab&tool=hello');
+    await di.page.waitForSelector('#notbuilt:not([hidden])');
+    check(/Hello is not built yet/.test(await di.page.textContent('#notbuilt')) && await di.page.locator('#notbuilt-go').isVisible(), T + 'its manager is told it is not built yet and gets a Build button');
+    await di.page.click('#notbuilt-go');
+    await di.page.waitForSelector('#body:not([hidden])');
+    check(di.page.url().endsWith('admin/tool.html?space=lab&tool=hello'), T + 'the Build button opens the guided builder');
 
     // --- the checks before upload
     await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=hello');
@@ -173,7 +182,7 @@ async function run(width, height, label) {
       '<link rel="stylesheet" href="missing.css"></head><body><img src="//img.example.com/a.png"><iframe src="x.html"></iframe><a href="nowhere.html">x</a></body></html>';
     await upload(di.page, [{ name: 'index.html', mimeType: 'text/html', buffer: Buffer.from(bad) }]);
     const report = await di.page.textContent('#up-report');
-    check(/does not load the kit/.test(report) && /from outside the site/.test(report) && /missing\.css, which is not among/.test(report) && /<iframe>/.test(report) && /nowhere\.html, which is not a page/.test(report), T + 'a bad upload is explained line by line');
+    check(/from outside the site/.test(report) && /missing\.css, which is not among/.test(report) && /<iframe>/.test(report) && /nowhere\.html, which is not a page/.test(report), T + 'a bad upload is explained line by line');
     check(await di.page.locator('#up-send').isDisabled(), T + 'a version with a problem cannot be uploaded');
     await upload(di.page, [{ name: 'home.html', mimeType: 'text/html', buffer: Buffer.from('<p>x</p>') }]);
     check(/no page named index\.html/.test(await di.page.textContent('#up-report')), T + 'a tool without index.html is refused');
@@ -183,7 +192,7 @@ async function run(width, height, label) {
 
     // --- upload version 1 from loose files
     await upload(di.page, await example(), 'first');
-    check(/Ready to upload: (about\.html, index\.html|index\.html, about\.html)/.test(await di.page.textContent('#up-report')), T + 'the example tool passes the checks');
+    check(/The check passed: (about\.html, index\.html|index\.html, about\.html)/.test(await di.page.textContent('#up-report')), T + 'the example tool passes the checks');
     await shot(di.page, '1-upload-ready');
     await di.page.click('#up-send');
     await said(di.page, 'Version 1 is uploaded and is the preview');
@@ -216,7 +225,9 @@ async function run(width, height, label) {
     check(true, T + 'the tool moves between its own pages');
     check(await fits(di.page), T + 'the tool page fits the screen');
     check(/do not look after this tool/.test(await refused(cy.page, 'tool.html?space=lab&tool=hello&preview=1')), T + 'a reader cannot open the preview');
-    check(/not published yet/.test(await refused(cy.page, 'tool.html?space=lab&tool=hello')), T + 'a preview is not live');
+    await cy.page.goto(SITE + 'tool.html?space=lab&tool=hello');
+    await cy.page.waitForSelector('#notbuilt:not([hidden])');
+    check(true, T + 'a preview is not live');
     const peek = await cy.page.evaluate(() => window.DameApi.fileBytes('lab/hello/1/index.html').then(() => 'READ', (e) => e.code));
     check(peek === 'file', T + 'a reader cannot fetch the preview files directly (' + peek + ')');
 
@@ -224,13 +235,14 @@ async function run(width, height, label) {
     await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=hello');
     await di.page.waitForSelector('#body:not([hidden])');
     await di.page.click('#versions button:text-is("Make live")');
-    check(/Nothing is live yet/.test(await di.page.textContent('#ver-state')), T + 'one press on Make live changes nothing');
+    check(/Not built yet/.test(await di.page.textContent('#ver-state')), T + 'one press on Make live changes nothing');
     await di.page.click('#versions button:text-is("Press again to confirm")');
     await said(di.page, 'Version 1 is live');
     await openTool(cy.page, 'hello');
     f = await sealed(cy.page, '#who:has-text("Hello, Cy Reader")');
     check(/level on this tool: read/.test(await f.textContent('#who')), T + 'a reader opens the live tool with his own level');
     check(!(await cy.page.locator('#admin').isVisible()) && !(await cy.page.locator('#preview-pill').isVisible()), T + 'a reader sees no admin link and no preview mark');
+    check((await cy.page.textContent('.hub-trail')).replace(/\s+/g, ' ').trim() === 'Hub/Lab/Hello', T + 'the bar shows where he is: Hub / Lab / Hello');
     await shot(cy.page, '3-live');
     check(/does not allow this/.test(await refused(zed.page, 'tool.html?space=lab&tool=hello')), T + 'a person without the tool cannot open it');
     const out1 = await zed.page.evaluate(() => window.DameApi.fileBytes('lab/hello/1/index.html').then(() => 'READ', (e) => e.code));
@@ -242,7 +254,7 @@ async function run(width, height, label) {
     // --- version 2 from a zip, then roll back
     const v2 = (await example()).map((x) => x.name === 'index.html' ? { ...x, buffer: Buffer.from(x.buffer.toString().replace('<h1>Hello tool</h1>', '<h1>Hello tool, version two</h1>')) } : x);
     await upload(di.page, [{ name: 'hello.zip', mimeType: 'application/zip', buffer: zip(v2, 'hello-tool') }], 'second');
-    check(/Ready to upload/.test(await di.page.textContent('#up-report')), T + 'a zip with the files in a folder is read');
+    check(/The check passed/.test(await di.page.textContent('#up-report')), T + 'a zip with the files in a folder is read');
     await di.page.click('#up-send');
     await said(di.page, 'Version 2 is uploaded and is the preview');
     await openTool(cy.page, 'hello');
@@ -270,11 +282,19 @@ async function run(width, height, label) {
     await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=hostile');
     await di.page.waitForSelector('#body:not([hidden])');
     await upload(di.page, [{ name: 'index.html', mimeType: 'text/html', buffer: Buffer.from(hostile) }]);
-    check(/Ready to upload/.test(await di.page.textContent('#up-report')) && /tries to call a server/.test(await di.page.textContent('#up-report')), T + 'hostile tool: the checks let it through with a note (the frame is the wall, not the checks)');
-    await di.page.click('#up-send');
-    await said(di.page, 'Version 1 is uploaded');
-    await twice(di.page, '#versions', 'Make live');
-    await said(di.page, 'Version 1 is live');
+    const hostileReport = await di.page.textContent('#up-report');
+    check(/starts a background worker/.test(hostileReport) && /tries to call a server/.test(hostileReport) && await di.page.locator('#up-send').isDisabled(), T + 'hostile tool: the checks refuse it and say why');
+    // A manager who goes around the checks: the same three calls the page makes, with the file as it is.
+    const around = await di.page.evaluate(async (html) => {
+      const bytes = new TextEncoder().encode(html);
+      const sha = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))).map((b) => ('0' + b.toString(16)).slice(-2)).join('');
+      const v = await window.DameApi.rpc('dame_version_begin', { p_space: 'lab', p_tool: 'hostile', p_note: 'around the checks', p_files: [{ name: 'index.html', size: bytes.length, sha256: sha }] });
+      await window.DameApi.fileSend('lab/hostile/' + v + '/index.html', new Blob([bytes], { type: 'text/html' }));
+      await window.DameApi.rpc('dame_version_seal', { p_space: 'lab', p_tool: 'hostile', p_version: v });
+      await window.DameApi.rpc('dame_version_make_live', { p_space: 'lab', p_tool: 'hostile', p_version: v });
+      return v;
+    }, hostile);
+    check(around === 1, T + 'hostile tool: a manager can still upload it around the checks (the frame is the wall, not the checks)');
 
     asked.length = 0;
     mock.calls.length = 0;
@@ -302,6 +322,96 @@ async function run(width, height, label) {
     check(toolCalls.every((n) => ['dame_me', 'dame_tool_open'].includes(n)), T + 'hostile tool: the shell made no call on its behalf (' + [...new Set(toolCalls)].join(', ') + ')');
     await shot(cy.page, '5-hostile');
     quiet = false;
+
+    // --- the guided builder: starter kit, starter page, pasted code, fix request
+    await ben.page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await ben.page.goto(SITE + 'admin/tool.html?space=lab&tool=secret');
+    await ben.page.waitForSelector('#body:not([hidden])');
+    await ben.page.waitForSelector('#needs input');
+    await ben.page.fill('#brief', 'Turn a list of TEST-WIDGET codes into a table.');
+    await ben.page.check('#needs input[value="exceljs"]');
+    await ben.page.click('#kit-copy');
+    const kitText = await ben.page.evaluate(() => navigator.clipboard.readText());
+    check(/Name: Secret Tool/.test(kitText) && /TEST-WIDGET codes/.test(kitText) && kitText.includes('<script src="/_dame/v1/lib/exceljs.js"></script>') && /Library: ExcelJS 4\.4\.0/.test(kitText) && /<title>Secret Tool<\/title>/.test(kitText) && /class="dame-drop"/.test(kitText), T + 'the starter kit holds the tool\'s name, the description, the chosen library, the blocks and the starting page');
+    check(!kitText.includes(MOCK) && !kitText.includes(KEY) && !/test\.dame|supabase|at_[0-9a-f]{8}/.test(kitText) && !/\{\{[A-Z]+\}\}/.test(kitText), T + 'the starter kit holds no address, key, token or person, and no unfilled gap');
+    await ben.page.reload();
+    await ben.page.waitForSelector('#needs input');
+    check((await ben.page.inputValue('#brief')) === 'Turn a list of TEST-WIDGET codes into a table.' && await ben.page.isChecked('#needs input[value="exceljs"]'), T + 'the description survives a reload');
+    await ben.page.click('#code-check');
+    check(/nothing was pasted/.test(await ben.page.textContent('#up-report')), T + 'checking with nothing pasted says what to do');
+    const answer = 'Here is your tool!\n\n```html\n<!doctype html><html><head><title>x</title><style>body { font-family: Comic Sans MS; color: #ff0000; }</style></head>' +
+      '<body><header><h1>My tool</h1></header><main class="dame-page"><input type="password"><p id="p">hi</p></main>' +
+      '<script>new Worker("w.js"); alert("x");</scr' + 'ipt></body></html>\n```\n\nHelp text: it does things.';
+    await ben.page.fill('#code', answer);
+    await ben.page.click('#code-check');
+    await ben.page.waitForSelector('#up-report li.hub-warn');
+    const pasted = await ben.page.textContent('#up-report');
+    check(/its own <header>/.test(pasted) && /asks for a password/.test(pasted) && /sets its own font/.test(pasted) && /background worker/.test(pasted) && /its own colours/.test(pasted) && /pop-up box/.test(pasted), T + 'a pasted answer that breaks the site rules is refused, each point in plain words');
+    check(!/does not load the kit/.test(pasted) && !/Here is your tool/.test(pasted), T + 'the words around the code are ignored and the kit lines are added without asking');
+    check(await ben.page.locator('#up-send').isDisabled() && await ben.page.locator('#fix-copy').isVisible(), T + 'nothing can be uploaded; a fix request is offered');
+    await ben.page.click('#fix-copy');
+    const fix = await ben.page.evaluate(() => navigator.clipboard.readText());
+    check(/refused it/.test(fix) && /1\. index\.html has its own <header>/.test(fix) && /complete index\.html again/.test(fix), T + 'the fix request lists the points for the AI');
+    await shot(ben.page, '6-builder-refused');
+    await ben.page.click('#code-starter');
+    await ben.page.waitForSelector('#up-report li.hub-ok');
+    check(/The check passed: index\.html/.test(await ben.page.textContent('#up-report')) && !(await ben.page.locator('#fix-copy').isVisible()), T + 'the starter page passes the check as it is');
+    await ben.page.click('#up-send');
+    await said(ben.page, 'Version 1 is uploaded and is the preview');
+    await openTool(ben.page, 'secret', '&preview=1');
+    f = await sealed(ben.page, '#hello:has-text("Hello, Ben Admin")');
+    check((await f.textContent('h1')) === 'Secret Tool', T + 'the starter page runs with the tool\'s own name, minutes after the tile was made');
+    check(await fits(ben.page), T + 'the builder page and the starter tool fit the screen');
+
+    // --- the reference tool: Excel in, Excel out, with the shelf library, inside the sealed frame
+    await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=parts');
+    await di.page.waitForSelector('#body:not([hidden])');
+    await upload(di.page, [{ name: 'index.html', mimeType: 'text/html', buffer: await readFile(join(ROOT, 'examples/parts-extractor/index.html')) }]);
+    const partsReport = await di.page.textContent('#up-report');
+    check(/The check passed/.test(partsReport) && !/Note:/.test(partsReport), T + 'the reference tool passes the check without a single note');
+    await di.page.click('#up-send');
+    await said(di.page, 'Version 1 is uploaded');
+    await twice(di.page, '#versions', 'Make live');
+    await said(di.page, 'Version 1 is live');
+    const book = new ExcelJS.Workbook();
+    const sheet = book.addWorksheet('Unit A');
+    sheet.addRow(['Parts list issue 3']);
+    sheet.addRow(['Item', 'Description', 'Part Number', 'TST 029.1', 'TST 033.1']);
+    sheet.addRow(['COMPRESSOR']);
+    sheet.addRow([1, 'Test compressor', 'P-100', 1, 2]);
+    sheet.addRow([2, 'Test fan', 'P-200', '1pc each', null]);
+    sheet.mergeCells('D5:E5');
+    sheet.addRow([3, 'Test valve', 'P-300', '-', 1]);
+    book.addWorksheet('Index').addRow(['nothing here']);
+    const workbook = Buffer.from(await book.xlsx.writeBuffer());
+    await openTool(cy.page, 'parts');
+    f = await sealed(cy.page, '#dropzone');
+    check((await f.evaluate(() => typeof window.ExcelJS)) === 'object', T + 'the shelf library is in place inside the tool');
+    await f.setInputFiles('#dropzone + input[type=file]', [{ name: 'Parts List 12.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: workbook }]);
+    await f.waitForSelector('#file-list li');
+    await f.click('#run-btn');
+    await f.waitForSelector('#result-panel:not([hidden])', { timeout: 20000 });
+    const stats = (await f.textContent('#result-stats')).replace(/\s+/g, ' ');
+    check(/6rows extracted/.test(stats) && /1sheets with data/.test(stats), T + 'the reference tool reads the workbook: 3 parts x 2 models = 6 rows, merged cell spread over both (' + stats.trim() + ')');
+    check(/skipped \(blacklist\)/.test(await f.textContent('#log-body')), T + 'its rules are the old ones: the Index sheet is skipped');
+    const [download] = await Promise.all([cy.page.waitForEvent('download', { timeout: 15000 }), f.click('#download-btn')]);
+    const saved = new ExcelJS.Workbook();
+    await saved.xlsx.load(await readFile(await download.path()));
+    const long = saved.getWorksheet('Parts_Long');
+    const values = [];
+    long.eachRow((row) => values.push(row.values.slice(1).join('|')));
+    check(download.suggestedFilename() === 'Parts_Database.xlsx' && saved.worksheets.map((w) => w.name).join(',').startsWith('Parts_Long,Extraction_Log') && long.rowCount === 7, T + 'the result is saved as a real Excel file with its sheets (' + saved.worksheets.map((w) => w.name).join(', ') + ')');
+    check(values.some((v) => /Test fan\|.*TST 029\.1\|1pc each/.test(v)) && values.some((v) => /Test fan\|.*TST 033\.1\|1pc each/.test(v)) && values.some((v) => /COMPRESSOR/.test(v)), T + 'the saved table holds the right values, section and merged quantity');
+    check(!asked.some((u) => /LEAK/.test(u)) && mock.calls.every((c) => !/Parts%20List|P-100/.test(c.path)), T + 'the workbook never left the browser');
+    await shot(cy.page, '7-parts-extractor');
+    check(await fits(cy.page), T + 'the reference tool fits the screen');
+
+    // --- the building blocks page
+    await cy.page.goto(SITE + 'blocks.html');
+    await cy.page.waitForSelector('.hub-pre');
+    check((await cy.page.locator('[data-block]').count()) >= 10 && /class="dame-drop"/.test(await cy.page.textContent('main')), T + 'the building blocks page shows each block with its code');
+    check(await fits(cy.page), T + 'the building blocks page fits the screen');
+    await shot(cy.page, '8-blocks');
 
     check(problems.length === 0, T + 'no page error, blocked load or dialog outside the hostile test' + (problems.length ? ' -> ' + problems.slice(0, 4).join(' | ') : ''));
   } catch (err) {

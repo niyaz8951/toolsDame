@@ -2,6 +2,25 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - Phase 3b: one website from many teams (guided builder, building blocks, shelf)
+Added
+- **Guided builder** on `admin/tool.html`: describe, copy the starter kit, paste the answer, see what the site found (with a ready fix request for the AI), upload. "Use the starter page as it is" gives a working tool in a minute.
+- **Starter kit**: `kit/ai-prompt.md` (template) + `kit/starter/index.html`, filled per tool by the site.
+- **Building blocks**: about 30 new classes in `kit/v1/dame.css`; `blocks.html` + `pages/blocks.js` show each with its code.
+- **Kit**: `Dame.drop`, `Dame.download`, `Dame.progress`, `Dame.pause`.
+- **Shelf**: `kit/v1/lib/` with ExcelJS 4.4.0; the shell puts a shelf library in place of its line.
+- **Reference tool**: `examples/parts-extractor/index.html`.
+- Trail "Hub / Space / Tool" on the tool page; a friendly "not built yet" screen.
+
+Changed
+- Upload check: adds the kit lines itself; accepts pasted code; new stops (own header, password field, own font, worker, unknown library) and notes (own colours, pop-up boxes).
+- Kit bug fixed: a download made by a tool was blocked by the kit's own link handling.
+- `kit/tool-guide.md`, `help/admin-tool.md` rewritten for the guided flow.
+- Tests: `tests/browser/phase3.mjs` and `tests/phase0.mjs` extended; the hostile tool is now uploaded around the checks, as an attacker would.
+
+SQL to paste: none. Reload the site (Ctrl+F5).
+Owner: the steps in `STATUS.md`.
+
 ## 2026-11-26 - Phase 3: running a tool, uploads and versions
 Added
 - `db/core/003_versions.sql`: versions (announce, send, close; preview; make live; roll back), the private file store `tools` with its two rules, `dame_tool_open`.

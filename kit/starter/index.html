@@ -1,0 +1,52 @@
+<!doctype html>
+<!--
+  kit/starter/index.html - the page every new tool starts from. The site puts
+  the tool's name where {{TOOL}} stands and hands this file to the builder
+  inside the starter kit, or loads it as it is ("Use the starter page").
+  Serves: contract 4 (Tool kit) and the site rules every tool follows.
+  Must not change: the two kit lines; one file; no header, sign-in or outside
+  address; only building blocks of dame.css.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TOOL}}</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+<style>
+  /* Only what the building blocks do not cover. No fonts, no colours. */
+</style>
+</head>
+<body>
+<main class="dame-page">
+  <div class="dame-head">
+    <h1>{{TOOL}}</h1>
+    <p id="hello">One line that says what this tool is for.</p>
+  </div>
+
+  <section class="dame-card">
+    <div class="dame-card-head">
+      <h2>First step</h2>
+      <button class="dame-btn dame-btn-primary" type="button" id="go">Try it</button>
+    </div>
+    <p class="dame-empty" id="empty">Nothing here yet. This is the starter page: the real tool replaces it.</p>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  // The site tells the tool who is using it: { id, name, level }.
+  Dame.ready().then(function (me) {
+    document.getElementById('hello').textContent = 'Hello, ' + me.name + '. Your level on this tool: ' + me.level + '.';
+  });
+
+  document.getElementById('go').addEventListener('click', function () {
+    Dame.toast('The starter page works. Now build the real tool.');
+  });
+})();
+</script>
+</body>
+</html>

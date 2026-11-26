@@ -93,3 +93,83 @@ a { color: var(--dame-accent); }
   background: var(--dame-text); color: var(--dame-bg);
   border-radius: 8px; box-shadow: 0 4px 16px rgba(0, 0, 0, .25);
 }
+
+/* ---------------------------------------------------------------------------
+ * Building blocks (added 2026-11-26). Every tool is made of these, so that
+ * tools from different teams look like one site. Shown with their code on
+ * blocks.html; listed for the AI in kit/ai-prompt.md.
+ * ------------------------------------------------------------------------- */
+
+/* Top of a page: <header> is not allowed in a tool; use this. */
+.dame-head { margin: 0 0 var(--dame-gap); }
+.dame-head p { color: var(--dame-muted); margin: 0; }
+
+/* A card with a title on the left and buttons on the right. */
+.dame-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 0 0 12px; }
+.dame-card-head h2, .dame-card-head h3 { margin: 0; }
+.dame-card > :last-child { margin-bottom: 0; }
+
+/* Buttons: smaller, and quiet (no border until hovered). */
+.dame-btn-small { min-height: 32px; padding: 4px 12px; font-size: .9rem; }
+.dame-btn-quiet { background: transparent; border-color: transparent; color: var(--dame-accent); }
+.dame-btn-quiet:hover { border-color: var(--dame-line); }
+
+/* A label with its input, and a line of help under a field. */
+.dame-field { display: block; margin: 0 0 14px; font-weight: 600; font-size: .95rem; }
+.dame-field .dame-input { margin-top: 6px; font-weight: 400; }
+.dame-hint { color: var(--dame-muted); font-size: .88rem; margin: 4px 0 12px; }
+
+/* A tick box with its text; <em> inside is a second, quieter line. */
+.dame-check { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 12px; cursor: pointer; }
+.dame-check input { width: 18px; height: 18px; margin: 3px 0 0; flex: none; accent-color: var(--dame-accent); }
+.dame-check em { display: block; font-style: normal; color: var(--dame-muted); font-size: .88rem; }
+
+/* Choose one of a few: buttons with aria-pressed="true" on the chosen one. */
+.dame-toggle { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--dame-line); border-radius: 8px; overflow: hidden; }
+.dame-toggle button { min-height: 38px; padding: 6px 14px; border: 0; border-right: 1px solid var(--dame-line); background: var(--dame-surface); color: var(--dame-text); font: inherit; cursor: pointer; }
+.dame-toggle button:last-child { border-right: 0; }
+.dame-toggle button[aria-pressed="true"] { background: var(--dame-accent); color: var(--dame-bg); font-weight: 600; }
+
+/* A place to drop files or press to choose them. Wire it with Dame.drop(). */
+.dame-drop { display: block; text-align: center; cursor: pointer; padding: 28px var(--dame-gap); border: 2px dashed var(--dame-line); border-radius: var(--dame-radius); background: var(--dame-surface); }
+.dame-drop:hover, .dame-drop.is-over { border-color: var(--dame-accent); }
+.dame-drop strong { display: block; }
+.dame-drop span { color: var(--dame-muted); font-size: .88rem; }
+
+/* A list of chosen files or other short items with a button at the end. */
+.dame-list { list-style: none; margin: 12px 0; padding: 0; }
+.dame-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin: 0 0 6px; border: 1px solid var(--dame-line); border-radius: 8px; background: var(--dame-surface); }
+.dame-list li > :first-child { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+
+/* Progress: <div class="dame-progress"><span></span></div>, set with Dame.progress(). */
+.dame-progress { height: 10px; border-radius: 999px; background: var(--dame-line); overflow: hidden; }
+.dame-progress span { display: block; height: 100%; width: 0; background: var(--dame-accent); transition: width .15s linear; }
+
+/* A row of numbers: <div class="dame-stats"><div class="dame-stat"><b>12</b><span>rows</span></div>...</div> */
+.dame-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 0 0 var(--dame-gap); }
+.dame-stat { padding: 12px; border: 1px solid var(--dame-line); border-radius: var(--dame-radius); background: var(--dame-surface); }
+.dame-stat b { display: block; font-size: 1.5rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.dame-stat span { color: var(--dame-muted); font-size: .88rem; }
+
+/* A message in the page: plain, good news, or something to fix. */
+.dame-note { margin: 0 0 12px; padding: 8px 12px; border-left: 4px solid var(--dame-line); background: var(--dame-surface); border-radius: 0 8px 8px 0; }
+.dame-note-ok { border-left-color: var(--dame-ok); }
+.dame-note-warn { border-left-color: var(--dame-warn); color: var(--dame-warn); }
+
+/* Small labels. */
+.dame-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--dame-line); color: var(--dame-muted); font-size: .8rem; }
+.dame-badge-ok { border-color: var(--dame-ok); color: var(--dame-ok); }
+.dame-badge-warn { border-color: var(--dame-warn); color: var(--dame-warn); }
+
+/* Tables: a wrapper that scrolls sideways, rows that need attention, numbers. */
+.dame-scroll { overflow-x: auto; margin: 0 0 12px; }
+.dame-table tr.is-warn td { background: color-mix(in srgb, var(--dame-warn) 8%, transparent); }
+.dame-table tr.is-ok td { background: color-mix(in srgb, var(--dame-ok) 8%, transparent); }
+.dame-num { text-align: right; font-variant-numeric: tabular-nums; }
+.dame-mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .92em; }
+
+/* Columns that fold on a narrow screen, and text only a screen reader gets. */
+.dame-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 var(--dame-gap); }
+.dame-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) { .dame-progress span { transition: none; } }

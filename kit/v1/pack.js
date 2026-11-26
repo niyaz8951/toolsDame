@@ -18,6 +18,7 @@
   var PAGE = /^[a-z0-9][a-z0-9._-]{0,59}\.html$/;
   var KIT_CSS = '/_dame/v1/dame.css';
   var KIT_JS = '/_dame/v1/dame.js';
+  var LIB = /^\/_dame\/v1\/lib\/([a-z0-9-]{2,30})\.js$/;
   var TYPES = {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp',
     svg: 'image/svg+xml', ico: 'image/x-icon', avif: 'image/avif',
@@ -152,7 +153,25 @@
 
   // ------------------------------------------------------------------ pack
 
-  async function pack(map) {
+  // The code a person pasted, as the one page index.html. An AI often wraps
+  // its answer in ``` marks and adds a sentence before or after: only the code is kept.
+  function fromCode(pasted) {
+    var code = String(pasted || '');
+    var blocks = [];
+    code.replace(/```[a-zA-Z]*[ \t]*\r?\n([\s\S]*?)```/g, function (all, inner) { blocks.push(inner); return all; });
+    var pages = blocks.filter(function (b) { return /<(!doctype|html|head|body|main|div|script)\b/i.test(b); });
+    if (pages.length) { code = pages.sort(function (a, b) { return b.length - a.length; })[0]; }
+    if (!/<[a-z!][\s\S]*>/i.test(code)) {
+      throw new Error('This does not look like the code of a page. Paste everything the AI gave for index.html, from <!doctype html> to </html>.');
+    }
+    var start = code.search(/<!doctype|<html/i);
+    if (start > 0) { code = code.slice(start); }
+    return { 'index.html': new TextEncoder().encode(code.trim() + '\n') };
+  }
+
+  // options.libs: the ids of the libraries on the shelf (kit/v1/lib/index.json).
+  async function pack(map, options) {
+    var libs = (options && options.libs) || [];
     var problems = [];
     var notes = [];
     var pages = [];
@@ -162,7 +181,21 @@
     function note(t) { if (notes.indexOf(t) < 0) { notes.push(t); } }
 
     // url(...) inside styles: a chosen file is put inside; an outside address is a problem.
+    var colours = {};
+    function lint(css, where) {
+      if (/@font-face/i.test(css)) { problem(where + ' brings its own font (@font-face). Tools use the site\'s font: remove it.'); }
+      css.replace(/font-family\s*:\s*([^;}]*)/gi, function (all, value) {
+        if (!/^\s*(inherit|initial|unset|var\(|ui-monospace|monospace)/i.test(value)) {
+          problem(where + ' sets its own font (font-family: ' + value.trim().slice(0, 40) + '). Tools use the site\'s font: remove that line. For numbers and codes use the class dame-mono.');
+        }
+        return all;
+      });
+      var own = css.replace(/--dame-accent\s*:[^;}]*/gi, '').match(/#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(/gi);
+      if (own) { colours[where] = (colours[where] || 0) + own.length; }
+    }
+
     function styles(css, from, where) {
+      lint(css, where);
       if (/@import/i.test(css)) { problem(where + ' uses @import. Put all styles in the style sheets you upload and remove @import.'); }
       return css.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, function (all, q, ref) {
         ref = ref.trim();
@@ -180,6 +213,8 @@
       if (m) { note(where + ' mentions the outside address ' + m[0] + '. Outside calls are blocked on this site; the tool must work without it.'); }
       if (/\b(localStorage|sessionStorage|indexedDB)\b/.test(js)) { note(where + ' uses the browser\'s own storage. It does not work inside a tool; keep work data in tables.'); }
       if (/\b(fetch|XMLHttpRequest|WebSocket|EventSource)\s*\(/.test(js)) { note(where + ' tries to call a server. That is blocked; data goes only through Dame.table.'); }
+      if (/\bnew\s+(Shared)?Worker\s*\(|\bimportScripts\s*\(/.test(js)) { problem(where + ' starts a background worker. Tools have none: do long work in small steps and write "await Dame.pause();" between them so the screen stays alive.'); }
+      if (/(^|[^.\w])(alert|confirm|prompt)\s*\(/.test(js)) { note(where + ' uses a pop-up box (alert, confirm or prompt). Show messages with Dame.toast or a dame-note instead.'); }
     }
 
     var pageNames = paths.filter(function (p) { return /\.html?$/i.test(p) && p.indexOf('/') < 0; });
@@ -203,12 +238,39 @@
         problem(name + ' holds a <' + n.tagName.toLowerCase() + '>. A tool cannot show other pages or plug-ins inside itself: remove it.');
       });
 
-      // The two kit lines.
+      Array.prototype.forEach.call(doc.querySelectorAll('header, nav, footer'), function (n) {
+        problem(name + ' has its own <' + n.tagName.toLowerCase() + '>. The site\'s bar already shows the tool\'s name, the way back and the user: remove it. For a title at the top use <div class="dame-head">.');
+      });
+      if (doc.querySelector('input[type="password"]')) {
+        problem(name + ' asks for a password. A tool never signs anyone in and never asks for a password: remove that field.');
+      }
+
+      // The two kit lines: added if the page forgot them.
       var kitCss = doc.querySelector('link[href="' + KIT_CSS + '"]');
       var kitJs = doc.querySelector('script[src="' + KIT_JS + '"]');
-      if (!kitCss || !kitJs) {
-        problem(name + ' does not load the kit. Put these two lines in its <head>, exactly: <link rel="stylesheet" href="' + KIT_CSS + '"> and <script src="' + KIT_JS + '"></' + 'script>');
+      if (!kitCss) {
+        kitCss = doc.createElement('link');
+        kitCss.setAttribute('rel', 'stylesheet');
+        kitCss.setAttribute('href', KIT_CSS);
       }
+      if (!kitJs) {
+        kitJs = doc.createElement('script');
+        kitJs.setAttribute('src', KIT_JS);
+      }
+
+      // Libraries from the shelf: kept as they are, placed right after the kit.
+      var shelfLines = [];
+      Array.prototype.forEach.call(doc.querySelectorAll('script[src^="/_dame/v1/lib/"]'), function (n) {
+        var id = (LIB.exec(n.getAttribute('src')) || [])[1];
+        if (!id || libs.indexOf(id) < 0) {
+          problem(name + ' asks for the library ' + n.getAttribute('src') + ', which the site does not provide. ' +
+            (libs.length ? 'The shelf has: ' + libs.join(', ') + '.' : 'The shelf is empty.') + ' Ask IT to add it, or do without it.');
+          n.remove();
+          return;
+        }
+        ['defer', 'async', 'type', 'integrity', 'crossorigin'].forEach(function (a) { n.removeAttribute(a); });
+        shelfLines.push(n);
+      });
 
       // Style sheets.
       Array.prototype.forEach.call(doc.querySelectorAll('link[rel~="stylesheet"][href]'), function (n) {
@@ -222,10 +284,10 @@
         n.replaceWith(style);
       });
       Array.prototype.forEach.call(doc.querySelectorAll('style'), function (n) {
-        if (/url\(|@import/i.test(n.textContent)) { n.textContent = styles(n.textContent, name, name); }
+        n.textContent = styles(n.textContent, name, name);
       });
       Array.prototype.forEach.call(doc.querySelectorAll('[style]'), function (n) {
-        if (/url\(/i.test(n.getAttribute('style'))) { n.setAttribute('style', styles(n.getAttribute('style'), name, name)); }
+        n.setAttribute('style', styles(n.getAttribute('style'), name, name));
       });
 
       // Scripts.
@@ -233,7 +295,7 @@
       Array.prototype.forEach.call(doc.querySelectorAll('script'), function (n) {
         var ref = n.getAttribute('src');
         var type = (n.getAttribute('type') || '').toLowerCase();
-        if (ref === KIT_JS) { return; }
+        if (ref === KIT_JS || LIB.test(ref || '')) { return; }
         if (type && type !== 'module' && !/javascript|ecmascript/.test(type)) { return; }   // data blocks stay as they are
         var js = n.textContent;
         if (ref !== null) {
@@ -283,8 +345,9 @@
       });
 
       // The kit first, so it is in place before any of the tool's own code runs.
-      if (kitJs) { head.insertBefore(kitJs, head.firstChild); }
-      if (kitCss) { head.insertBefore(kitCss, head.firstChild); }
+      shelfLines.reverse().forEach(function (n) { head.insertBefore(n, head.firstChild); });
+      head.insertBefore(kitJs, head.firstChild);
+      head.insertBefore(kitCss, head.firstChild);
 
       var html = '<!doctype html>\n' + doc.documentElement.outerHTML;
       var bytes = new TextEncoder().encode(html);
@@ -292,6 +355,9 @@
       pages.push({ name: name, bytes: bytes, size: bytes.length, sha256: hex(await crypto.subtle.digest('SHA-256', bytes)) });
     }
 
+    Object.keys(colours).forEach(function (where) {
+      note(where + ' uses its own colours (' + colours[where] + ' places). Tools take their colours from the theme, for example var(--dame-text), var(--dame-line), var(--dame-ok), var(--dame-warn); a tool sets only --dame-accent.');
+    });
     if (pages.length > 50) { problem('A version has 50 pages at most.'); }
     var total = pages.reduce(function (sum, p) { return sum + p.size; }, 0);
     if (total > MAX_VERSION) { problem('The version is larger than 200 MB in all.'); }
@@ -309,5 +375,5 @@
     return { pages: pages, problems: problems, notes: notes, manifest: manifest, total: total };
   }
 
-  window.DamePack = Object.freeze({ collect: collect, pack: pack });
+  window.DamePack = Object.freeze({ collect: collect, fromCode: fromCode, pack: pack });
 })();

@@ -38,6 +38,13 @@ Known limits, said plainly:
 5. A stored page is run only if its fingerprint (SHA-256) equals the one recorded when the version was closed.
 6. Files of a deleted tool stay in the store, unreachable; clearing them is part of phase 6.
 
+## Building with AI (phase 3b)
+- The starter kit goes OUT to an AI: it holds only the site's public rules, the tool's name and what the person typed as description. No address, key, token, email or data. A test proves it. People are told on the page: no real names, prices or customer data into the AI.
+- What comes BACK from an AI is untrusted like any upload. Pasted code is only read by the checker in the hidden helper page; it runs nowhere but in the sealed frame, after upload.
+- A library from the shelf runs inside the sealed frame with the tool's rights: no network, no session, no storage. Only IT adds a library; its file is the publisher's, its fingerprint is recorded and checked by `tests/phase0.mjs`.
+- Downloads: a tool may hand the person a file it made (`Dame.download`). The file is made in the browser from what the tool already has; nothing is sent anywhere.
+- Background workers stay forbidden, so the policy of the sealed frame did not change in this phase.
+
 ## Accounts and keys
 - GitHub and Supabase: owner only, MFA on. Secret scanning and push protection on.
 - Anything sensitive pasted in a chat or committed: rotate at once, record in `STATUS.md`.
