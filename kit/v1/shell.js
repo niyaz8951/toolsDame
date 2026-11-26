@@ -273,6 +273,7 @@
     'tool.switched_off': 'switched the tool off', 'tool.switched_on': 'switched the tool on',
     'tool.deleted': 'deleted the tool', 'tool.manager_added': 'named manager', 'tool.manager_removed': 'removed manager',
     'tool.access_set': 'gave access', 'tool.access_removed': 'took access away',
+    'table.created': 'made a table', 'table.column_added': 'added a column', 'table.deleted': 'deleted a table',
     'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back'
   };
 
@@ -290,6 +291,7 @@
         if (d.from !== undefined && d.to !== undefined) { about += (about ? ': ' : '') + (/^version\./.test(a.action) ? 'version ' : '') + d.from + ' > ' + d.to; }
         else if (d.name) { about += (about ? ', ' : '') + d.name; }
         else if (d.version) { about += 'version ' + d.version + (d.note ? ': ' + d.note : ''); }
+        else if (d.table) { about += d.table + (d.column ? '.' + d.column : '') + (d.rows !== undefined ? ' (' + d.rows + ' rows)' : ''); }
         addRow(body, [when(a.at), a.actor, ACTIONS[a.action] || a.action, where, about]);
       });
       if (rows.length) { oldest = rows[rows.length - 1].id; }

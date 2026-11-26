@@ -1,12 +1,13 @@
 <!doctype html>
 <!--
   admin/tool.html - tool admin: the guided builder (starter kit, check, upload,
-  versions) and access; Data and help text later.
+  versions), the tool's tables (Data) and access; help text later.
   Serves: contract 3 (Access: a tool's manager gives and takes access to his
   tool), later 5 (Data) and 6 (Releases). Must not change: every action is
   refused by the database unless the user is an admin of the space or a manager
   of this tool. The security policy stays the first element of the head.
-  A version is never changed after upload. Data arrives in phase 4.
+  A version is never changed after upload. A table is deleted only after its
+  name is typed.
 -->
 <html lang="en">
 <head>
@@ -47,8 +48,10 @@
           <label class="hub-field">In your own words: who uses it, what goes in, what comes out
             <textarea class="dame-input" id="brief" rows="5" maxlength="4000" placeholder="Example: A person chooses several Excel price lists. The tool finds the rows of one model, shows them in one table and lets him download that table as Excel."></textarea>
           </label>
-          <div id="needs"></div>
-          <p class="dame-muted">Saving rows that people share arrives in phase 4. Until then a tool can calculate, read files the person chooses, and give files back.</p>
+          <div id="needs">
+            <label class="hub-check"><input type="checkbox" id="need-data" value="data"> It must save rows that people share (the site keeps them in a table)</label>
+          </div>
+          <p class="dame-muted">A tool can calculate, read files the person chooses, give files back, and keep rows in tables of this site.</p>
         </li>
 
         <li id="step-2">
@@ -72,7 +75,16 @@
             <button class="dame-btn dame-btn-primary" type="button" id="code-check">Check the code</button>
             <button class="dame-btn" type="button" id="code-starter">Use the starter page as it is</button>
           </div>
-          <label class="hub-field hub-delete">Or, for a tool made of several files: choose all of them together, or one zip
+          <div class="dame-row hub-delete">
+            <label class="dame-sr" for="example">Load a ready-made page</label>
+            <select class="dame-input hub-grow" id="example">
+              <option value="converter">Ready-made: a converter (stand-alone, saves nothing)</option>
+              <option value="tracker">Ready-made: a tracker (saves rows in a table)</option>
+              <option value="own" hidden>A list and form for this tool's own tables (no AI needed)</option>
+            </select>
+            <button class="dame-btn" type="button" id="example-load">Load it</button>
+          </div>
+          <label class="hub-field hub-delete">Or choose a page you already have (any name), all the files of a tool together, or one zip
             <input class="dame-input" id="up-files" type="file" multiple>
           </label>
         </li>
@@ -81,6 +93,11 @@
           <h3>See what the site found</h3>
           <p class="dame-muted" id="report-empty">Nothing checked yet. The result of the check shows here.</p>
           <ul class="hub-list hub-report" id="up-report"></ul>
+          <div id="tables-need" hidden>
+            <p id="tables-text"></p>
+            <ul class="hub-list hub-report" id="tables-list"></ul>
+            <button class="dame-btn dame-btn-primary" type="button" id="tables-create">Create the tables</button>
+          </div>
           <div class="dame-row">
             <button class="dame-btn dame-btn-primary" type="button" id="fix-copy" hidden>Copy a fix request for the AI</button>
           </div>
@@ -135,7 +152,32 @@
 
     <section class="dame-card">
       <h2>Data</h2>
-      <p class="dame-empty">Making tables arrives in phase 4.</p>
+      <p class="dame-muted">A tool keeps its rows in tables of this site. You make a table here by naming it and its columns; nobody types SQL. Every table gets five columns by itself: id, owner, created_at, updated_at, updated_by. The preview has its own empty copy of each table, so trying things there never touches real rows.</p>
+      <div id="data-tables"></div>
+      <p class="dame-empty" id="data-empty" hidden>No table yet. A tool that only calculates needs none.</p>
+      <div class="hub-block">
+        <h3>New table</h3>
+        <form id="form-table" method="post" novalidate>
+          <div class="hub-two">
+            <label class="hub-field">Name (small letters, digits, underscore)
+              <input class="dame-input" id="tb-name" type="text" maxlength="41" autocomplete="off" placeholder="bids">
+            </label>
+            <label class="hub-field">Who shares the rows
+              <select class="dame-input" id="tb-sharing">
+                <option value="team">Team: everyone with the tool sees all rows</option>
+                <option value="private">Private: each person sees only his own rows</option>
+                <option value="reference">Reference: everyone reads, only managers change</option>
+              </select>
+            </label>
+          </div>
+          <p class="hub-sub">Columns</p>
+          <div id="tb-columns"></div>
+          <div class="dame-row hub-delete">
+            <button class="dame-btn" type="button" id="tb-more">Add another column</button>
+            <button class="dame-btn dame-btn-primary" type="submit">Create table</button>
+          </div>
+        </form>
+      </div>
     </section>
 
     <section class="dame-card">

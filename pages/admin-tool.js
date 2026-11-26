@@ -101,6 +101,7 @@
         person.name + ' no longer has access by name.');
     }, levelSelect);
     ui.people($('managers'), t.managers, 'No manager. The space admins look after this tool.', '', null);
+    await showTables();
     await loadAudit();
   }
 
@@ -113,6 +114,10 @@
   var toolName = '';
   var aiMode = 'prompt';
   var lastProblems = [];
+  var tables = [];         // this tool's tables, as the database lists them
+  var plan = null;         // what the checked page still needs: { create: [], add: [], clash: [] }
+  var SAMPLE = { dame: 1, tables: { bids: { sharing: 'team', columns: { project: 'text', capacity_kw: 'number', due: 'date',
+    status: { choice: ['open', 'won', 'lost'] }, lead: 'person', notes: 'longtext' } } } };
 
   function draftKey() { return 'dame.brief.' + space + '.' + tool; }
 
@@ -137,6 +142,54 @@
   function chosenLibs() {
     return Array.prototype.map.call(document.querySelectorAll('#needs input:checked'), function (b) { return b.value; });
   }
+
+  // "bids (team): project text, status choice (open, won, lost)"
+  function describe(t) {
+    return t.name + ' (' + t.sharing + '): ' + t.columns.map(function (c) {
+      return c.name + ' ' + c.type + (c.choices ? ' (' + c.choices.join(', ') + ')' : '');
+    }).join(', ');
+  }
+
+  // The tables as a page declares them -> as the database takes them.
+  function fromManifest(manifest) {
+    return Object.keys(manifest.tables).map(function (name) {
+      var t = manifest.tables[name] || {};
+      var cols = (t.columns && typeof t.columns === 'object') ? t.columns : {};
+      return { name: name, sharing: t.sharing, columns: Object.keys(cols).map(function (c) {
+        var type = cols[c];
+        return (type && typeof type === 'object') ? { name: c, type: 'choice', choices: type.choice } : { name: c, type: type };
+      }) };
+    });
+  }
+
+  // ...and back: this tool's own tables as a page declares them.
+  function toManifest(list) {
+    var out = { dame: 1, tables: {} };
+    list.forEach(function (t) {
+      var cols = {};
+      t.columns.forEach(function (c) { cols[c.name] = c.type === 'choice' ? { choice: c.choices } : c.type; });
+      out.tables[t.name] = { sharing: t.sharing, columns: cols };
+    });
+    return out;
+  }
+
+  // What the site tells the AI about keeping data.
+  function dataText() {
+    return '## Keeping data: tables of this site\n' +
+      'The tool keeps its rows in tables that the site makes. Declare every table the tool needs in the head, right after the kit lines, in exactly this block (the site reads it and makes the tables):\n' +
+      '```html\n<script type="application/json" id="dame-tables">\n' +
+      '{ "dame": 1, "tables": { "bids": { "sharing": "team", "columns": { "project": "text", "capacity_kw": "number", "due": "date", "status": { "choice": ["open", "won", "lost"] } } } } }\n' +
+      '</script>\n```\n' +
+      '- Table and column names: a small letter, then small letters, digits or underscore.\n' +
+      '- Column types: `text` (up to 1000 characters), `longtext`, `number`, `bool`, `date` (written `2026-12-31`), `{ "choice": ["a", "b"] }`, `person` (the id of a person from `Dame.people()`), `json`.\n' +
+      '- Sharing: `team` = everyone with the tool sees all rows; `private` = each person sees only his own rows; `reference` = everyone reads, only the tool\'s managers change.\n' +
+      '- Every row also has `id`, `owner`, `created_at`, `updated_at`, `updated_by`. The site sets them; never send them.\n' +
+      '- Use: `const t = Dame.table(\'bids\');` then `await t.list({ where: { status: \'open\' }, sort: \'-due\', limit: 100 })` (an array, at most 1000 rows; `where` matches exact values only), `await t.get(id)`, `await t.add({ project: \'A\' })`, `await t.update(id, { status: \'won\' })`, `await t.remove(id)`.\n' +
+      '- `await Dame.people()` gives `[{ id, name }]`, the people who have this tool: use it to show who added a row (`row.owner`) and to fill a person picker.\n' +
+      '- Levels (`me.level`): `read` sees rows; `contribute` adds rows and changes his own; `edit` changes anyone\'s; `approve` also deletes. Hide what the level does not allow. The site refuses anyway: every call can fail, so catch it and show `error.message` on the page.\n' +
+      (tables.length ? '- This tool already has these tables; use them as they are and declare them unchanged: ' + tables.map(describe).join('; ') + '.\n' : '') + '\n';
+  }
+
 
   async function text(path) {
     var res = await fetch(api.href(path), { cache: 'no-cache', credentials: 'omit' });
@@ -169,7 +222,9 @@
       .split('{{TOOL}}').join(toolName)
       .split('{{BRIEF}}').join(brief)
       .split('{{HEAD}}').join(head)
-      .split('{{DATA}}').join('This tool cannot save anything yet: it works with what the person types or the files he chooses, and gives results on screen or as a download. Do not use `Dame.table` or `Dame.files`.')
+      .split('{{DATARULE}}').join($('need-data').checked ? 'To keep data use the tables of this site, as described below.'
+        : 'This tool saves nothing: it works with what the person types or the files he chooses, and gives results on screen or as a download. Do not use `Dame.table`.')
+      .split('{{DATA}}').join($('need-data').checked ? dataText() : '')
       .split('{{LIBS}}').join(libText)
       .split('{{STARTER}}').join(page);
   }
@@ -215,10 +270,63 @@
 
   function mark(step, done) { $('step-' + step).classList.toggle('hub-done', !!done); }
 
+  // Compares the tables the checked page needs with the tables the tool has.
+  async function planTables() {
+    plan = { create: [], add: [], clash: [] };
+    if (packed && packed.manifest) {
+      tables = await api.rpc('dame_tables_list', { p_space: space, p_tool: tool }) || [];
+      fromManifest(packed.manifest).forEach(function (want) {
+        var have = tables.filter(function (t) { return t.name === want.name; })[0];
+        if (!have) { plan.create.push(want); return; }
+        if (have.sharing !== want.sharing) { plan.clash.push('The table ' + want.name + ' exists as "' + have.sharing + '", the page asks for "' + want.sharing + '".'); }
+        want.columns.forEach(function (c) {
+          var old = have.columns.filter(function (x) { return x.name === c.name; })[0];
+          if (!old) { plan.add.push({ table: want.name, column: c }); }
+          else if (old.type !== c.type) { plan.clash.push('The column ' + want.name + '.' + c.name + ' exists as ' + old.type + ', the page asks for ' + c.type + '.'); }
+        });
+      });
+    }
+    var list = ui.clear($('tables-list'));
+    plan.create.forEach(function (t) { list.appendChild(ui.el('li', '', 'New table ' + describe(t))); });
+    plan.add.forEach(function (a) { list.appendChild(ui.el('li', '', 'New column in ' + a.table + ': ' + a.column.name + ' ' + a.column.type)); });
+    plan.clash.forEach(function (c) { list.appendChild(ui.el('li', 'hub-warn', 'Fix this: ' + c + ' A table cannot be changed that way. Use another name in the page, or delete the table under Data (its rows go with it).')); });
+    var pending = plan.create.length + plan.add.length;
+    $('tables-need').hidden = pending + plan.clash.length === 0;
+    $('tables-create').hidden = pending === 0 || plan.clash.length > 0;
+    $('tables-text').textContent = plan.clash.length ? 'The page and the tool\'s tables do not agree:'
+      : 'This tool keeps rows. It needs the following, which the site makes for you (live and preview copy). Read the list, then press the button:';
+    $('up-send').disabled = !packed || pending > 0 || plan.clash.length > 0;
+    mark(4, !!packed && pending === 0 && plan.clash.length === 0);
+  }
+
+  async function createTables() {
+    $('tables-create').disabled = true;
+    ui.say($('msg'), '');
+    try {
+      for (var i = 0; i < plan.create.length; i += 1) {
+        var t = plan.create[i];
+        await api.rpc('dame_table_create', { p_space: space, p_tool: tool, p_name: t.name, p_sharing: t.sharing, p_columns: t.columns });
+      }
+      for (var k = 0; k < plan.add.length; k += 1) {
+        await api.rpc('dame_table_add_column', { p_space: space, p_tool: tool, p_table: plan.add[k].table, p_column: plan.add[k].column });
+      }
+      await planTables();
+      await showTables();
+      ui.say($('msg'), 'The tables are made. Go to step 5.', 'ok');
+    } catch (err) {
+      await planTables().catch(function () {});
+      ui.sayError($('msg'), err);
+      $('msg').scrollIntoView({ block: 'nearest' });
+    }
+    $('tables-create').disabled = false;
+  }
+
   // Checks what was pasted or chosen. Nothing is sent anywhere by this.
   async function check(getMap) {
     packed = null;
+    plan = null;
     lastProblems = [];
+    $('tables-need').hidden = true;
     $('up-send').disabled = true;
     $('fix-copy').hidden = true;
     $('fix-text').hidden = true;
@@ -235,10 +343,10 @@
       result.notes.forEach(function (n) { lines.push(['Note: ' + n, '']); });
       mark(3, true);
       if (!result.problems.length) {
-        lines.unshift(['The check passed: ' + result.pages.map(function (p) { return p.name; }).join(', ') + ' (' + size(result.total) + '). Go to step 5.', 'hub-ok']);
         packed = result;
-        $('up-send').disabled = false;
-        mark(4, true);
+        await planTables();
+        var waits = plan.create.length + plan.add.length + plan.clash.length > 0;
+        lines.unshift(['The check passed: ' + result.pages.map(function (p) { return p.name; }).join(', ') + ' (' + size(result.total) + '). ' + (waits ? 'One thing left before step 5: the tables below.' : 'Go to step 5.'), 'hub-ok']);
       } else {
         lastProblems = result.problems;
         lines.push(['Nothing was uploaded. Copy the fix request, give it to the AI, and paste the new answer in step 3.', '']);
@@ -269,6 +377,7 @@
       }
       await api.rpc('dame_version_seal', { p_space: space, p_tool: tool, p_version: version });
       packed = null;
+      $('tables-need').hidden = true;
       $('up-files').value = '';
       $('up-note').value = '';
       $('code').value = '';
@@ -284,6 +393,98 @@
       ui.sayError($('msg'), err);
     }
     $('msg').scrollIntoView({ block: 'nearest' });
+  }
+
+  // ------------------------------------------------------------------ data: the tool's tables
+
+  var TYPES = [['text', 'Text (short)'], ['longtext', 'Text (long)'], ['number', 'Number'], ['date', 'Date'],
+    ['bool', 'Yes or no'], ['choice', 'One of a list'], ['person', 'A person'], ['json', 'Structured data (json)']];
+
+  // One line of the column form: name, type and, for "one of a list", the choices.
+  function columnLine() {
+    var line = ui.el('div', 'hub-two hub-colline');
+    var name = ui.el('input', 'dame-input');
+    name.type = 'text';
+    name.maxLength = 41;
+    name.autocomplete = 'off';
+    name.placeholder = 'column name, for example status';
+    name.setAttribute('aria-label', 'Column name');
+    var type = ui.el('select', 'dame-input');
+    type.setAttribute('aria-label', 'Column type');
+    TYPES.forEach(function (t) { var o = ui.el('option', null, t[1]); o.value = t[0]; type.appendChild(o); });
+    var choices = ui.el('input', 'dame-input');
+    choices.type = 'text';
+    choices.placeholder = 'the choices, with commas: open, won, lost';
+    choices.setAttribute('aria-label', 'Choices');
+    choices.hidden = true;
+    type.addEventListener('change', function () { choices.hidden = type.value !== 'choice'; });
+    line.appendChild(name);
+    line.appendChild(type);
+    line.appendChild(choices);
+    line.read = function () {
+      if (!name.value.trim()) { return null; }
+      var col = { name: name.value.trim(), type: type.value };
+      if (type.value === 'choice') { col.choices = choices.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean); }
+      return col;
+    };
+    return line;
+  }
+
+  function tableBlock(t) {
+    var box = ui.el('div', 'hub-block');
+    box.setAttribute('data-table', t.name);
+    var title = ui.el('h3', null, t.name + ' ');
+    title.appendChild(ui.el('span', 'hub-pill', t.sharing));
+    title.appendChild(ui.el('span', 'hub-pill', t.rows + (t.rows === 1 ? ' row' : ' rows')));
+    title.appendChild(ui.el('span', 'hub-pill', t.preview_rows + ' in the preview'));
+    box.appendChild(title);
+    box.appendChild(ui.el('p', 'dame-muted', 'Columns: ' + t.columns.map(function (c) {
+      return c.name + ' (' + c.type + (c.choices ? ': ' + c.choices.join(', ') : '') + ')';
+    }).join(', ') + '.'));
+    var line = columnLine();
+    var add = ui.el('button', 'dame-btn hub-small', 'Add this column');
+    add.type = 'button';
+    add.addEventListener('click', function () {
+      var col = line.read();
+      if (!col) { ui.say($('msg'), 'Type the name of the new column first.', 'warn'); return; }
+      act('dame_table_add_column', { p_space: space, p_tool: tool, p_table: t.name, p_column: col }, 'The column ' + col.name + ' is added to ' + t.name + '.');
+    });
+    box.appendChild(ui.el('p', 'hub-sub', 'Add a column'));
+    box.appendChild(line);
+    box.appendChild(add);
+    box.appendChild(ui.typedDelete(t.name, 'Delete table and its ' + t.rows + (t.rows === 1 ? ' row' : ' rows'), function (typed) {
+      act('dame_table_drop', { p_space: space, p_tool: tool, p_table: t.name, p_confirm: typed }, 'The table ' + t.name + ' and its rows are deleted.');
+    }));
+    return box;
+  }
+
+  async function showTables() {
+    tables = await api.rpc('dame_tables_list', { p_space: space, p_tool: tool }) || [];
+    var box = ui.clear($('data-tables'));
+    tables.forEach(function (t) { box.appendChild(tableBlock(t)); });
+    $('data-empty').hidden = tables.length > 0;
+    var own = $('example').querySelector('[value="own"]');
+    if (own) { own.hidden = tables.length === 0; }
+  }
+
+  function dataForm() {
+    $('tb-columns').appendChild(columnLine());
+    $('tb-columns').appendChild(columnLine());
+    $('tb-more').addEventListener('click', function () { $('tb-columns').appendChild(columnLine()); });
+    $('form-table').addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      var cols = Array.prototype.map.call($('tb-columns').children, function (l) { return l.read(); }).filter(Boolean);
+      var name = $('tb-name').value.trim();
+      var before = tables.length;
+      await act('dame_table_create', { p_space: space, p_tool: tool, p_name: name, p_sharing: $('tb-sharing').value, p_columns: cols },
+        'The table ' + name + ' is made. A tool reaches it with Dame.table(\'' + name + '\').');
+      if (tables.length > before) {
+        $('tb-name').value = '';
+        ui.clear($('tb-columns'));
+        $('tb-columns').appendChild(columnLine());
+        $('tb-columns').appendChild(columnLine());
+      }
+    });
   }
 
   async function builder(me) {
@@ -313,8 +514,37 @@
       $('kit-save').hidden = true;
       $('kit-show').hidden = true;
     }
-    $('kit-copy').addEventListener('click', function () { mark(2, true); copy(starterKit(), $('kit-copy'), 'Copied. Paste it into the AI.'); });
-    $('kit-save').addEventListener('click', function () { mark(2, true); saveFile('dame-starter-kit-' + tool + '.md', starterKit()); });
+    // The AI can only build what was described: no description, no kit.
+    function described() {
+      if ($('brief').value.trim().length >= 20) { return true; }
+      ui.say($('msg'), 'First say in step 1 what the tool should do, in a sentence or two. The AI gets exactly those words.', 'warn');
+      $('brief').focus();
+      return false;
+    }
+    $('kit-copy').addEventListener('click', function () { if (described()) { mark(2, true); copy(starterKit(), $('kit-copy'), 'Copied. Paste it into the AI.'); } });
+    $('kit-save').addEventListener('click', function () { if (described()) { mark(2, true); saveFile('dame-starter-kit-' + tool + '.md', starterKit()); } });
+    $('need-data').addEventListener('change', saveDraft);
+
+    // Ready-made pages: served by this site, loaded into the box like a pasted answer.
+    $('example').querySelector('[value="own"]').hidden = tables.length === 0;
+    if (tables.length) { $('example').value = 'own'; }
+    else if (/track|list|log|regist/.test(tool)) { $('example').value = 'tracker'; }
+    $('example-load').addEventListener('click', async function () {
+      try {
+        var which = $('example').value;
+        var page = (await text(which === 'converter' ? 'examples/converter/index.html' : 'kit/starter/tracker.html')).replace(/<!--[\s\S]*?-->\s*/, '');
+        if (which !== 'converter') {
+          page = page.split('{{TOOL}}').join(toolName.replace(/[<>&]/g, ' '))
+            .split('{{TABLES}}').join(JSON.stringify(which === 'own' ? toManifest(tables) : SAMPLE, null, 1).replace(/</g, '\\u003c'));
+        }
+        $('code').value = page;
+        check(function (packer) { return packer.fromCode($('code').value); });
+      } catch (err) {
+        ui.sayError($('msg'), err);
+      }
+    });
+    $('tables-create').addEventListener('click', createTables);
+    dataForm();
     $('kit-show').addEventListener('click', function () {
       $('kit-pre').textContent = starterKit();
       $('kit-pre').hidden = !$('kit-pre').hidden;

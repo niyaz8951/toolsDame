@@ -13,10 +13,16 @@ You do not need to program. The site gives you a starter kit for the approved AI
 
 No AI at hand? Press "Use the starter page as it is": a working page with your tool's name is uploaded in a minute. A tool made of several files can be chosen as files or one zip instead of pasting.
 
-## What a tool can do today
+## What a tool can do
 - Calculate and show results.
 - Read files the person chooses (for example Excel) and give files back as a download.
-- Saving rows that people share arrives in phase 4.
+- Keep rows in tables of this site, shared by the people who have the tool.
+
+## A tool that keeps rows
+- Tick "It must save rows that people share" in step 1; the starter kit then teaches the AI how.
+- The page says which tables it needs. After the check the site lists them; read the list and press **Create the tables**. Nobody types SQL.
+- Or make a table yourself under **Data**: a name, the columns, and who shares the rows. Then load "A list and form for this tool's own tables": a complete tool, no AI needed.
+- The preview has its own empty copy of each table. Try anything there.
 
 ## What every tool has in common
 - The site's bar on top: name, the way back, the user. A tool has no header, menu or sign-in of its own.

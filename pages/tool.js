@@ -127,12 +127,45 @@
       answer(d.id, true);
       ask(url);
     } else if (/^table\.(list|get|add|update|remove)$/.test(d.action)) {
-      refuse(d.id, 'This tool cannot save yet: tables arrive in phase 4.', 'not_built');
+      rows(d.id, d.action.slice(6), args);
+    } else if (d.action === 'people') {
+      ask2(d.id, 'dame_tool_people', { p_space: space, p_tool: tool });
     } else if (/^files\.(upload|url)$/.test(d.action)) {
       refuse(d.id, 'File upload from a tool is not built yet.', 'not_built');
     } else {
       refuse(d.id, 'Unknown request.', 'bad_request');
     }
+  }
+
+  // Calls the database for the tool and hands the answer, or the refusal, back to it.
+  function ask2(id, name, params) {
+    api.rpc(name, params).then(function (result) { answer(id, result === undefined ? null : result); },
+      function (err) { refuse(id, (err && err.message) || 'That did not work. Try again.', (err && err.code) || 'error'); });
+  }
+
+  // The data service. The tool names only a table of ITS OWN tool: space, tool
+  // and preview come from this page, never from the message. The database
+  // checks the table, the columns, the values and the person's level again.
+  function rows(id, what, args) {
+    var table = String(args.table || '');
+    var isId = function (v) { return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v); };
+    var isObject = function (v) { return !!v && typeof v === 'object' && !Array.isArray(v); };
+    if (!/^[a-z][a-z0-9_]{1,40}$/.test(table)) { refuse(id, 'This table name is not valid.', 'bad_request'); return; }
+    var p = { p_space: space, p_tool: tool, p_table: table, p_preview: info.preview };
+    if (what === 'list') {
+      p.p_options = isObject(args.options) ? args.options : {};
+    } else if (what === 'add') {
+      if (!isObject(args.row)) { refuse(id, 'A row is given as { column: value }.', 'bad_request'); return; }
+      p.p_row = args.row;
+    } else {
+      if (!isId(args.id)) { refuse(id, 'This row was not found.', 'bad_request'); return; }
+      p.p_id = args.id;
+      if (what === 'update') {
+        if (!isObject(args.patch)) { refuse(id, 'A change is given as { column: value }.', 'bad_request'); return; }
+        p.p_patch = args.patch;
+      }
+    }
+    ask2(id, 'dame_rows_' + what, p);
   }
 
   // Each load of the sealed frame gets a fresh private line; the old one dies.

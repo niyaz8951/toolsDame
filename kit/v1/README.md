@@ -5,7 +5,7 @@ What is in this folder, and who uses it. Contract 4: v1 only gets additions.
 | File | Used by | State |
 |---|---|---|
 | `dame.css` | hub pages and every tool (`/_dame/v1/dame.css`) | theme and the building blocks (shown on `blocks.html`, listed in `kit/ai-prompt.md`) |
-| `dame.js` | every tool (`/_dame/v1/dame.js`) | `Dame.ready`, `Dame.toast`, `Dame.drop`, `Dame.download`, `Dame.progress`, `Dame.pause`, page links, outside links; `Dame.table` and `Dame.files` answer from phase 4 |
+| `dame.js` | every tool (`/_dame/v1/dame.js`) | `Dame.ready`, `Dame.table`, `Dame.people`, `Dame.toast`, `Dame.drop`, `Dame.download`, `Dame.progress`, `Dame.pause`, page links, outside links; `Dame.files` is not built yet |
 | `lib/` | tools, through the line `/_dame/v1/lib/<id>.js` | the shelf of approved libraries; see `lib/README.md` |
 | `pack.js` | `pack.html`, the hidden helper of the tool admin page | reads the chosen files or zip, packs each page into one file, checks it |
 | `config.js` | hub pages | Supabase URL and publishable key only |

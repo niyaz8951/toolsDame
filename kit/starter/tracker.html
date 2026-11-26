@@ -1,0 +1,318 @@
+<!doctype html>
+<!--
+  kit/starter/tracker.html - a complete tool made without AI: a shared list
+  with a form, for any table. The site puts the tool's name where {{TOOL}}
+  stands and the table definition where {{TABLES}} stands, and the page builds
+  itself from that definition.
+  Serves: contract 5 (Data) and contract 4 (Tool kit).
+  Must not change: all data goes through Dame.table; data is put on the page
+  as text; what a person may do is decided by the database, this page only
+  hides what would be refused.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TOOL}}</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+<script type="application/json" id="dame-tables">
+{{TABLES}}
+</script>
+<style>
+  /* Only what the building blocks do not cover. No fonts, no colours. */
+  .tr-long { grid-column: 1 / -1; }
+  #find { width: 220px; max-width: 100%; }
+</style>
+</head>
+<body>
+<main class="dame-page">
+  <div class="dame-head">
+    <h1>{{TOOL}}</h1>
+    <p id="lede">A shared list. Everyone who has this tool sees the same rows.</p>
+  </div>
+
+  <p class="dame-note dame-note-warn" id="trouble" hidden></p>
+
+  <section class="dame-card" id="form-card" hidden>
+    <div class="dame-card-head">
+      <h2 id="form-title">Add a row</h2>
+      <button class="dame-btn dame-btn-quiet dame-btn-small" type="button" id="form-cancel" hidden>Cancel the change</button>
+    </div>
+    <form id="form" novalidate>
+      <div class="dame-grid" id="fields"></div>
+      <div class="dame-row">
+        <button class="dame-btn dame-btn-primary" type="submit" id="form-save">Add</button>
+        <span class="dame-muted" id="form-note" role="status" aria-live="polite"></span>
+      </div>
+    </form>
+  </section>
+
+  <section class="dame-card">
+    <div class="dame-card-head">
+      <h2 id="list-title">Rows</h2>
+      <div class="dame-row">
+        <label class="dame-sr" for="find">Find in the list</label>
+        <input class="dame-input" id="find" type="search" placeholder="Find in the list">
+        <button class="dame-btn dame-btn-small" type="button" id="csv">Download as CSV</button>
+      </div>
+    </div>
+    <div class="dame-stats" id="stats"></div>
+    <p class="dame-empty" id="empty" hidden>No rows yet. Add the first one above.</p>
+    <div class="dame-scroll">
+      <table class="dame-table" id="table" hidden>
+        <thead><tr id="head"></tr></thead>
+        <tbody id="body"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = function (tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = String(text);
+    return n;
+  };
+
+  // The table this page works on: the first one in the definition above.
+  var def = JSON.parse($('dame-tables').textContent).tables;
+  var tableName = Object.keys(def)[0];
+  var sharing = def[tableName].sharing;
+  var columns = Object.keys(def[tableName].columns).map(function (name) {
+    var t = def[tableName].columns[name];
+    return typeof t === 'string' ? { name: name, type: t } : { name: name, type: 'choice', choices: t.choice };
+  });
+  var table = Dame.table(tableName);
+
+  var me = null;
+  var rank = 0;            // 1 read, 2 contribute, 3 edit, 4 approve
+  var people = {};         // id -> name
+  var rows = [];
+  var editing = null;      // the row being changed, or null
+  var inputs = {};         // column name -> its input
+
+  function label(name) {
+    var text = name.replace(/_/g, ' ');
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function trouble(err) {
+    $('trouble').textContent = err ? (err.message || 'That did not work. Try again.') : '';
+    $('trouble').hidden = !err;
+  }
+
+  // What a value looks like in the list.
+  function show(col, v) {
+    if (v === null || v === undefined || v === '') return '';
+    if (col.type === 'bool') return v ? 'Yes' : 'No';
+    if (col.type === 'person') return people[v] || 'Someone who left';
+    if (col.type === 'json') return JSON.stringify(v);
+    return String(v);
+  }
+
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  /* ---------------- the form ---------------- */
+
+  function buildForm() {
+    columns.forEach(function (col) {
+      var input;
+      if (col.type === 'longtext' || col.type === 'json') {
+        input = el('textarea', 'dame-input');
+        input.rows = 3;
+      } else if (col.type === 'choice' || col.type === 'person') {
+        input = el('select', 'dame-input');
+        input.appendChild(el('option', null, ''));
+        (col.type === 'choice' ? col.choices.map(function (c) { return [c, c]; })
+          : Object.keys(people).map(function (id) { return [id, people[id]]; }))
+          .forEach(function (pair) {
+            var o = el('option', null, pair[1]);
+            o.value = pair[0];
+            input.appendChild(o);
+          });
+      } else {
+        input = el('input', col.type === 'bool' ? null : 'dame-input');
+        input.type = { number: 'number', date: 'date', bool: 'checkbox' }[col.type] || 'text';
+        if (col.type === 'number') input.step = 'any';
+        if (col.type === 'text') input.maxLength = 1000;
+      }
+      inputs[col.name] = input;
+      var wrap;
+      if (col.type === 'bool') {
+        wrap = el('label', 'dame-check');
+        wrap.appendChild(input);
+        wrap.appendChild(el('span', null, label(col.name)));
+      } else {
+        wrap = el('label', 'dame-field' + (col.type === 'longtext' || col.type === 'json' ? ' tr-long' : ''), label(col.name));
+        wrap.appendChild(input);
+      }
+      $('fields').appendChild(wrap);
+    });
+  }
+
+  // The form's values as the row to save. Throws a sentence when one does not fit.
+  function read() {
+    var row = {};
+    columns.forEach(function (col) {
+      var input = inputs[col.name];
+      var v = col.type === 'bool' ? input.checked : input.value.trim();
+      if (col.type === 'bool') { row[col.name] = v; return; }
+      if (v === '') { row[col.name] = null; return; }
+      if (col.type === 'number') {
+        if (isNaN(Number(v))) throw new Error(label(col.name) + ' must be a number.');
+        v = Number(v);
+      }
+      if (col.type === 'json') {
+        try { v = JSON.parse(v); } catch (e) { throw new Error(label(col.name) + ' must be valid JSON, for example {"a": 1}.'); }
+      }
+      row[col.name] = v;
+    });
+    return row;
+  }
+
+  function fill(row) {
+    columns.forEach(function (col) {
+      var input = inputs[col.name];
+      var v = row ? row[col.name] : null;
+      if (col.type === 'bool') input.checked = !!v;
+      else input.value = (v === null || v === undefined) ? '' : (col.type === 'json' ? JSON.stringify(v) : String(v));
+    });
+  }
+
+  function startEdit(row) {
+    editing = row;
+    fill(row);
+    $('form-title').textContent = row ? 'Change this row' : 'Add a row';
+    $('form-save').textContent = row ? 'Save the change' : 'Add';
+    $('form-cancel').hidden = !row;
+    $('form-note').textContent = '';
+    if (row) { $('form-card').scrollIntoView({ block: 'nearest' }); }
+  }
+
+  /* ---------------- the list ---------------- */
+
+  // May this person change or delete this row? The database decides; this only hides buttons it would refuse.
+  function canChange(row) {
+    if (sharing === 'reference') return rank >= 4;
+    if (sharing === 'private') return rank >= 2;
+    return rank >= 3 || (rank >= 2 && row.owner === me.id);
+  }
+  function canDelete() {
+    return sharing === 'private' ? rank >= 2 : rank >= 4;
+  }
+
+  function draw() {
+    var find = $('find').value.trim().toLowerCase();
+    var shown = rows.filter(function (row) {
+      return !find || columns.some(function (col) { return show(col, row[col.name]).toLowerCase().indexOf(find) >= 0; });
+    });
+    $('stats').textContent = '';
+    var stat = el('div', 'dame-stat');
+    stat.append(el('b', null, shown.length), el('span', null, find ? 'rows found of ' + rows.length : (rows.length === 1 ? 'row' : 'rows')));
+    $('stats').appendChild(stat);
+    $('empty').hidden = rows.length > 0;
+    $('table').hidden = rows.length === 0;
+
+    var body = $('body');
+    body.textContent = '';
+    shown.forEach(function (row) {
+      var tr = el('tr');
+      columns.forEach(function (col) {
+        tr.appendChild(el('td', col.type === 'number' ? 'dame-num' : null, show(col, row[col.name])));
+      });
+      tr.appendChild(el('td', 'dame-muted', (people[row.owner] || 'Someone who left') + ', ' + when(row.created_at)));
+      var act = el('td');
+      var box = el('div', 'dame-row');
+      if (canChange(row)) {
+        var change = el('button', 'dame-btn dame-btn-small', 'Change');
+        change.type = 'button';
+        change.addEventListener('click', function () { startEdit(row); });
+        box.appendChild(change);
+      }
+      if (canDelete()) {
+        var del = el('button', 'dame-btn dame-btn-quiet dame-btn-small', 'Delete');
+        del.type = 'button';
+        del.addEventListener('click', function () {
+          if (del.textContent === 'Delete') {
+            del.textContent = 'Press again to delete';
+            setTimeout(function () { del.textContent = 'Delete'; }, 4000);
+            return;
+          }
+          del.disabled = true;
+          table.remove(row.id).then(function () { Dame.toast('Deleted.'); return load(); }, function (err) { trouble(err); del.disabled = false; });
+        });
+        box.appendChild(del);
+      }
+      act.appendChild(box);
+      tr.appendChild(act);
+      body.appendChild(tr);
+    });
+  }
+
+  function load() {
+    return table.list({ sort: '-created_at', limit: 1000 }).then(function (list) {
+      rows = list;
+      trouble(null);
+      draw();
+    });
+  }
+
+  /* ---------------- start ---------------- */
+
+  Dame.ready().then(function (who) {
+    me = who;
+    rank = { read: 1, contribute: 2, edit: 3, approve: 4 }[me.level] || 0;
+    return Dame.people();
+  }).then(function (list) {
+    list.forEach(function (p) { people[p.id] = p.name; });
+    $('lede').textContent = sharing === 'private' ? 'Your own list. Only you see your rows.'
+      : sharing === 'reference' ? 'A reference list. Everyone who has this tool reads it; its managers keep it up to date.'
+      : 'A shared list. Everyone who has this tool sees the same rows.';
+    $('list-title').textContent = label(tableName);
+    columns.forEach(function (col) { $('head').appendChild(el('th', col.type === 'number' ? 'dame-num' : null, label(col.name))); });
+    $('head').appendChild(el('th', null, 'Added by'));
+    $('head').appendChild(el('th', null, ''));
+    buildForm();
+    $('form-card').hidden = sharing === 'reference' ? rank < 4 : rank < 2;
+    return load();
+  }).catch(trouble);
+
+  $('form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var row;
+    try { row = read(); } catch (e) { $('form-note').textContent = e.message; return; }
+    $('form-save').disabled = true;
+    $('form-note').textContent = '';
+    (editing ? table.update(editing.id, row) : table.add(row)).then(function () {
+      Dame.toast(editing ? 'Saved.' : 'Added.');
+      startEdit(null);
+      return load();
+    }).catch(function (err) {
+      $('form-note').textContent = err.message;
+    }).then(function () { $('form-save').disabled = false; });
+  });
+  $('form-cancel').addEventListener('click', function () { startEdit(null); });
+  $('find').addEventListener('input', draw);
+
+  $('csv').addEventListener('click', function () {
+    var esc = function (v) { v = String(v); return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [columns.map(function (c) { return esc(label(c.name)); }).concat(['Added by', 'Added on']).join(',')];
+    rows.forEach(function (row) {
+      lines.push(columns.map(function (c) { return esc(show(c, row[c.name])); })
+        .concat([esc(people[row.owner] || ''), esc(String(row.created_at).slice(0, 10))]).join(','));
+    });
+    Dame.download(tableName + '.csv', '﻿' + lines.join('\r\n'), 'text/csv');
+  });
+})();
+</script>
+</body>
+</html>

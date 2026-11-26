@@ -184,8 +184,12 @@ async function run(width, height, label) {
     const report = await di.page.textContent('#up-report');
     check(/from outside the site/.test(report) && /missing\.css, which is not among/.test(report) && /<iframe>/.test(report) && /nowhere\.html, which is not a page/.test(report), T + 'a bad upload is explained line by line');
     check(await di.page.locator('#up-send').isDisabled(), T + 'a version with a problem cannot be uploaded');
-    await upload(di.page, [{ name: 'home.html', mimeType: 'text/html', buffer: Buffer.from('<p>x</p>') }]);
-    check(/no page named index\.html/.test(await di.page.textContent('#up-report')), T + 'a tool without index.html is refused');
+    await upload(di.page, [{ name: 'My Tool v2.HTML', mimeType: 'text/html', buffer: Buffer.from('<main class="dame-page"><p>x</p></main>') }]);
+    check(/The check passed: index\.html/.test(await di.page.textContent('#up-report')), T + 'one page is accepted whatever its file is called');
+    await upload(di.page, [{ name: 'home.html', mimeType: 'text/html', buffer: Buffer.from('<p>x</p>') }, { name: 'other.html', mimeType: 'text/html', buffer: Buffer.from('<p>y</p>') }]);
+    check(/no page named index\.html/.test(await di.page.textContent('#up-report')), T + 'several pages with no index.html among them are refused');
+    await upload(di.page, [{ name: 'index.html', mimeType: 'text/html', buffer: Buffer.from('<main class="dame-page"><script>localStorage.setItem("a", 1)</scr' + 'ipt></main>') }]);
+    check(/stops the script at once/.test(await di.page.textContent('#up-report')) && await di.page.locator('#up-send').isDisabled(), T + 'a page that would break at once (browser storage) is stopped at the check');
     await upload(di.page, [{ name: 'tool.zip', mimeType: 'application/zip', buffer: Buffer.from('not a zip at all') }]);
     check(/zip cannot be read/.test(await di.page.textContent('#up-report')), T + 'a broken zip is refused in plain words');
     check(!asked.some((u) => /LEAK/.test(u)) && !mock.calls.some((c) => /LEAK/.test(c.path)), T + 'checking files loads nothing they point to');
@@ -211,8 +215,8 @@ async function run(width, height, label) {
     await f.click('#toast');
     check(await f.locator('.dame-toast:has-text("A message from the tool.")').isVisible(), T + 'Dame.toast shows a message');
     await f.click('#save');
-    await f.waitForSelector('#saved:has-text("tables arrive in phase 4")');
-    check(true, T + 'saving is refused with a plain sentence until phase 4');
+    await f.waitForSelector('#saved:has-text("This tool has no table named notes")');
+    check(/Tables are made on the tool's admin page, under Data/.test(await f.textContent('#saved')), T + 'saving into a table that was never made is refused with what to do');
     await f.click('a:has-text("An outside link")');
     await di.page.waitForSelector('#ask:not([hidden])');
     check(/example\.org/.test(await di.page.textContent('#ask-url')) && popups.length === 0, T + 'an outside link asks first and opens nothing by itself');
@@ -318,8 +322,10 @@ async function run(width, height, label) {
     check(popups.length === 0, T + 'hostile tool: no window was opened');
     check(await cy.page.locator('.hub-bar .hub-brand').isVisible() && (await cy.page.evaluate(() => typeof window.DameApi.rpc)) === 'function', T + 'hostile tool: the shell is untouched');
     check((await cy.page.evaluate(() => window.DameApi.rpc('dame_me').then((m) => m.name))) === 'Cy Reader', T + 'hostile tool: the user\'s session is still his own');
-    const toolCalls = mock.calls.filter((c) => /rpc/.test(c.path)).map((c) => c.path.split('/').pop());
-    check(toolCalls.every((n) => ['dame_me', 'dame_tool_open'].includes(n)), T + 'hostile tool: the shell made no call on its behalf (' + [...new Set(toolCalls)].join(', ') + ')');
+    const toolCalls = mock.calls.filter((c) => /rpc/.test(c.path));
+    const names = [...new Set(toolCalls.map((c) => c.path.split('/').pop()))];
+    check(names.every((n) => ['dame_me', 'dame_tool_open', 'dame_rows_list'].includes(n)) && toolCalls.filter((c) => /dame_rows/.test(c.path)).every((c) => c.body.p_space === 'lab' && c.body.p_tool === 'hostile' && c.body.p_preview === false),
+      T + 'hostile tool: the only calls made for it name its own tool, whatever it asked for (' + names.join(', ') + ')');
     await shot(cy.page, '5-hostile');
     quiet = false;
 

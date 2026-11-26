@@ -7,37 +7,51 @@
 
 **Phase 2 (2026-11-26): done, confirmed by the owner on the real project.** Spaces and tools.
 
-**Phase 3 (2026-11-26): SQL run by the owner; the tool admin page works on the real project. Uploading a version to the real file store is not yet confirmed.**
+**Phase 3 and 3b (2026-11-26): SQL run by the owner; pages work on the real project. A real upload to the file store is not yet confirmed.** The sealed frame, versions, the guided builder, building blocks, the shelf.
 
-**Phase 3b (2026-11-26): built and tested locally. No SQL.**
-- The guided builder: describe > starter kit for the AI > paste the answer > the site checks and writes the fix request > upload > preview > make live.
-- Building blocks in `dame.css` (shown on `blocks.html`), kit functions for files and long work, the library shelf with ExcelJS, the reference tool `examples/parts-extractor/`.
-- Tests, all passing locally: phase 0 checks, three SQL files, four browser tests at desktop and 390 px, the hostile-tool test.
+**Phase 4 (2026-11-26): built and tested locally. Not yet run on the real Supabase project.**
+- `db/core/004_tables.sql`: tables made from the site and the one data service.
+- The Data section and "Create the tables" on the tool admin page; a list-and-form tool without AI; the test space.
+- Tests, all passing locally: four SQL test files, five browser tests at desktop and 390 px, the hostile-tool test.
 
-**What is most likely to need a fix on the real project:** the first real upload to Supabase Storage. Locally the file store is a stand-in that obeys the database's own file rules. If "Upload as a new version" fails, send the exact message on screen.
-
-A tool cannot save rows yet: tables are phase 4.
+**What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 4 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
 ## The owner does now, in this order
-No SQL this time.
-1. Reload the site with Ctrl+F5.
-2. Open the tile "Spare Parts Extractor": it shows "is not built yet" and a button **Build this tool**.
-3. In step 3 of the builder, under "Or, for a tool made of several files", choose the one file `examples/parts-extractor/index.html` from the repo. The check must pass.
-4. Press **Upload as a new version**, then **Open the preview**. Choose one or two parts-list workbooks (.xlsx), press Extract, download the result.
-5. Press **Make live** twice in the Versions list. Open the tool from the hub.
-6. Try the full path on another tile: write two lines in step 1, press **Copy the starter kit**, give it to the AI, paste the answer in step 3.
+1. **SQL editor:** paste all of `db/core/004_tables.sql`, Run. The result must be an empty table.
+2. **SQL editor:** paste all of `tests/sql/004_tables_test.sql`, Run. First row: "... passed, 0 failed".
+3. **On the site** (Ctrl+F5 first): IT admin > Spaces > **Make the test space**, then **Open the test space's admin page**.
+
+Stand-alone sub tile:
+4. On **Converter** press "Build and access". In step 3 press **Load it** (the converter is chosen). The check passes. Press **Upload as a new version**, then **Make live** twice in the Versions list. Open it from the hub.
+
+Sub tile with a database table:
+5. On **Tracker** press "Build and access". In step 3 press **Load it** (the tracker is chosen).
+6. Step 4 lists the table the page needs. Press **Create the tables**. Scroll to **Data**: the table `bids` is there.
+7. Press **Upload as a new version**, **Open the preview**, add a row. Back on the admin page, Data shows "1 in the preview" and "0 rows".
+8. Press **Make live** twice. Open the Tracker from the hub and add a real row.
+9. To see the levels: approve a second account, give it the Tracker at "read" (Access on the tool admin page), sign in as it in a private window: it sees the rows and has no form.
+
+10. **Supabase > Advisors > Security:** no errors. Send any warning text.
 
 If a step fails, send the exact message on screen.
 
 ## Still needed from the owner
 - `docs/IT-GUIDE.md`.
 - MFA on GitHub and Supabase; secret scanning and push protection on for the repo.
-- A "go" for phase 4.
+- A "go" for phase 5.
 
 ## Next
-Phase 4: the table builder and the Data page, `dame.json`, the one data service (`dame_rows_*`), the three sharing presets, and the starter kit taught to use them. With it, a "tracker" needs no AI at all: name the columns and the site makes the tool. Test: a tracker saves shared rows; every refused case fails correctly.
+Phase 5: on every page the info icon, pinned notes, ideas with votes, and the AI prompt setting; the tool's help text; a space admin tightening the AI setting.
 
-Later, noted: a second person approving before Make live; the description of step 1 kept in the database; old `.xls` files.
+Still open from the walk as a basic user (not built yet):
+- "I already have a page": a conversion kit that includes the person's page.
+- Script errors inside a tool shown to its manager in the preview, with "copy for the AI".
+- Plain HTML styled like the site by default; a note when a page uses no building block.
+- After upload, "Open the preview" and "Make live" right where the person is.
+- Files chosen without their folders matched by name; two pasted code blocks merged.
+- Charts: a built-in chart block or a library on the shelf (owner to choose).
+
+Later, noted: a second person approving before Make live; file columns and `Dame.files`; old `.xls` files; renaming or removing a column; quotas (phase 6).
 
 ## Changes tools must know
-Additions only: the building blocks of `dame.css`, `Dame.drop`, `Dame.download`, `Dame.progress`, `Dame.pause`, the shelf line for a library.
+Additions only: `Dame.table` now works, `Dame.people()`, the `dame-tables` block that declares a tool's tables.

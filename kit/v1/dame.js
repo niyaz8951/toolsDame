@@ -191,6 +191,8 @@
       upload: function (file) { return call('files.upload', { file: file }); },
       url: function (id) { return call('files.url', { id: id }); }
     }),
+    // The people who have this tool: [{ id, name }]. For showing who added a row and for choosing a person.
+    people: function () { return call('people'); },
     toast: toast,
     download: download,
     pause: pause,

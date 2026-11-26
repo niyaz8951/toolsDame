@@ -2,6 +2,23 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - Phase 4: tables from the site, the data service, the test space
+Added
+- `db/core/004_tables.sql`: `dame_table_create`, `dame_table_add_column`, `dame_table_drop`, `dame_tables_list`; `dame_rows_list / _get / _add / _update / _remove`; `dame_tool_people`. Deleting a tool now deletes its tables.
+- The shell answers `Dame.table(...)` calls through the data service, always for its own tool. Kit: `Dame.people()`.
+- `admin/tool.html`: the Data section (tables, new table form, add a column, delete), "Create the tables" in the builder, the "saves rows" option of the starter kit, ready-made pages.
+- `kit/starter/tracker.html`: a list and form for any table, no AI. `examples/converter/index.html`: a stand-alone example.
+- `admin/it.html`: "Make the test space".
+- Tests: `tests/sql/004_tables_test.sql`, `tests/browser/phase4.mjs`.
+
+Changed
+- Upload check: one page is accepted whatever its file is called; browser storage is a stop, not a note; tables are read from the page's `dame-tables` block or from `dame.json`.
+- The starter kit is not copied without a description.
+- `kit/ai-prompt.md`: new gaps `{{DATARULE}}` and `{{DATA}}`.
+
+SQL to paste, in order: `db/core/004_tables.sql`, then `tests/sql/004_tables_test.sql`.
+Owner: the steps in `STATUS.md`.
+
 ## 2026-11-26 - Phase 3b: one website from many teams (guided builder, building blocks, shelf)
 Added
 - **Guided builder** on `admin/tool.html`: describe, copy the starter kit, paste the answer, see what the site found (with a ready fix request for the AI), upload. "Use the starter page as it is" gives a working tool in a minute.

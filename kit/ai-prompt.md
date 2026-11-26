@@ -14,7 +14,7 @@ What it must do:
 {{HEAD}}
 3. The site already shows a top bar with the tool's name, the way back and the user. So: no `<header>`, `<nav>` or `<footer>`, no sign-in, no password field, no user menu, no logo.
 4. Nothing from outside the file: no CDN, web font, outside image, script or style sheet; no `fetch`, `XMLHttpRequest` or `WebSocket`; no web worker; no `<iframe>`. All of these are blocked and the upload is refused.
-5. The browser's own storage (`localStorage`, `sessionStorage`, `indexedDB`, cookies) does not work inside a tool. {{DATA}}
+5. The browser's own storage (`localStorage`, `sessionStorage`, `indexedDB`, cookies) does not work inside a tool and stops the script. {{DATARULE}}
 6. Look: build the page only from the building blocks below. No own fonts. No own colours: use the theme variables `var(--dame-text)`, `var(--dame-muted)`, `var(--dame-line)`, `var(--dame-surface)`, `var(--dame-bg)`, `var(--dame-ok)`, `var(--dame-warn)`. The only thing a tool may set is `--dame-accent` (one colour).
 7. It must work on a phone (390 px wide) and on a desktop. Every control is reachable by keyboard and every input has a label.
 8. Plain words on screen, for people who are not technical. Every message says what the person should do next. Show an empty state before there is anything to show. No `alert`, `confirm` or `prompt` boxes.
@@ -31,7 +31,7 @@ What it must do:
 - `await Dame.pause()` lets the screen update during long work.
 - A link to an outside address (`<a href="https://...">`) asks the person before it opens.
 
-{{LIBS}}## Building blocks (use these classes and no others, except your own small additions for layout)
+{{DATA}}{{LIBS}}## Building blocks (use these classes and no others, except your own small additions for layout)
 ```html
 <main class="dame-page"> ... the whole page ... </main>
 

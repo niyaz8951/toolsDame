@@ -129,6 +129,12 @@
     }
     var map = {};
     files.forEach(function (f) { map[f.path] = f.bytes; });
+    // One page whatever it is called: "My Tool v2.HTML" or "tool.htm" is the tool's index.html.
+    var htmls = Object.keys(map).filter(function (p) { return /\.html?$/i.test(p) && p.indexOf('/') < 0; });
+    if (htmls.length === 1 && htmls[0] !== 'index.html') {
+      map['index.html'] = map[htmls[0]];
+      delete map[htmls[0]];
+    }
     return map;
   }
 
@@ -211,12 +217,13 @@
     function scan(js, where) {
       var m = js.match(/https?:\/\/[^\s'"`)<>]{4,80}/);
       if (m) { note(where + ' mentions the outside address ' + m[0] + '. Outside calls are blocked on this site; the tool must work without it.'); }
-      if (/\b(localStorage|sessionStorage|indexedDB)\b/.test(js)) { note(where + ' uses the browser\'s own storage. It does not work inside a tool; keep work data in tables.'); }
+      if (/\b(localStorage|sessionStorage|indexedDB)\b/.test(js)) { problem(where + ' uses the browser\'s own storage (localStorage, sessionStorage or indexedDB). Inside a tool that stops the script at once. Remove it; to keep data use a table and Dame.table.'); }
       if (/\b(fetch|XMLHttpRequest|WebSocket|EventSource)\s*\(/.test(js)) { note(where + ' tries to call a server. That is blocked; data goes only through Dame.table.'); }
       if (/\bnew\s+(Shared)?Worker\s*\(|\bimportScripts\s*\(/.test(js)) { problem(where + ' starts a background worker. Tools have none: do long work in small steps and write "await Dame.pause();" between them so the screen stays alive.'); }
       if (/(^|[^.\w])(alert|confirm|prompt)\s*\(/.test(js)) { note(where + ' uses a pop-up box (alert, confirm or prompt). Show messages with Dame.toast or a dame-note instead.'); }
     }
 
+    var inlineTables = '';
     var pageNames = paths.filter(function (p) { return /\.html?$/i.test(p) && p.indexOf('/') < 0; });
     paths.filter(function (p) { return /\.html?$/i.test(p) && p.indexOf('/') >= 0; }).forEach(function (p) {
       problem('The page ' + p + ' is inside a folder. Put every page next to index.html.');
@@ -231,6 +238,9 @@
       }
       var doc = new DOMParser().parseFromString(text(map[name]), 'text/html');
       var head = doc.head;
+
+      var block = doc.querySelector('script#dame-tables');
+      if (block && !inlineTables) { inlineTables = block.textContent; }
 
       // Things a tool may not carry.
       Array.prototype.forEach.call(doc.querySelectorAll('base, meta[http-equiv], link[rel~="preload"], link[rel~="prefetch"], link[rel~="dns-prefetch"], link[rel~="preconnect"], link[rel~="modulepreload"], link[rel~="manifest"], link[rel~="icon"]'), function (n) { n.remove(); });
@@ -362,13 +372,18 @@
     var total = pages.reduce(function (sum, p) { return sum + p.size; }, 0);
     if (total > MAX_VERSION) { problem('The version is larger than 200 MB in all.'); }
 
+    // The tables the tool needs: in a file dame.json, or in the page itself in
+    // <script type="application/json" id="dame-tables">. The site makes them
+    // after the manager presses Create; this only reads the list.
     var manifest = null;
-    if (map['dame.json']) {
+    var declared = map['dame.json'] ? text(map['dame.json']) : inlineTables;
+    if (declared) {
       try {
-        manifest = JSON.parse(text(map['dame.json']));
-        note('dame.json was found. Its tables are offered on the Data page from phase 4 on.');
+        manifest = JSON.parse(declared);
+        if (!manifest || typeof manifest !== 'object' || !manifest.tables || typeof manifest.tables !== 'object' || Array.isArray(manifest.tables)) { throw new Error('shape'); }
       } catch (e) {
-        problem('dame.json cannot be read: it is not valid JSON. Ask the AI to give the file again.');
+        manifest = null;
+        problem('The list of tables cannot be read. It must look like { "dame": 1, "tables": { "name": { "sharing": "team", "columns": { "column": "text" } } } }. Ask the AI to give it again.');
       }
     }
 

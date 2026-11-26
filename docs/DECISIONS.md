@@ -66,6 +66,20 @@
 - A tile that is not built yet shows "being prepared" to people and "Build this tool" to its manager, not an error.
 - `examples/parts-extractor/` is the old hub's Parts List Extractor rewritten for this site: same extraction rules, one file, building blocks, shelf library, no worker.
 
+## Built in phase 4 (say if any should change)
+- **Nobody runs SQL for a tool's table.** `004_tables.sql`, pasted once by the owner, installs the table maker. From then on a tool's manager makes tables on the tool's Data page, or presses "Create the tables" when a page declares what it needs. The database writes and runs the SQL itself, from checked names and a fixed list of types.
+- **A page declares its tables inside itself**, in `<script type="application/json" id="dame-tables">` (same content as `dame.json`, which still works for tools made of several files). One file per tool stays true.
+- **Levels on the three presets.** Team: read sees all; contribute adds and changes his own; edit changes anyone's; approve deletes. Private: each person only his own rows, also hidden from managers; adding, changing and deleting his own needs contribute. Reference: everyone reads; every change is for the tool's managers and the space admins only.
+- **The preview has its own rows.** Every table exists twice (live and preview copy). In the preview a manager may do everything; nothing there touches real rows.
+- **What a table can and cannot do yet.** Columns can be added. A column cannot be renamed, retyped or removed, and a table cannot change its preset: make a new table. A table is deleted only after its name is typed; its rows go with it.
+- **Limits:** 30 tables a tool, 60 columns a table, text 1,000 characters, long text 20,000, a list returns at most 1,000 rows, filters match exact values only. Empty values sort last.
+- **File columns are refused for now** ("not built yet"), also from a declared list. `Dame.files` still answers "not built".
+- **Rows are not written to the audit one by one.** Each row carries who added it, who changed it last and when. Making, extending and deleting tables is in the audit.
+- **A tool learns the names of the people who have it** (`Dame.people()`: id and name, no email), to show who added a row and to choose a person.
+- **A list and form without AI:** `kit/starter/tracker.html` builds itself from a table's definition. The builder offers it ready-made, and for a tool's own tables once it has some.
+- **The test space** (IT admin page, one press): the space "Test space" with two empty tools, Converter and Tracker, to be built by hand with the ready-made pages.
+- From the walk as a basic user, fixed here: one page is accepted whatever its file is called; a page that uses the browser's storage is stopped at the check; the starter kit is not copied without a description; ready-made pages are on the site, not only in the repo.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

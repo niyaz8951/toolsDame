@@ -118,6 +118,10 @@
     var box = ui.clear($('spaces'));
     spaces.forEach(function (s) { box.appendChild(spaceBlock(s)); });
     $('spaces-empty').hidden = spaces.length > 0;
+    var hasTest = spaces.some(function (x) { return x.id === 'test-space'; });
+    $('test-make').hidden = hasTest;
+    $('test-open').hidden = !hasTest;
+    $('test-open').href = api.href('admin/space.html') + '?space=test-space';
 
     await loadAudit();
   }
@@ -173,6 +177,28 @@
         idTouched = false;
         showFirstAdmin();
       }
+    });
+
+    // The test space: the same three calls a person makes by hand, in one press.
+    $('test-make').addEventListener('click', async function () {
+      $('test-make').disabled = true;
+      ui.say($('msg'), '');
+      try {
+        await api.rpc('dame_space_create', { p_id: 'test-space', p_name: 'Test space', p_description: 'Two example tools to try the site.', p_admin: me.id });
+        await api.rpc('dame_tool_create', { p_space: 'test-space', p_id: 'converter', p_name: 'Converter', p_description: 'Stand-alone example: it calculates and saves nothing.',
+          p_icon: 'C', p_colour: '#0a7d6c', p_open_to_space: true, p_open_level: 'read' });
+        await api.rpc('dame_tool_create', { p_space: 'test-space', p_id: 'tracker', p_name: 'Tracker', p_description: 'Example that saves rows in a table.',
+          p_icon: 'T', p_colour: '#b45309', p_open_to_space: true, p_open_level: 'contribute' });
+        await load();
+        ui.say($('msg'), 'The test space is made, with two empty tools. Open its admin page and press "Build and access" on each tool.', 'ok');
+      } catch (err) {
+        await load().catch(function () {});
+        ui.say($('msg'), (err && err.code === 'bad_request')
+          ? 'The test space exists already, or was deleted before (an id is never used twice). Open it below, or make a space by hand under "New space".'
+          : ((err && err.message) || 'That did not work. Try again.'), 'warn');
+      }
+      $('test-make').disabled = false;
+      $('msg').scrollIntoView({ block: 'nearest' });
     });
 
     await load();

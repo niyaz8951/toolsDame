@@ -115,3 +115,6 @@ textarea.dame-input { resize: vertical; line-height: 1.4; }
 .hub-pre { max-height: 320px; overflow: auto; margin: 10px 0 0; padding: 12px; border: 1px solid var(--dame-line); border-radius: 8px; background: var(--dame-bg); font-family: ui-monospace, Consolas, monospace; font-size: .82rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 .hub-block-demo { padding: 14px; border: 1px dashed var(--dame-line); border-radius: var(--dame-radius); margin: 0 0 8px; }
 @media (max-width: 640px) { .hub-steps > li { padding-left: 0; padding-top: 52px; } .hub-steps > li::before { top: 12px; } }
+
+/* Phase 4: the column lines of the table form. */
+.hub-colline { margin: 0 0 8px; gap: 8px var(--dame-gap); }

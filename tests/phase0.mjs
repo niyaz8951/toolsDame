@@ -17,7 +17,7 @@ const SITE = 'http://127.0.0.1:' + PORT + '/toolsDame/';
 const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.html', 'pack.html', 'blocks.html',
   'admin/it.html', 'admin/space.html', 'admin/tool.html'];
 const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1/shell.js',
-  'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'pages/space.js', 'pages/admin-space.js', 'pages/admin-tool.js', 'pages/tool.js', 'pages/blocks.js', 'kit/v1/pack.js', 'kit/v1/lib/index.json', 'kit/v1/lib/exceljs.js', 'kit/starter/index.html',
+  'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'pages/space.js', 'pages/admin-space.js', 'pages/admin-tool.js', 'pages/tool.js', 'pages/blocks.js', 'kit/v1/pack.js', 'kit/v1/lib/index.json', 'kit/v1/lib/exceljs.js', 'kit/starter/index.html', 'kit/starter/tracker.html', 'examples/converter/index.html',
   'examples/parts-extractor/index.html',
   'examples/hello-tool/index.html', 'examples/hello-tool/about.html', 'examples/hello-tool/style.css', 'examples/hello-tool/app.js', 'kit/v1/icon.svg', 'kit/ai-prompt.md', 'kit/dame.schema.json',
   'help/index.md', 'help/hub.md', 'help/space.md', 'help/tool.md',
@@ -136,7 +136,7 @@ try {
   for (const name of ['ready', 'toast', 'drop', 'download', 'progress', 'pause']) {
     check(new RegExp('Dame\\.' + name + '\\(').test(prompt) && new RegExp('\\b' + name + ': ').test(kitJs), 'Dame.' + name + ' exists in the kit and is explained to the AI');
   }
-  for (const gap of ['{{TOOL}}', '{{BRIEF}}', '{{HEAD}}', '{{DATA}}', '{{LIBS}}', '{{STARTER}}']) {
+  for (const gap of ['{{TOOL}}', '{{BRIEF}}', '{{HEAD}}', '{{DATARULE}}', '{{DATA}}', '{{LIBS}}', '{{STARTER}}']) {
     check(prompt.includes(gap), 'the starter kit template has the gap ' + gap);
   }
 }

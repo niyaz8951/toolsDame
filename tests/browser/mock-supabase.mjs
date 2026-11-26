@@ -91,7 +91,7 @@ export async function startMock(port, { confirmEmail = true } = {}) {
         const auth = req.headers.authorization || '';
         let body = {};
         try { body = raw ? JSON.parse(raw) : {}; } catch (e) { return reply(400, { error_code: 'bad_json' }); }
-        calls.push({ path: url.pathname, auth: auth ? 'yes' : 'no' });
+        calls.push({ path: url.pathname, auth: auth ? 'yes' : 'no', body });
 
         if (req.headers.apikey !== KEY) { return reply(401, { message: 'Invalid API key' }); }
         // Like Supabase: an API key in the Authorization header is refused.
