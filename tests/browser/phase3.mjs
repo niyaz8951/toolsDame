@@ -142,10 +142,14 @@ async function run(width, height, label) {
     throw new Error('the tool did not show ' + selector);
   }
   const openTool = async (page, tool, extra = '') => { await page.goto(SITE + 'tool.html?space=lab&tool=' + tool + extra); };
+  // The builder is a guide with one step on screen: these do what a person does to get to a step.
+  const way = async (page, which) => { if (await page.locator('#wz-restart').isVisible()) { await page.click('#wz-restart'); } await page.click('#go-' + which); };
+  const toUpload = async (page) => { if (await page.locator('#wz-next').isVisible()) { await page.click('#wz-next'); } };
   async function upload(page, files, note) {
+    if (await page.locator('#wz-start').isVisible()) { await page.click('#go-own'); }
     await page.setInputFiles('#up-files', files);
     await page.waitForSelector('#up-report li.hub-ok, #up-report li.hub-warn');
-    if (note) { await page.fill('#up-note', note); }
+    if (note) { await toUpload(page); await page.fill('#up-note', note); }
   }
   const twice = async (page, box, labelText) => {
     await page.click(box + ' button:text-is("' + labelText + '")');
@@ -200,7 +204,7 @@ async function run(width, height, label) {
     await upload(di.page, await example(), 'first');
     check(/The check passed: (about\.html, index\.html|index\.html, about\.html)/.test(await di.page.textContent('#up-report')), T + 'the example tool passes the checks');
     await shot(di.page, '1-upload-ready');
-    await di.page.click('#up-send');
+    await toUpload(di.page); await di.page.click('#up-send');
     await said(di.page, 'Version 1 is uploaded and is the preview');
     check((await di.page.locator('#versions tr').count()) === 1 && /Preview/.test(await di.page.textContent('#versions')), T + 'version 1 is listed as the preview');
     check(mock.storedNames().sort().join(',') === 'lab/hello/1/about.html,lab/hello/1/index.html', T + 'each page is stored as one file under space/tool/version');
@@ -261,7 +265,7 @@ async function run(width, height, label) {
     const v2 = (await example()).map((x) => x.name === 'index.html' ? { ...x, buffer: Buffer.from(x.buffer.toString().replace('<h1>Hello tool</h1>', '<h1>Hello tool, version two</h1>')) } : x);
     await upload(di.page, [{ name: 'hello.zip', mimeType: 'application/zip', buffer: zip(v2, 'hello-tool') }], 'second');
     check(/The check passed/.test(await di.page.textContent('#up-report')), T + 'a zip with the files in a folder is read');
-    await di.page.click('#up-send');
+    await toUpload(di.page); await di.page.click('#up-send');
     await said(di.page, 'Version 2 is uploaded and is the preview');
     await openTool(cy.page, 'hello');
     f = await sealed(cy.page, 'h1');
@@ -338,18 +342,36 @@ async function run(width, height, label) {
     await ben.page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     await ben.page.goto(SITE + 'admin/tool.html?space=lab&tool=secret');
     await ben.page.waitForSelector('#body:not([hidden])');
-    await ben.page.waitForSelector('#needs input');
+    check(await ben.page.locator('#go-ai').isVisible() && !(await ben.page.locator('#wz').isVisible()), T + 'the builder starts with three choices and nothing else');
+    await ben.page.click('#go-ai');
+    check(await ben.page.locator('#brief').isVisible() && !(await ben.page.locator('#step-data').isVisible()) && !(await ben.page.locator('#kit-copy').isVisible()) && /Step 1 of 6/.test(await ben.page.textContent('#wz-where')), T + 'only step 1 is on screen');
+    await ben.page.click('#wz-next');
+    check(/First say what the tool should do/.test(await ben.page.textContent('#msg')) && await ben.page.locator('#brief').isVisible(), T + 'step 2 does not show until step 1 is done');
     await ben.page.fill('#brief', 'Turn a list of TEST-WIDGET codes into a table.');
+    await ben.page.click('#wz-next');
+    check(/save data in the database/.test(await ben.page.textContent('#step-data h3')) && !(await ben.page.locator('#brief').isVisible()), T + 'step 2 asks one thing: does it save data in the database');
+    await ben.page.click('#wz-next');
+    check(/Choose one of the two answers/.test(await ben.page.textContent('#msg')), T + 'the database question must be answered to go on');
+    await ben.page.check('#need-data');
+    check(/will go into this site's database/.test(await ben.page.textContent('#data-note')) && await ben.page.locator('#data-note').isVisible(), T + 'choosing Yes says plainly that the data goes into the database');
+    await ben.page.check('#save-no');
     await ben.page.check('#needs input[value="exceljs"]');
+    await ben.page.click('#wz-next');
+    check(!(await ben.page.locator('#wz-next').isVisible()), T + 'the kit step has no Next until the kit is copied');
     await ben.page.click('#kit-copy');
+    check(await ben.page.locator('#wz-next').isVisible(), T + 'after copying, Next appears');
     const kitText = await ben.page.evaluate(() => navigator.clipboard.readText());
     check(/Name: Secret Tool/.test(kitText) && /TEST-WIDGET codes/.test(kitText) && kitText.includes('<script src="/_dame/v1/lib/exceljs.js"></script>') && /Library: ExcelJS 4\.4\.0/.test(kitText) && /<title>Secret Tool<\/title>/.test(kitText) && /class="dame-drop"/.test(kitText), T + 'the starter kit holds the tool\'s name, the description, the chosen library, the blocks and the starting page');
     check(!kitText.includes(MOCK) && !kitText.includes(KEY) && !/test\.dame|supabase|at_[0-9a-f]{8}/.test(kitText) && !/\{\{[A-Z]+\}\}/.test(kitText), T + 'the starter kit holds no address, key, token or person, and no unfilled gap');
     await ben.page.reload();
-    await ben.page.waitForSelector('#needs input');
-    check((await ben.page.inputValue('#brief')) === 'Turn a list of TEST-WIDGET codes into a table.' && await ben.page.isChecked('#needs input[value="exceljs"]'), T + 'the description survives a reload');
+    await ben.page.waitForSelector('#body:not([hidden])');
+    check((await ben.page.inputValue('#brief')) === 'Turn a list of TEST-WIDGET codes into a table.' && await ben.page.isChecked('#needs input[value="exceljs"]') && await ben.page.isChecked('#save-no'), T + 'the description and answers survive a reload');
+    await ben.page.click('#go-ai');
+    await ben.page.click('#wz-next');
+    await ben.page.click('#wz-next');
+    await ben.page.click('#kit-skip');
     await ben.page.click('#code-check');
-    check(/nothing was pasted/.test(await ben.page.textContent('#up-report')), T + 'checking with nothing pasted says what to do');
+    check(/Nothing is pasted yet/.test(await ben.page.textContent('#msg')), T + 'checking with nothing pasted says what to do');
     const answer = 'Here is your tool!\n\n```html\n<!doctype html><html><head><title>x</title><style>body { font-family: Comic Sans MS; color: #ff0000; }</style></head>' +
       '<body><header><h1>My tool</h1></header><main class="dame-page"><input type="password"><p id="p">hi</p></main>' +
       '<script>new Worker("w.js"); alert("x");</scr' + 'ipt></body></html>\n```\n\nHelp text: it does things.';
@@ -364,10 +386,11 @@ async function run(width, height, label) {
     const fix = await ben.page.evaluate(() => navigator.clipboard.readText());
     check(/refused it/.test(fix) && /1\. index\.html has its own <header>/.test(fix) && /complete index\.html again/.test(fix), T + 'the fix request lists the points for the AI');
     await shot(ben.page, '6-builder-refused');
+    await ben.page.click('#wz-back');
     await ben.page.click('#code-starter');
     await ben.page.waitForSelector('#up-report li.hub-ok');
     check(/The check passed: index\.html/.test(await ben.page.textContent('#up-report')) && !(await ben.page.locator('#fix-copy').isVisible()), T + 'the starter page passes the check as it is');
-    await ben.page.click('#up-send');
+    await toUpload(ben.page); await ben.page.click('#up-send');
     await said(ben.page, 'Version 1 is uploaded and is the preview');
     await openTool(ben.page, 'secret', '&preview=1');
     f = await sealed(ben.page, '#hello:has-text("Hello, Ben Admin")');
@@ -376,12 +399,13 @@ async function run(width, height, label) {
 
     // --- a tool whose own code fails: its builder is told why, a user is not left guessing
     await ben.page.goto(SITE + 'admin/tool.html?space=lab&tool=secret');
-    await ben.page.waitForSelector('#needs input[value="exceljs"]');
+    await ben.page.waitForSelector('#body:not([hidden])');
+    await ben.page.click('#go-own');
     await ben.page.fill('#code', '<h2>Plain page</h2><label>kW <input id="kw"></label> <button id="go">Go</button><table><tr><td>a</td></tr></table><script>document.getElementById("go").onclick = function () { notThere.run(); };</scr' + 'ipt>');
     await ben.page.click('#code-check');
     await ben.page.waitForSelector('#up-report li.hub-ok');
     check(/uses none of the site's building blocks/.test(await ben.page.textContent('#up-report')), T + 'a page without building blocks passes, with a note that says so');
-    await ben.page.click('#up-send');
+    await toUpload(ben.page); await ben.page.click('#up-send');
     await ben.page.waitForSelector('#after-upload:not([hidden])');
     check(await ben.page.locator('#after-preview').isVisible() && await ben.page.locator('#after-live button').isVisible(), T + 'after the upload, Open the preview and Make live are right there');
     await ben.page.click('#after-live button');
@@ -407,17 +431,25 @@ async function run(width, height, label) {
 
     // --- "I already have a page": the kit asks the AI to rebuild it
     await ben.page.goto(SITE + 'admin/tool.html?space=lab&tool=secret');
-    await ben.page.waitForSelector('#needs input[value="exceljs"]');
-    await ben.page.fill('#brief', 'Rebuild my existing duct calculator for this site.');
+    await ben.page.waitForSelector('#body:not([hidden])');
+    await ben.page.click('#go-own');
     await ben.page.fill('#code', '<html><body><h1>Duct OLDPAGE calculator</h1></body></html>');
+    await ben.page.click('#code-check');
+    await ben.page.waitForSelector('#to-ai:not([hidden])');
+    await ben.page.click('#to-ai');
+    await ben.page.fill('#brief', 'Rebuild my existing duct calculator for this site.');
+    await ben.page.click('#wz-next');
+    await ben.page.click('#wz-next');
+    check(await ben.page.locator('#kit-convert').isVisible(), T + 'the kit step says the existing page is inside the kit');
     await ben.page.click('#kit-copy');
     const convertKit = await ben.page.evaluate(() => navigator.clipboard.readText());
     check(/The page I already have/.test(convertKit) && /Duct OLDPAGE calculator/.test(convertKit) && /Rebuild this page as a DAME tool/.test(convertKit), T + 'with a page pasted first, the starter kit asks the AI to rebuild that page');
-    await ben.page.fill('#code', '');
+    await ben.page.click('#wz-back');
+    await ben.page.click('#wz-back');
     await ben.page.fill('#brief', 'short');
-    await ben.page.click('#kit-copy');
+    await ben.page.click('#wz-next');
     await ben.page.waitForSelector('#msg.hub-warn');
-    check(/First say in step 1/.test(await ben.page.textContent('#msg')), T + 'without a description the starter kit is not copied');
+    check(/First say what the tool should do/.test(await ben.page.textContent('#msg')) && await ben.page.locator('#brief').isVisible(), T + 'without a description the guide does not go on');
     await upload(ben.page, [
       { name: 'index.html', mimeType: 'text/html', buffer: Buffer.from('<main class="dame-page"><link rel="stylesheet" href="css/look.css"><img src="images/dot.png" alt=""><script src="js/run.js"></scr' + 'ipt></main>') },
       { name: 'look.css', mimeType: 'text/css', buffer: Buffer.from('.x{margin:0}') }, { name: 'run.js', mimeType: 'text/javascript', buffer: Buffer.from('document.title="x";') },
@@ -430,7 +462,7 @@ async function run(width, height, label) {
     await upload(di.page, [{ name: 'index.html', mimeType: 'text/html', buffer: await readFile(join(ROOT, 'examples/parts-extractor/index.html')) }]);
     const partsReport = await di.page.textContent('#up-report');
     check(/The check passed/.test(partsReport) && !/Note:/.test(partsReport), T + 'the reference tool passes the check without a single note');
-    await di.page.click('#up-send');
+    await toUpload(di.page); await di.page.click('#up-send');
     await said(di.page, 'Version 1 is uploaded');
     await twice(di.page, '#versions', 'Make live');
     await said(di.page, 'Version 1 is live');

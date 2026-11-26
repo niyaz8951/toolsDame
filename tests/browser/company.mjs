@@ -112,7 +112,8 @@ const said = async (page, text) => {
 // The builder, as a person uses it: bring the page, read the check, make tables if asked, upload, make live.
 async function build(who, space, tool, bring) {
   await who.page.goto(SITE + 'admin/tool.html?space=' + space + '&tool=' + tool);
-  await who.page.waitForSelector('#needs input[value="exceljs"]');
+  await who.page.waitForSelector('#body:not([hidden])');
+  await who.page.click('#go-own');
   await bring(who.page);
   await who.page.waitForSelector('#up-report li.hub-ok, #up-report li.hub-warn');
   const lines = await who.page.locator('#up-report li').allTextContents();
@@ -123,6 +124,7 @@ async function build(who, space, tool, bring) {
     await who.page.click('#tables-create');
     await said(who.page, 'The tables are made');
   }
+  await who.page.click('#wz-next');
   await who.page.click('#up-send');
   await who.page.waitForSelector('#after-upload:not([hidden])');
   await who.page.click('#after-live button');

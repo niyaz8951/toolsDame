@@ -66,7 +66,10 @@ try {
     check(/<meta name="robots" content="noindex/.test(html), name + ' is hidden from search engines');
     check(!/<script(?![^>]*\bsrc=)[^>]*>/i.test(html), name + ' has no inline script');
     check(!/\son[a-z]+\s*=|\sstyle\s*=|javascript:/i.test(html.replace(/<!--[\s\S]*?-->/g, '')), name + ' has no inline handler or style');
-    check(!/(src|href)\s*=\s*["'](https?:)?\/\//i.test(html), name + ' loads nothing from outside');
+    // One outside address may be named, and only as a hint to open the connection early: the database of config.js.
+    const hint = (html.match(/<link rel="preconnect" href="([^"]*)" crossorigin>/) || [])[1];
+    check(!hint || hint === CONFIG_URL, name + ' names no outside address but the database of config.js');
+    check(!/(src|href)\s*=\s*["'](https?:)?\/\//i.test(html.replace(/<link rel="preconnect" href="[^"]*" crossorigin>/, '')), name + ' loads nothing from outside');
     check(!/(src|href)\s*=\s*["']\//i.test(html), name + ' uses no fixed base path');
     const hosts = [...head.split('>')[0].matchAll(/https?:\/\/[^\s;'"]+/g)].map((m) => m[0]);
     check(hosts.every((h) => h === CONFIG_URL), name + ' may call only this site and the database in config.js');

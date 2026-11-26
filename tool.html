@@ -11,6 +11,7 @@
 <head>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'">
 <meta charset="utf-8">
+<link rel="preconnect" href="https://ggpwitbuhxqgcfexsnbf.supabase.co" crossorigin>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
@@ -29,7 +30,7 @@
     <a id="crumb-hub" href="hub.html">Hub</a><span aria-hidden="true">/</span><a id="back" href="hub.html">Space</a><span aria-hidden="true">/</span><b id="crumb-tool"></b>
   </nav>
   <span class="hub-pill" id="preview-pill" hidden></span>
-  <a id="admin" href="hub.html" hidden>Tool admin</a>
+  <a class="dame-btn hub-small" id="admin" href="hub.html" hidden>Tool admin</a>
 </div>
 <div class="hub-ask" id="ask" role="alertdialog" aria-labelledby="ask-text" hidden>
   <span id="ask-text"></span>
@@ -49,7 +50,7 @@
     <p id="notbuilt-text"></p>
     <a class="dame-btn dame-btn-primary" id="notbuilt-go" href="hub.html" hidden>Build this tool</a>
   </div>
-  <p><a id="back2" href="hub.html">Back to the space</a></p>
+  <p><a class="dame-btn hub-small hub-back" id="back2" href="hub.html">Back to the space</a></p>
 </main>
 <iframe class="hub-frame" id="frame" title="Tool" hidden></iframe>
 </body>

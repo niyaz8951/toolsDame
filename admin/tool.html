@@ -13,6 +13,7 @@
 <head>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'">
 <meta charset="utf-8">
+<link rel="preconnect" href="https://ggpwitbuhxqgcfexsnbf.supabase.co" crossorigin>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
@@ -27,7 +28,7 @@
 </head>
 <body data-page="admin-tool" data-title="Tool admin">
 <main class="dame-page" id="main" hidden>
-  <p class="dame-muted"><a id="back" href="../hub.html">Back to the space</a></p>
+  <p><a class="dame-btn hub-small hub-back" id="back" href="../hub.html">Back to the space</a></p>
   <h1 id="title">Tool admin</h1>
   <p class="dame-muted" id="text"></p>
   <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
@@ -40,59 +41,99 @@
         <a class="dame-btn dame-btn-primary" id="open-live" href="../hub.html" hidden>Open the tool</a>
         <a class="dame-btn" id="open-preview" href="../hub.html" hidden>Open the preview</a>
       </div>
-      <p class="dame-muted">Five steps, no programming. The site gives you a starter kit for the approved AI, checks what comes back and tells you what to fix. The look, the top bar, sign-in and security are already there: you bring only what the tool does.</p>
+      <!-- The guide: one question on screen at a time. The next one shows only when this one is done. -->
+      <div id="wz-start" class="hub-block">
+        <h3 id="wz-start-title">How do you want to make the page of this tool?</h3>
+        <p class="dame-muted">Choose one. You can come back and choose again at any time; nothing is uploaded until the last step.</p>
+        <div class="hub-choices">
+          <button class="hub-choice" type="button" id="go-ai"><strong>Build a new page</strong><span>You say in your own words what the tool should do. The site prepares the request for the AI, checks the answer and uploads it. No programming.</span></button>
+          <button class="hub-choice" type="button" id="go-own"><strong>I already have a page</strong><span>You have an HTML file, made by you or by an AI. The site checks it and uploads it.</span></button>
+          <button class="hub-choice" type="button" id="go-ready"><strong>Use a ready-made page</strong><span>No AI at all. A simple converter, a tracker, or a list and form for this tool's tables.</span></button>
+        </div>
+      </div>
 
-      <ol class="hub-steps">
-        <li id="step-1">
-          <h3>Say what the tool should do</h3>
-          <label class="hub-field">In your own words: who uses it, what goes in, what comes out
-            <textarea class="dame-input" id="brief" rows="5" maxlength="4000" placeholder="Example: A person chooses several Excel price lists. The tool finds the rows of one model, shows them in one table and lets him download that table as Excel."></textarea>
+      <div id="wz" class="hub-block" hidden>
+        <div class="hub-wz-top">
+          <p class="hub-sub" id="wz-where"></p>
+          <button class="dame-btn hub-small" type="button" id="wz-restart">Start again</button>
+        </div>
+        <div class="hub-progress" aria-hidden="true"><span id="wz-bar"></span></div>
+
+        <section id="step-1" hidden>
+          <h3>What should the tool do?</h3>
+          <label class="hub-field">Write it as you would tell a colleague: who uses it, what goes in, what comes out
+            <textarea class="dame-input" id="brief" rows="6" maxlength="4000" placeholder="Example: A person chooses several Excel price lists. The tool finds the rows of one model, shows them in one table and lets him download that table as Excel."></textarea>
           </label>
-          <div id="needs">
-            <label class="hub-check"><input type="checkbox" id="need-data" value="data"> It must save rows that people share (the site keeps them in a table)</label>
-          </div>
-          <p class="dame-muted">A tool can calculate, read files the person chooses, give files back, and keep rows in tables of this site.</p>
-        </li>
+          <p class="dame-muted">Take your time. Two or three sentences are enough, and you can change them later. The AI gets exactly these words. Put no real names, prices or customer data here.</p>
+        </section>
 
-        <li id="step-2">
+        <section id="step-data" hidden>
+          <h3>Does the tool need to save data in the database?</h3>
+          <label class="hub-option"><input type="radio" name="save" id="save-no" value="no"> <span><strong>No.</strong> It calculates, or works with files the person chooses. Nothing is kept after the page is closed.</span></label>
+          <label class="hub-option"><input type="radio" name="save" id="need-data" value="yes"> <span><strong>Yes, it saves data in the database.</strong> What people enter is kept in this site's database, so they find it again next time and others with the tool can see it.</span></label>
+          <p class="dame-card hub-msg" id="data-note" hidden>The data will go into this site's database. You write no SQL and need no IT ticket: the AI lists the tables the tool needs, the site shows you that list in a later step, and it makes the tables when you press "Create the tables". You can see them at any time under Data on this page.</p>
+          <div id="needs">
+            <p class="hub-sub">Anything else it must do? (optional)</p>
+          </div>
+        </section>
+
+        <section id="step-2" hidden>
           <h3>Give the starter kit to the AI</h3>
-          <p id="kit-text">The starter kit is one text: the rules of this site, the building blocks, a starting page and your description. Copy it, paste it into the approved AI and send it. Put no real names, prices or customer data into the AI.</p>
-          <p class="dame-muted" id="kit-convert">Already have a page? Paste its code into the box of step 3 first. The kit then asks the AI to rebuild that page for this site.</p>
+          <p id="kit-text">The starter kit is one text: the rules of this site, a starting page and your description. Do these three things, in order:</p>
+          <ol class="hub-plain" id="kit-how">
+            <li>Press "Copy the starter kit".</li>
+            <li>Open the approved AI, paste, and send it.</li>
+            <li>Wait for its answer, then come back here and press Next.</li>
+          </ol>
+          <p class="dame-card hub-msg" id="kit-convert" hidden>The page you already have is inside the kit. The AI is asked to rebuild it for this site.</p>
           <div class="dame-row" id="kit-buttons">
             <button class="dame-btn dame-btn-primary" type="button" id="kit-copy">Copy the starter kit</button>
             <button class="dame-btn" type="button" id="kit-save">Download it as a file</button>
             <button class="dame-btn" type="button" id="kit-show">Show it</button>
-            <a class="dame-btn" href="../blocks.html" target="_blank" rel="noopener">See the building blocks</a>
           </div>
           <pre class="hub-pre" id="kit-pre" hidden></pre>
-        </li>
+          <p><button class="dame-btn hub-small" type="button" id="kit-skip">I already have the AI's answer</button></p>
+        </section>
 
-        <li id="step-3">
-          <h3>Bring the answer here</h3>
-          <label class="hub-field">The AI answers with one file, index.html. Paste all of its code here
-            <textarea class="dame-input hub-code" id="code" rows="8" spellcheck="false" autocomplete="off" placeholder="Paste the code of index.html here, from &lt;!doctype html&gt; to &lt;/html&gt;"></textarea>
-          </label>
-          <div class="dame-row">
-            <button class="dame-btn dame-btn-primary" type="button" id="code-check">Check the code</button>
-            <button class="dame-btn" type="button" id="code-starter">Use the starter page as it is</button>
+        <section id="step-3" hidden>
+          <div id="bring-file" hidden>
+            <h3>Choose your page</h3>
+            <label class="hub-field">Your HTML file (any name). If the tool has several files, choose all of them together, or one zip
+              <input class="dame-input" id="up-files" type="file" multiple>
+            </label>
+            <p class="dame-muted">The site reads the file in your browser and checks it. Nothing is uploaded yet.</p>
+            <p class="hub-sub">Or paste the code instead</p>
           </div>
-          <div class="dame-row hub-delete">
-            <label class="dame-sr" for="example">Load a ready-made page</label>
-            <select class="dame-input hub-grow" id="example">
-              <option value="converter">Ready-made: a converter (stand-alone, saves nothing)</option>
-              <option value="tracker">Ready-made: a tracker (saves rows in a table)</option>
-              <option value="own" hidden>A list and form for this tool's own tables (no AI needed)</option>
-            </select>
-            <button class="dame-btn" type="button" id="example-load">Load it</button>
+          <div id="bring-ready" hidden>
+            <h3>Choose a ready-made page</h3>
+            <div class="dame-row">
+              <label class="dame-sr" for="example">Ready-made page</label>
+              <select class="dame-input hub-grow" id="example">
+                <option value="converter">A converter: calculates, saves nothing</option>
+                <option value="tracker">A tracker: saves rows in a database table</option>
+                <option value="own" hidden>A list and form for this tool's own database tables</option>
+                <option value="starter">The empty starter page</option>
+              </select>
+              <button class="dame-btn dame-btn-primary" type="button" id="example-load">Use it</button>
+            </div>
+            <p class="dame-muted">The site checks the page and shows you the result. Nothing is uploaded yet.</p>
           </div>
-          <label class="hub-field hub-delete">Or choose a page you already have (any name), all the files of a tool together, or one zip
-            <input class="dame-input" id="up-files" type="file" multiple>
-          </label>
-        </li>
+          <div id="bring-paste" hidden>
+            <h3 id="paste-title">Bring the AI's answer here</h3>
+            <label class="hub-field"><span id="paste-label">The AI answers with one file, index.html. Copy all of its code and paste it here</span>
+              <textarea class="dame-input hub-code" id="code" rows="8" spellcheck="false" autocomplete="off" placeholder="Paste the code here, from &lt;!doctype html&gt; to &lt;/html&gt;"></textarea>
+            </label>
+            <div class="dame-row">
+              <button class="dame-btn dame-btn-primary" type="button" id="code-check">Check the code</button>
+              <button class="dame-btn" type="button" id="code-starter">Use the starter page as it is</button>
+            </div>
+            <p class="dame-muted">Checking sends nothing anywhere and uploads nothing. If something is wrong the site tells you what, in words.</p>
+          </div>
+        </section>
 
-        <li id="step-4">
-          <h3>See what the site found</h3>
-          <p class="dame-muted" id="report-empty">Nothing checked yet. The result of the check shows here.</p>
+        <section id="step-4" hidden>
+          <h3>What the site found</h3>
+          <p class="dame-muted" id="report-empty">Nothing checked yet.</p>
           <ul class="hub-list hub-report" id="up-report"></ul>
           <div id="tables-need" hidden>
             <p id="tables-text"></p>
@@ -101,26 +142,35 @@
           </div>
           <div class="dame-row">
             <button class="dame-btn dame-btn-primary" type="button" id="fix-copy" hidden>Copy a fix request for the AI</button>
+            <button class="dame-btn" type="button" id="to-ai" hidden>Ask the AI to rebuild this page for the site</button>
           </div>
-          <p class="dame-muted" id="fix-text" hidden>Paste the fix request into the same AI chat, then bring the new answer to step 3.</p>
-        </li>
+          <p class="dame-muted" id="fix-text" hidden>Paste the fix request into the same AI chat. When it answers, press Back and paste the new answer.</p>
+        </section>
 
-        <li id="step-5">
+        <section id="step-5" hidden>
           <h3>Upload, try, make live</h3>
-          <label class="hub-field">Note for this version (optional)
-            <input class="dame-input" id="up-note" type="text" maxlength="200" autocomplete="off">
-          </label>
-          <button class="dame-btn dame-btn-primary" type="button" id="up-send" disabled>Upload as a new version</button>
+          <div id="up-form">
+            <p class="dame-muted">The upload becomes the preview: only admins and managers see it. You try it first. Nobody else sees anything until you press Make live.</p>
+            <label class="hub-field">Note for this version (optional)
+              <input class="dame-input" id="up-note" type="text" maxlength="200" autocomplete="off">
+            </label>
+            <button class="dame-btn dame-btn-primary" type="button" id="up-send" disabled>Upload as a new version</button>
+          </div>
           <div class="dame-card hub-msg hub-ok" id="after-upload" hidden>
             <p id="after-text"></p>
             <div class="dame-row">
-              <a class="dame-btn dame-btn-primary" id="after-preview" href="../hub.html">Open the preview</a>
+              <a class="dame-btn dame-btn-primary" id="after-preview" href="../hub.html" target="_blank" rel="noopener">Open the preview</a>
               <span id="after-live"></span>
             </div>
+            <p class="dame-muted">An older version can be brought back at any time in the Versions list below.</p>
           </div>
-          <p class="dame-muted">The upload becomes the preview: only admins and managers see it. Try it, then make it live. An older version can be brought back at any time in the list below.</p>
-        </li>
-      </ol>
+        </section>
+
+        <div class="dame-row hub-wz-nav">
+          <button class="dame-btn" type="button" id="wz-back">Back</button>
+          <button class="dame-btn dame-btn-primary" type="button" id="wz-next">Next</button>
+        </div>
+      </div>
 
       <div class="hub-block">
         <h3>Versions</h3>

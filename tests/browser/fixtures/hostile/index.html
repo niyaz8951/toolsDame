@@ -150,8 +150,9 @@
       var port = ports[0];
       var ok = 0, slowed = 0;
       port.addEventListener('message', function (m) { if (m.data.id >= 20000 && m.data.id < 21000) { if (m.data.ok) { ok += 1; } else if (m.data.code === 'too_many') { slowed += 1; } } });
-      for (var i = 0; i < 600; i += 1) { port.postMessage({ id: 20000 + i, action: 'table.list', args: { table: 'x' } }); }
-      setTimeout(function () { f(slowed >= 250 ? 'blocked (' + slowed + ' of 600 fast requests were slowed down)' : 'LEAKED flood: only ' + slowed + ' slowed, ' + ok + ' answered'); }, 2500);
+      // Last of all, so the other attempts on the line are not answered with "too fast".
+      setTimeout(function () { for (var i = 0; i < 600; i += 1) { port.postMessage({ id: 20000 + i, action: 'table.list', args: { table: 'x' } }); } }, 1500);
+      setTimeout(function () { f(slowed >= 250 ? 'blocked (' + slowed + ' of 600 fast requests were slowed down)' : 'LEAKED flood: only ' + slowed + ' slowed, ' + ok + ' answered'); }, 4000);
     })();
   }, 6000));
 

@@ -31,14 +31,17 @@
   }
 
   async function start() {
-    await ui.guard();
     var id = ui.param('space');
+    // Asked at the same moment as the sign-in check, so the page waits once, not twice.
+    var asked = id ? api.rpc('dame_space_get', { p_space: id }) : null;
+    if (asked) { asked.catch(function () {}); }
+    await ui.guard();
     $('main').hidden = false;
     if (!id) {
       ui.say($('msg'), 'This address names no space. Go back to the hub and press a tile.', 'warn');
       return;
     }
-    var space = await api.rpc('dame_space_get', { p_space: id });
+    var space = await asked;
     document.title = space.name + ' - DAME';
     $('title').textContent = space.name;
     $('text').textContent = space.description;

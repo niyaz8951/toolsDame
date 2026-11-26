@@ -78,7 +78,10 @@ async function run(width, height, label) {
     }
     throw new Error('the tool did not show ' + selector);
   }
-  const builder = async (page, tool) => { await page.goto(SITE + 'admin/tool.html?space=test-space&tool=' + tool); await page.waitForSelector('#body:not([hidden])'); await page.waitForSelector('#needs input[value="exceljs"]'); };
+  const builder = async (page, tool) => { await page.goto(SITE + 'admin/tool.html?space=test-space&tool=' + tool); await page.waitForSelector('#body:not([hidden])'); };
+  // The builder is a guide with one step on screen: these do what a person does to get to a step.
+  const way = async (page, which) => { if (await page.locator('#wz-restart').isVisible()) { await page.click('#wz-restart'); } await page.click('#go-' + which); };
+  const toUpload = async (page) => { if (await page.locator('#wz-next').isVisible()) { await page.click('#wz-next'); } };
   const openTool = async (page, tool, extra = '') => { await page.goto(SITE + 'tool.html?space=test-space&tool=' + tool + extra); };
   const twice = async (page, box, labelText) => {
     await page.click(box + ' button:text-is("' + labelText + '")');
@@ -110,10 +113,11 @@ async function run(width, height, label) {
     // --- sub tile 1: stand-alone, from a ready-made page
     await builder(ita.page, 'converter');
     check((await ita.page.inputValue('#example')) === 'converter', T + 'the builder offers a ready-made stand-alone page');
+    await way(ita.page, 'ready');
     await ita.page.click('#example-load');
     await ita.page.waitForSelector('#up-report li.hub-ok');
-    check(/The check passed: index\.html .*Go to step 5/.test(await ita.page.textContent('#up-report')) && !(await ita.page.locator('#tables-need').isVisible()), T + 'stand-alone: the check passes and no table is asked for');
-    await ita.page.click('#up-send');
+    check(/The check passed: index\.html .*Next: upload/.test(await ita.page.textContent('#up-report')) && !(await ita.page.locator('#tables-need').isVisible()), T + 'stand-alone: the check passes and no table is asked for');
+    await toUpload(ita.page); await ita.page.click('#up-send');
     await said(ita.page, 'Version 1 is uploaded');
     await twice(ita.page, '#versions', 'Make live');
     await said(ita.page, 'Version 1 is live');
@@ -129,6 +133,7 @@ async function run(width, height, label) {
     // --- sub tile 2: saves rows. The page says which tables it needs; the site makes them.
     await builder(ita.page, 'tracker');
     check((await ita.page.inputValue('#example')) === 'tracker', T + 'for a tile named Tracker the ready-made tracker is offered first');
+    await way(ita.page, 'ready');
     await ita.page.click('#example-load');
     await ita.page.waitForSelector('#tables-need:not([hidden])');
     const need = await ita.page.textContent('#tables-need');
@@ -141,7 +146,7 @@ async function run(width, height, label) {
     check(/bids/.test(await ita.page.textContent('#data-tables')) && /0 rows/.test(await ita.page.textContent('[data-table="bids"]')), T + 'the Data section lists the new table with its columns');
     const made = await mock.sql("select (to_regclass('t_test_space__tracker.bids') is not null and to_regclass('p_test_space__tracker.bids') is not null) as both, (select relforcerowsecurity from pg_class where oid = to_regclass('t_test_space__tracker.bids')) as locked");
     check(made.rows[0].both && made.rows[0].locked, T + 'in the database: a live table and a preview copy, both locked');
-    await ita.page.click('#up-send');
+    await toUpload(ita.page); await ita.page.click('#up-send');
     await said(ita.page, 'Version 1 is uploaded');
 
     // --- the preview has its own rows
@@ -261,8 +266,11 @@ async function run(width, height, label) {
     check(await ita.page.locator('[data-table="prices"] .hub-delete button').isDisabled(), T + 'deleting a table is locked until its name is typed');
     await shot(ita.page, '4-data');
     check(await fits(ita.page), T + 'the builder with the Data section fits the screen');
+    await way(ita.page, 'ai');
     await ita.page.fill('#brief', 'Keep a list of site visits with date, customer segment and outcome.');
+    await ita.page.click('#wz-next');
     await ita.page.check('#need-data');
+    await ita.page.click('#wz-next');
     await ita.page.click('#kit-copy');
     const kitText = await ita.page.evaluate(() => navigator.clipboard.readText());
     check(/id="dame-tables"/.test(kitText) && /Dame\.table\('bids'\)/.test(kitText) && /already has these tables.*bids \(team\).*prices \(reference\)/.test(kitText) && !/saves nothing/.test(kitText), T + 'the starter kit teaches the AI the tables, and names the ones this tool already has');

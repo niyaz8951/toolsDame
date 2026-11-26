@@ -2,6 +2,17 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - The builder as a guide, buttons, speed
+Changed
+- `admin/tool.html`: the builder starts with three choices (Build a new page / I already have a page / Use a ready-made page) and then shows one step at a time. The next step appears only when this one is done. "Start again" and "Back" on every step.
+- A step of its own asks "Does the tool need to save data in the database?" and says plainly that the data goes into the site's database and that the site makes the tables.
+- "I already have a page": after the check, one button hands the page to the AI to be rebuilt for the site.
+- Everything a person clicks is a button: back links, the trail in the tool bar, the DAME mark.
+- Speed: every page sends its questions to the database together instead of one after another, and opens the connection to the database while its scripts load. Measured with 300 ms per database call: hub 0.69 s > 0.36 s, space 0.69 > 0.35, IT admin 1.65 > 0.69, tool admin 1.63 > 0.68, opening a tool 1.09 > 0.74.
+- `tests/phase0.mjs`: a page may name the database of `config.js` in one early-connection hint, nothing else from outside.
+
+SQL to paste: none new. Owner: Ctrl+F5.
+
 ## 2026-11-26 - Hardening, the builder's rough edges, the department rehearsal
 Added
 - `db/core/005_hardening.sql`: setting `signup_domains` (who may ask for access), `dame_settings_get`, sign-ins written to the audit. Replaces `core.require_login`, `dame_request_access`, `dame_setting_set`.

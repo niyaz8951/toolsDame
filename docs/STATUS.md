@@ -16,6 +16,7 @@
 - Downloads through the site with an allow-list; a request limit per tool; script errors shown to the tool's manager.
 - The builder: "I already have a page", plain HTML styled like the site, "Open the preview" and "Make live" right after the upload.
 - `tests/browser/company.mjs`: seven departments, 14 tools, 1,176 cross-department tries, all refused. Write-up: `docs/IT-REVIEW.md`.
+- The builder is a guide: three choices, then one step at a time; a database question in plain words; every link a button; pages load about twice as fast.
 - Tests, all passing locally: five SQL test files, six browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
@@ -26,8 +27,8 @@
 3. **SQL editor:** the same with `db/core/005_hardening.sql`, then `tests/sql/005_hardening_test.sql`.
 4. **On the site** (Ctrl+F5 first): IT admin > Site settings > **Who may ask for access**: type the work email domain(s), Save. Empty means anyone may ask.
 5. IT admin > Spaces > **Make the test space**, then **Open the test space's admin page**.
-6. On **Converter**: "Build and access", step 3 **Load it**, **Upload as a new version**, then **Make live** twice (right under the upload). Open it from the hub.
-7. On **Tracker**: **Load it**, **Create the tables**, **Upload as a new version**, **Open the preview**, add a row; back on the admin page **Make live** twice. Open it from the hub and add a real row.
+6. On **Converter**: "Build and access", **Use a ready-made page**, **Use it**, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.
+7. On **Tracker**: **Use a ready-made page**, **Use it**, **Create the tables**, **Next: upload**, **Upload as a new version**, **Open the preview**, add a row; back on the admin page **Make live** twice. Open it from the hub and add a real row.
 8. Optional, a real department tool: make a space, a tool, and upload any file from `examples/departments/`.
 9. **Supabase > Authentication:** set the minimum password length to 12.
 10. **Supabase > Advisors > Security:** no errors. Send any warning text.

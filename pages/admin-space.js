@@ -122,6 +122,8 @@
   }
 
   async function load() {
+    var audit = loadAudit();
+    audit.catch(function () {});
     var s = await api.rpc('dame_space_admin_get', { p_space: space });
     document.title = s.name + ' admin - DAME';
     $('title').textContent = s.name + ': admin';
@@ -138,7 +140,7 @@
     ui.people($('admins'), s.admins, 'No admin.', 'Remove', function (person) {
       act('dame_space_admin_remove', { p_space: space, p_user: person.id }, person.name + ' is no longer an admin.');
     });
-    await loadAudit();
+    await audit;
   }
 
   function slug(text) {

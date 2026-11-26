@@ -72,7 +72,12 @@
   }
 
   async function load() {
-    var t = await api.rpc('dame_tool_admin_get', { p_space: space, p_tool: tool });
+    // The four questions go out together; the page waits for the slowest, not for the sum.
+    var asked = [api.rpc('dame_tool_admin_get', { p_space: space, p_tool: tool }), api.rpc('dame_versions_list', { p_space: space, p_tool: tool }), showTables()];
+    var audit = loadAudit();
+    audit.catch(function () {});
+    var got = await Promise.all(asked);
+    var t = got[0];
     document.title = t.name + ' admin - DAME';
     $('title').textContent = (t.icon ? t.icon + ' ' : '') + t.name + ': admin';
     toolName = t.name;
@@ -85,7 +90,7 @@
     $('back').href = api.href(t.is_space_admin ? 'admin/space.html' : 'space.html') + '?space=' + encodeURIComponent(space);
     $('back').textContent = t.is_space_admin ? 'Back to the space admin page' : 'Back to the space';
 
-    var state = await api.rpc('dame_versions_list', { p_space: space, p_tool: tool });
+    var state = got[1];
     $('ver-state').textContent = (state.live === null ? 'Not built yet: people who have this tool see "being prepared".' : 'Live: version ' + state.live + '.') +
       (state.preview === null ? '' : ' Preview: version ' + state.preview + ' (only admins and managers see it).');
     $('open-live').href = toolUrl(false);
@@ -101,8 +106,7 @@
         person.name + ' no longer has access by name.');
     }, levelSelect);
     ui.people($('managers'), t.managers, 'No manager. The space admins look after this tool.', '', null);
-    await showTables();
-    await loadAudit();
+    await audit;
   }
 
   // ------------------------------------------------------------------ the builder
@@ -124,7 +128,8 @@
   // The description is kept in this browser only, so a reload does not lose it.
   function saveDraft() {
     try {
-      localStorage.setItem(draftKey(), JSON.stringify({ brief: $('brief').value, needs: chosenLibs() }));
+      localStorage.setItem(draftKey(), JSON.stringify({ brief: $('brief').value, needs: chosenLibs(),
+        data: $('need-data').checked ? 'yes' : ($('save-no').checked ? 'no' : '') }));
     } catch (e) { /* not kept; nothing depends on it */ }
   }
 
@@ -132,6 +137,8 @@
     try {
       var d = JSON.parse(localStorage.getItem(draftKey()) || '{}');
       $('brief').value = String(d.brief || '').slice(0, 4000);
+      $('need-data').checked = d.data === 'yes';
+      $('save-no').checked = d.data === 'no';
       (d.needs || []).forEach(function (id) {
         var box = document.querySelector('#needs input[value="' + String(id).replace(/[^a-z0-9-]/g, '') + '"]');
         if (box) { box.checked = true; }
@@ -140,7 +147,7 @@
   }
 
   function chosenLibs() {
-    return Array.prototype.map.call(document.querySelectorAll('#needs input:checked'), function (b) { return b.value; });
+    return Array.prototype.map.call(document.querySelectorAll('#needs input[type=checkbox]:checked'), function (b) { return b.value; });
   }
 
   // "bids (team): project text, status choice (open, won, lost)"
@@ -218,8 +225,8 @@
       page = page.replace('<script src="/_dame/v1/dame.js"></script>',
         '<script src="/_dame/v1/dame.js"></script>\n' + libs.map(function (l) { return l.line; }).join('\n'));
     }
-    // A page the person already has (pasted in step 3) is handed over to be rebuilt.
-    var existing = $('code').value.trim();
+    // A page the person already has (kept when he chose "Ask the AI to rebuild this page") is handed over.
+    var existing = oldPage.trim();
     var convert = (existing && /<[a-z!][\s\S]*>/i.test(existing))
       ? '\n## The page I already have\nRebuild this page as a DAME tool. Keep what it does and its words. Replace its look with the building blocks, ' +
         'remove everything the rules forbid (outside files, own header, own fonts, browser storage), and after the code tell me in one line anything it did that a DAME tool cannot do.\n' +
@@ -275,7 +282,118 @@
     $('report-empty').hidden = lines.length > 0;
   }
 
-  function mark(step, done) { $('step-' + step).classList.toggle('hub-done', !!done); }
+  function mark() { /* the guide shows one step at a time; nothing to tick */ }
+
+  // ------------------------------------------------------------------ the guide: one step on screen at a time
+  var STEPS = ['step-1', 'step-data', 'step-2', 'step-3', 'step-4', 'step-5'];
+  var way = null;          // 'ai' | 'own' | 'ready' | null (the three choices are shown)
+  var at = 0;
+  var kitDone = false;
+  var oldPage = '';        // a page the person already has, to be rebuilt by the AI
+  var uploaded = false;
+
+  function steps() {
+    if (way === 'ai') { return aiMode === 'off' ? ['step-2', 'step-3', 'step-4', 'step-5'] : STEPS; }
+    return ['step-3', 'step-4', 'step-5'];
+  }
+
+  function show() {
+    $('wz-start').hidden = !!way;
+    $('wz').hidden = !way;
+    if (!way) { return; }
+    var list = steps();
+    var now = list[at];
+    STEPS.forEach(function (id) { $(id).hidden = id !== now; });
+    $('wz-where').textContent = 'Step ' + (at + 1) + ' of ' + list.length;
+    $('wz-bar').setAttribute('data-at', String(Math.round((at + 1) / list.length * 6)));
+    $('bring-file').hidden = way !== 'own';
+    $('bring-ready').hidden = way !== 'ready';
+    $('bring-paste').hidden = way === 'ready';
+    $('code-starter').hidden = way !== 'ai';
+    $('paste-title').hidden = way !== 'ai';
+    $('paste-label').textContent = way === 'ai' ? 'The AI answers with one file, index.html. Copy all of its code and paste it here' : 'The code of your page';
+    $('data-note').hidden = !$('need-data').checked;
+    $('kit-convert').hidden = !oldPage;
+    $('kit-skip').hidden = kitDone || aiMode === 'off';
+    $('up-form').hidden = uploaded;
+    var ready = !!packed && !!plan && plan.create.length + plan.add.length + plan.clash.length === 0;
+    var next = $('wz-next');
+    next.hidden = now === 'step-3' || now === 'step-5' || (now === 'step-2' && !kitDone && aiMode !== 'off') || (now === 'step-4' && !ready);
+    next.textContent = now === 'step-2' ? 'I have the AI\'s answer. Next' : now === 'step-4' ? 'Next: upload' : 'Next';
+    $('wz-back').textContent = at === 0 ? 'Back to the three choices' : 'Back';
+    $('wz-back').hidden = uploaded;
+  }
+
+  function go(id) {
+    var i = steps().indexOf(id);
+    if (i >= 0) { at = i; show(); $('wz').scrollIntoView({ block: 'nearest' }); }
+  }
+
+  function begin(which) {
+    way = which;
+    at = 0;
+    uploaded = false;
+    ui.say($('msg'), '');
+    show();
+  }
+
+  function restart() {
+    way = null;
+    oldPage = '';
+    kitDone = false;
+    uploaded = false;
+    packed = null;
+    plan = null;
+    $('code').value = '';
+    $('up-files').value = '';
+    $('after-upload').hidden = true;
+    report([]);
+    show();
+  }
+
+  // The AI can only build what was described: no description, no next step.
+  function described() {
+    if ($('brief').value.trim().length >= 20) { return true; }
+    ui.say($('msg'), 'First say what the tool should do, in a sentence or two. The AI gets exactly those words.', 'warn');
+    if (way === 'ai') { go('step-1'); }
+    $('brief').focus();
+    return false;
+  }
+
+  function next() {
+    var now = steps()[at];
+    ui.say($('msg'), '');
+    if (now === 'step-1' && !described()) { return; }
+    if (now === 'step-data' && !$('need-data').checked && !$('save-no').checked) {
+      ui.say($('msg'), 'Choose one of the two answers: does the tool save data in the database, or not?', 'warn');
+      return;
+    }
+    at += 1;
+    show();
+    $('wz').scrollIntoView({ block: 'nearest' });
+  }
+
+  function back() {
+    ui.say($('msg'), '');
+    if (at === 0) { restart(); return; }
+    at -= 1;
+    show();
+  }
+
+  // "I already have a page" that the site refused: hand it to the AI to be rebuilt.
+  async function toAi() {
+    var code = $('code').value.trim();
+    if (!code) {
+      var file = Array.prototype.filter.call($('up-files').files, function (f) { return /\.html?$/i.test(f.name); })[0];
+      if (file) { code = await file.text(); }
+    }
+    oldPage = code;
+    $('code').value = '';
+    $('up-files').value = '';
+    packed = null;
+    report([]);
+    begin('ai');
+  }
 
   // Compares the tables the checked page needs with the tables the tool has.
   async function planTables() {
@@ -301,9 +419,9 @@
     $('tables-need').hidden = pending + plan.clash.length === 0;
     $('tables-create').hidden = pending === 0 || plan.clash.length > 0;
     $('tables-text').textContent = plan.clash.length ? 'The page and the tool\'s tables do not agree:'
-      : 'This tool keeps rows. It needs the following, which the site makes for you (live and preview copy). Read the list, then press the button:';
+      : 'This tool saves data in the database. It needs the following tables. The site makes them for you (one for real use, one empty copy for the preview). Read the list, then press the button:';
     $('up-send').disabled = !packed || pending > 0 || plan.clash.length > 0;
-    mark(4, !!packed && pending === 0 && plan.clash.length === 0);
+    show();
   }
 
   async function createTables() {
@@ -319,7 +437,7 @@
       }
       await planTables();
       await showTables();
-      ui.say($('msg'), 'The tables are made. Go to step 5.', 'ok');
+      ui.say($('msg'), 'The tables are made in the database. Press "Next: upload".', 'ok');
     } catch (err) {
       await planTables().catch(function () {});
       ui.sayError($('msg'), err);
@@ -338,8 +456,8 @@
     $('up-send').disabled = true;
     $('fix-copy').hidden = true;
     $('fix-text').hidden = true;
-    mark(3, false);
-    mark(4, false);
+    $('to-ai').hidden = true;
+    uploaded = false;
     report([['Reading.', '']]);
     try {
       // The code is read in the hidden helper page pack.html, not in this page.
@@ -352,21 +470,24 @@
       mark(3, true);
       if (!result.problems.length) {
         packed = result;
+        $('to-ai').hidden = way !== 'own' || aiMode === 'off';
         await planTables();
         var waits = plan.create.length + plan.add.length + plan.clash.length > 0;
-        lines.unshift(['The check passed: ' + result.pages.map(function (p) { return p.name; }).join(', ') + ' (' + size(result.total) + '). ' + (waits ? 'One thing left before step 5: the tables below.' : 'Go to step 5.'), 'hub-ok']);
+        lines.unshift(['The check passed: ' + result.pages.map(function (p) { return p.name; }).join(', ') + ' (' + size(result.total) + '). ' + (waits ? 'One thing left before the upload: the database tables below.' : 'Press "Next: upload".'), 'hub-ok']);
       } else {
         lastProblems = result.problems;
-        lines.push(['Nothing was uploaded. Copy the fix request, give it to the AI, and paste the new answer in step 3.', '']);
+        lines.push(['Nothing was uploaded. That is normal on a first try. Copy the fix request, give it to the AI, then press Back and paste the new answer.', '']);
         $('fix-copy').hidden = false;
         $('fix-text').hidden = false;
+        $('to-ai').hidden = way !== 'own' || aiMode === 'off';
       }
       report(lines);
     } catch (err) {
       lastProblems = [(err && err.message) || 'The code could not be read.'];
       report([['Fix this: ' + lastProblems[0], 'hub-warn']]);
     }
-    $('step-4').scrollIntoView({ block: 'nearest' });
+    if (!way) { way = 'own'; }
+    go('step-4');
   }
 
   async function send() {
@@ -390,20 +511,21 @@
       $('up-note').value = '';
       $('code').value = '';
       report([]);
-      mark(3, false);
-      mark(4, false);
+      uploaded = true;
+      show();
       await load();
       ui.say($('msg'), 'Version ' + version + ' is uploaded and is the preview. Open the preview, try it, then press Make live.', 'ok');
       // The next two things to do, right where the person is.
       $('after-text').textContent = 'Version ' + version + ' is uploaded. Only admins and managers see it until you make it live.';
       $('after-preview').href = toolUrl(true);
       ui.clear($('after-live')).appendChild(ui.confirmButton('Make live', '', function () {
-        $('after-upload').hidden = true;
+        restart();
         act('dame_version_make_live', { p_space: space, p_tool: tool, p_version: version }, 'Version ' + version + ' is live. Everyone with the tool gets it now.');
       }));
       $('after-upload').hidden = false;
     } catch (err) {
-      report([['The upload stopped. Nothing went live. Press Check the code again to retry.', 'hub-warn']]);
+      report([['The upload stopped. Nothing went live. Press Back and check the page again to retry.', 'hub-warn']]);
+      go('step-4');
       $('up-files').value = '';
       packed = null;
       ui.sayError($('msg'), err);
@@ -503,9 +625,10 @@
     });
   }
 
-  async function builder(me) {
+  // 'loading' is the page's own data, already on its way: the kit files are fetched at the same time.
+  async function builder(me, loading) {
     aiMode = me.ai_mode;
-    var loaded = await Promise.all([text('kit/ai-prompt.md'), text('kit/starter/index.html'), text('kit/v1/lib/index.json')]);
+    var loaded = await Promise.all([text('kit/ai-prompt.md'), text('kit/starter/index.html'), text('kit/v1/lib/index.json'), loading]);
     template = loaded[0];
     starter = loaded[1].replace(/<!--[\s\S]*?-->\s*/, '');
     shelf = JSON.parse(loaded[2]).libraries;
@@ -521,25 +644,27 @@
       $('needs').appendChild(label);
     });
     loadDraft();
-    mark(1, $('brief').value.trim().length > 0);
-    $('brief').addEventListener('input', function () { saveDraft(); mark(1, $('brief').value.trim().length > 0); });
+    $('brief').addEventListener('input', saveDraft);
+    $('go-ai').addEventListener('click', function () { begin('ai'); });
+    $('go-own').addEventListener('click', function () { begin('own'); });
+    $('go-ready').addEventListener('click', function () { begin('ready'); });
+    $('wz-next').addEventListener('click', next);
+    $('wz-back').addEventListener('click', back);
+    $('wz-restart').addEventListener('click', restart);
+    $('kit-skip').addEventListener('click', function () { if (described()) { kitDone = true; next(); } });
+    $('to-ai').addEventListener('click', function () { toAi().catch(function (err) { ui.sayError($('msg'), err); }); });
+    $('save-no').addEventListener('change', function () { saveDraft(); show(); });
+    $('need-data').addEventListener('change', function () { saveDraft(); show(); });
 
     if (aiMode === 'off') {
-      $('kit-text').textContent = 'IT has switched the AI prompt off on this site. Start from the starter page in step 3 and change it by hand, or ask a colleague who builds tools. The building blocks are shown on their own page.';
+      $('kit-text').textContent = 'IT has switched the AI prompt off on this site. Press Next and start from the starter page, then change it by hand, or ask a colleague who builds tools.';
+      $('kit-how').hidden = true;
       $('kit-copy').hidden = true;
       $('kit-save').hidden = true;
       $('kit-show').hidden = true;
     }
-    // The AI can only build what was described: no description, no kit.
-    function described() {
-      if ($('brief').value.trim().length >= 20) { return true; }
-      ui.say($('msg'), 'First say in step 1 what the tool should do, in a sentence or two. The AI gets exactly those words.', 'warn');
-      $('brief').focus();
-      return false;
-    }
-    $('kit-copy').addEventListener('click', function () { if (described()) { mark(2, true); copy(starterKit(), $('kit-copy'), 'Copied. Paste it into the AI.'); } });
-    $('kit-save').addEventListener('click', function () { if (described()) { mark(2, true); saveFile('dame-starter-kit-' + tool + '.md', starterKit()); } });
-    $('need-data').addEventListener('change', saveDraft);
+    $('kit-copy').addEventListener('click', function () { if (described()) { kitDone = true; show(); copy(starterKit(), $('kit-copy'), 'Copied. Paste it into the AI.'); } });
+    $('kit-save').addEventListener('click', function () { if (described()) { kitDone = true; show(); saveFile('dame-starter-kit-' + tool + '.md', starterKit()); } });
 
     // Ready-made pages: served by this site, loaded into the box like a pasted answer.
     $('example').querySelector('[value="own"]').hidden = tables.length === 0;
@@ -548,6 +673,7 @@
     $('example-load').addEventListener('click', async function () {
       try {
         var which = $('example').value;
+        if (which === 'starter') { $('code').value = starterPage(); check(function (packer) { return packer.fromCode($('code').value); }); return; }
         var page = (await text(which === 'converter' ? 'examples/converter/index.html' : 'kit/starter/tracker.html')).replace(/<!--[\s\S]*?-->\s*/, '');
         if (which !== 'converter') {
           page = page.split('{{TOOL}}').join(toolName.replace(/[<>&]/g, ' '))
@@ -562,13 +688,16 @@
     $('tables-create').addEventListener('click', createTables);
     dataForm();
     $('kit-show').addEventListener('click', function () {
+      if (!described()) { return; }
       $('kit-pre').textContent = starterKit();
       $('kit-pre').hidden = !$('kit-pre').hidden;
+      kitDone = true;
+      show();
     });
 
     $('code-check').addEventListener('click', function () {
       if (!$('code').value.trim()) {
-        report([['Fix this: nothing was pasted. Paste the code of index.html in step 3, or press "Use the starter page as it is".', 'hub-warn']]);
+        ui.say($('msg'), 'Nothing is pasted yet. Paste the code into the box first.', 'warn');
         return;
       }
       check(function (packer) { return packer.fromCode($('code').value); });
@@ -583,6 +712,7 @@
     });
     $('fix-copy').addEventListener('click', function () { copy(fixRequest(), $('fix-copy'), 'Copied. Paste it into the AI.'); });
     $('up-send').addEventListener('click', send);
+    show();
   }
 
   async function start() {
@@ -602,8 +732,7 @@
       act('dame_tool_access_set', { p_space: space, p_tool: tool, p_user: person.id, p_level: $('new-level').value },
         person.name + ' now has the level ' + $('new-level').value + '.');
     }));
-    await load();
-    await builder(me);
+    await builder(me, load());
     $('body').hidden = false;
   }
 

@@ -103,7 +103,12 @@
   }
 
   async function load() {
-    var users = await api.rpc('dame_users_list', { p_status: null }) || [];
+    // All four questions go out together; the page waits for the slowest, not for the sum.
+    var asked = [api.rpc('dame_users_list', { p_status: null }), api.rpc('dame_spaces_all'), api.rpc('dame_settings_get')];
+    var audit = loadAudit();
+    audit.catch(function () {});
+    var got = await Promise.all(asked);
+    var users = got[0] || [];
     var waiting = ui.clear($('waiting'));
     var people = ui.clear($('people'));
     var nWaiting = 0;
@@ -114,7 +119,7 @@
     $('waiting-empty').hidden = nWaiting > 0;
     $('people-empty').hidden = nPeople > 0;
 
-    var spaces = await api.rpc('dame_spaces_all') || [];
+    var spaces = got[1] || [];
     var box = ui.clear($('spaces'));
     spaces.forEach(function (s) { box.appendChild(spaceBlock(s)); });
     $('spaces-empty').hidden = spaces.length > 0;
@@ -123,11 +128,11 @@
     $('test-open').hidden = !hasTest;
     $('test-open').href = api.href('admin/space.html') + '?space=test-space';
 
-    var settings = await api.rpc('dame_settings_get') || {};
+    var settings = got[2] || {};
     if (document.activeElement !== $('domains')) { $('domains').value = String(settings.signup_domains || '').split(',').join(', '); }
     $('domains-warn').hidden = !!settings.signup_domains;
 
-    await loadAudit();
+    await audit;
   }
 
   function slug(text) {

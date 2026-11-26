@@ -89,6 +89,12 @@
 - Charts: not now. Later as a small building block in the kit (bars and lines from a table), so no second library has to be trusted.
 - Review before live, quotas, export: later, as ranked in `IT-REVIEW.md`.
 
+## Owner, 2026-11-26 (the builder)
+- The builder shows one step at a time; a step shows only when the one before is done. It starts with a clear "Build a new page" choice.
+- Where a tool saves data, the page says "database" in plain words.
+- Anything clicked with the mouse looks like a button.
+- Pages must open fast: a page asks the database everything it needs at once.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

@@ -24,12 +24,15 @@
   }
 
   async function start() {
+    // Asked at the same moment as the sign-in check, so the page waits once, not twice.
+    var asked = api.rpc('dame_spaces_list');
+    asked.catch(function () {});
     var me = await ui.guard();
     $('hello').textContent = 'Hello, ' + me.name;
     $('it-card').hidden = !me.is_it;
     $('main').hidden = false;
 
-    var spaces = await api.rpc('dame_spaces_list');
+    var spaces = await asked;
     var box = ui.clear($('spaces'));
     (spaces || []).forEach(function (s) { box.appendChild(tile(s)); });
     $('empty').hidden = (spaces || []).length > 0;

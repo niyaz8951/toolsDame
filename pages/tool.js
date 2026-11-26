@@ -263,10 +263,15 @@
   }
 
   async function start() {
-    await ui.guard();
     space = ui.param('space');
     tool = ui.param('tool');
     var preview = new URLSearchParams(location.search).get('preview') === '1';
+    // Asked at the same moment as the sign-in check: the tool, the kit and the frame are fetched together.
+    var opening = (space && tool) ? api.rpc('dame_tool_open', { p_space: space, p_tool: tool, p_preview: preview }) : Promise.resolve(null);
+    var kitFiles = Promise.all([kit('kit/v1/dame.css'), kit('kit/v1/dame.js'), hostReady()]);
+    opening.catch(function () {});
+    kitFiles.catch(function () {});
+    await ui.guard();
     var spaceUrl = api.href('space.html') + '?space=' + encodeURIComponent(space);
     var adminUrl = api.href('admin/tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(tool);
     $('back').href = space ? spaceUrl : api.href('hub.html');
@@ -279,7 +284,7 @@
     }
 
     try {
-      info = await api.rpc('dame_tool_open', { p_space: space, p_tool: tool, p_preview: preview });
+      info = await opening;
     } catch (err) {
       $('main').hidden = false;
       if (err && err.code === 'not_live' && !preview) {
@@ -288,7 +293,7 @@
         try { mine = await api.rpc('dame_tool_admin_get', { p_space: space, p_tool: tool }); } catch (e) { /* not its manager */ }
         $('notbuilt-title').textContent = mine ? mine.name + ' is not built yet' : 'This tool is being prepared';
         $('notbuilt-text').textContent = mine
-          ? 'You look after this tool. Building it takes five short steps and no programming: say what it should do, give the starter kit to the AI, paste the answer, let the site check it, make it live.'
+          ? 'You look after this tool. The site guides you one step at a time, with no programming: say what it should do, give the starter kit to the AI, paste the answer, let the site check it, make it live.'
           : 'It will open here as soon as its manager makes it live.';
         $('notbuilt-go').href = adminUrl;
         $('notbuilt-go').hidden = !mine;
@@ -324,7 +329,7 @@
         function () { $('oops-text').textContent = text; });
     });
 
-    var loaded = await Promise.all([kit('kit/v1/dame.css'), kit('kit/v1/dame.js'), hostReady()]);
+    var loaded = await kitFiles;
     kitCss = loaded[0];
     kitJs = loaded[1];
     await show('index.html');

@@ -19,7 +19,7 @@ No AI at hand? Press "Use the starter page as it is": a working page with your t
 - Keep rows in tables of this site, shared by the people who have the tool.
 
 ## A tool that keeps rows
-- Tick "It must save rows that people share" in step 1; the starter kit then teaches the AI how.
+- When the guide asks "Does the tool need to save data in the database?", answer Yes; the starter kit then teaches the AI how, and the site makes the tables.
 - The page says which tables it needs. After the check the site lists them; read the list and press **Create the tables**. Nobody types SQL.
 - Or make a table yourself under **Data**: a name, the columns, and who shares the rows. Then load "A list and form for this tool's own tables": a complete tool, no AI needed.
 - The preview has its own empty copy of each table. Try anything there.

@@ -118,3 +118,28 @@ textarea.dame-input { resize: vertical; line-height: 1.4; }
 
 /* Phase 4: the column lines of the table form. */
 .hub-colline { margin: 0 0 8px; gap: 8px var(--dame-gap); }
+
+/* The guided builder: one step on screen at a time. */
+.hub-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--dame-gap); margin: 10px 0 4px; }
+.hub-choice { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 16px; min-height: 120px; font: inherit; color: inherit; cursor: pointer; background: var(--dame-bg); border: 2px solid var(--dame-line); border-radius: var(--dame-radius); }
+.hub-choice strong { font-size: 1.05rem; color: var(--dame-accent); }
+.hub-choice span { font-size: .93rem; color: var(--dame-muted); }
+.hub-choice:hover, .hub-choice:focus-visible { border-color: var(--dame-accent); }
+.hub-wz-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hub-wz-top .hub-sub { margin: 0; }
+.hub-progress { height: 6px; border-radius: 3px; background: var(--dame-line); margin: 8px 0 16px; overflow: hidden; }
+.hub-progress span { display: block; height: 100%; width: 0; background: var(--dame-accent); }
+.hub-progress span[data-at="1"] { width: 17%; } .hub-progress span[data-at="2"] { width: 34%; } .hub-progress span[data-at="3"] { width: 50%; }
+.hub-progress span[data-at="4"] { width: 67%; } .hub-progress span[data-at="5"] { width: 84%; } .hub-progress span[data-at="6"] { width: 100%; }
+#wz h3 { font-size: 1.15rem; margin: 0 0 10px; }
+.hub-option { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; margin: 0 0 10px; border: 2px solid var(--dame-line); border-radius: var(--dame-radius); cursor: pointer; }
+.hub-option input { width: 20px; height: 20px; margin-top: 2px; flex: none; }
+.hub-option:has(input:checked) { border-color: var(--dame-accent); }
+.hub-plain { margin: 0 0 12px; padding-left: 22px; }
+.hub-plain li { margin: 0 0 4px; }
+.hub-wz-nav { justify-content: space-between; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--dame-line); }
+
+/* Everything a person clicks looks like a button: back links, the trail, the bar. */
+.hub-back::before { content: "\2190"; margin-right: 6px; }
+.hub-trail a, .hub-brand { display: inline-flex; align-items: center; min-height: 34px; padding: 4px 12px; border: 1px solid var(--dame-line); border-radius: var(--dame-radius); background: var(--dame-bg); text-decoration: none; font-weight: 600; }
+.hub-trail a:hover, .hub-brand:hover { border-color: var(--dame-accent); }
