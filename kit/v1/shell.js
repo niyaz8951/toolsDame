@@ -250,7 +250,7 @@
       showUser(me);
       return me;
     } catch (err) {
-      var gone = ['signed_out', 'session_ended', 'pending', 'disabled', 'no_profile'];
+      var gone = ['signed_out', 'session_ended', 'pending', 'disabled', 'no_profile', 'must_change'];
       if (err && gone.indexOf(err.code) !== -1) {
         leave(err.code === 'session_ended' ? err.message : '');
         return new Promise(function () {});
@@ -439,7 +439,7 @@
     'tool.deleted': 'deleted the tool', 'tool.manager_added': 'named manager', 'tool.manager_removed': 'removed manager',
     'tool.access_set': 'gave access', 'tool.access_removed': 'took access away',
     'table.created': 'made a table', 'table.column_added': 'added a column', 'table.deleted': 'deleted a table',
-    'tool.help_set': 'wrote the usage guide', 'user.added': 'added a person', 'user.add_removed': 'took an added person back', 'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back'
+    'tool.help_set': 'wrote the usage guide', 'user.created': 'made an account', 'user.password_chosen': 'chose his own password', 'user.added': 'added a person', 'user.add_removed': 'took an added person back', 'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back'
   };
 
   // Fills an audit table page by page. fetchPage(beforeId) returns the rows.

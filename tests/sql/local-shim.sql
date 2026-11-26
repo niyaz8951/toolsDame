@@ -35,3 +35,22 @@ alter table storage.objects enable row level security;
 grant usage on schema storage to anon, authenticated;
 grant all on storage.objects to anon, authenticated;
 grant select on storage.buckets to anon, authenticated;
+
+-- Supabase Auth's own tables, as far as db/core/009 writes to them, and the two
+-- password functions of the pgcrypto extension (here a plain stand-in: the real
+-- ones make a bcrypt hash; the tests only need "same password, same salt -> same hash").
+create table auth.users (
+  instance_id uuid, id uuid primary key, aud text, role text, email text unique, encrypted_password text,
+  email_confirmed_at timestamptz, raw_app_meta_data jsonb, raw_user_meta_data jsonb, created_at timestamptz, updated_at timestamptz,
+  confirmation_token text, recovery_token text, email_change_token_new text, email_change text, email_change_token_current text,
+  phone_change text, phone_change_token text, reauthentication_token text);
+create table auth.identities (
+  id uuid primary key, user_id uuid references auth.users (id) on delete cascade, identity_data jsonb, provider text, provider_id text,
+  last_sign_in_at timestamptz, created_at timestamptz, updated_at timestamptz);
+create schema extensions;
+create function extensions.gen_salt(text) returns text language sql volatile as $$
+  select '$stub$' || substr(md5(random()::text), 1, 16) || '$';
+$$;
+create function extensions.crypt(p_password text, p_salt text) returns text language sql immutable as $$
+  select substr(p_salt, 1, 23) || md5(p_password || substr(p_salt, 1, 23));
+$$;

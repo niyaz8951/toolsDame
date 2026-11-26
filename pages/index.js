@@ -15,7 +15,7 @@
 
   function $(id) { return document.getElementById(id); }
 
-  var panels = ['panel-signin', 'panel-request', 'panel-wait', 'panel-busy'];
+  var panels = ['panel-signin', 'panel-request', 'panel-wait', 'panel-newpw', 'panel-busy'];
   function show(id) {
     panels.forEach(function (p) { $(p).hidden = (p !== id); });
     var first = $(id).querySelector('input, button');
@@ -30,6 +30,11 @@
   async function next() {
     show('panel-busy');
     var res = await api.rpc('dame_request_access');
+    if (res && res.status === 'active' && res.must_change) {
+      // An account made by IT: the temporary password must be replaced before anything opens.
+      show('panel-newpw');
+      return;
+    }
     if (res && res.status === 'active') {
       location.replace(api.href('hub.html'));
       return;
@@ -93,13 +98,40 @@
     show('panel-signin');
   }
 
+  $('form-newpw').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var form = ev.currentTarget;
+    var pw = $('np-password').value;
+    var problem = pw !== $('np-password2').value ? 'The two passwords differ. Type the same password twice.'
+      : !/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{10,72}$/.test(pw) ? 'Use at least 10 characters, with a small letter, a capital letter and a digit.' : '';
+    if (problem) { ui.say($('np-msg'), problem, 'warn'); return; }
+    busy(form, true);
+    ui.say($('np-msg'), '');
+    try {
+      await api.setPassword(pw);
+      await api.rpc('dame_password_done');
+      $('np-password').value = '';
+      $('np-password2').value = '';
+      await next();
+    } catch (err) {
+      ui.sayError($('np-msg'), err);
+      show('panel-newpw');
+    } finally {
+      busy(form, false);
+    }
+  });
+  $('np-out').addEventListener('click', async function () {
+    await api.signOut();
+    show('panel-signin');
+  });
+
   $('form-signin').addEventListener('submit', async function (ev) {
     ev.preventDefault();
     var form = ev.currentTarget;
     var email = $('si-email').value.trim();
     var password = $('si-password').value;
     if (!email || !password) {
-      ui.say($('si-msg'), 'Type your email and your password.', 'warn');
+      ui.say($('si-msg'), 'Type your email or username, and your password.', 'warn');
       return;
     }
     busy(form, true);

@@ -28,7 +28,8 @@
 1. **SQL editor:** paste all of `db/core/004_tables.sql`, Run. The result must be an empty table.
 2. **SQL editor:** paste all of `tests/sql/004_tables_test.sql`, Run. First row: "... passed, 0 failed".
 3. **SQL editor:** the same with `db/core/005_hardening.sql`, then `tests/sql/005_hardening_test.sql`.
-   Then the same with `006_help.sql`, `007_add_people.sql` and `008_space_look.sql`, each followed by its test file of the same number.
+   Then the same with `006_help.sql`, `007_add_people.sql`, `008_space_look.sql` and `009_new_user.sql`, each followed by its test file of the same number.
+   After 009: IT admin > Add a person > **New user**, make a trial account, sign in with it in a private window and choose a password. If the sign-in fails, send the exact message: this file is the one most tied to Supabase itself.
 4. **On the site** (Ctrl+F5 first): IT admin > Site settings > **Who may ask for access**: type the work email domain(s), Save. Empty means anyone may ask.
 5. IT admin > Spaces > **Make the test space**, then **Open the test space's admin page**.
 6. On **Converter**: "Build and access", **Use a ready-made page**, **Use it**, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.

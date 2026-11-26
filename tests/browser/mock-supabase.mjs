@@ -73,7 +73,7 @@ export async function startMock(port, { confirmEmail = true } = {}) {
     const cors = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'apikey, authorization, content-type, x-upsert, cache-control',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS'
     };
     const reply = (status, body) => {
       res.writeHead(status, { ...cors, 'Content-Type': 'application/json' });
@@ -109,7 +109,12 @@ export async function startMock(port, { confirmEmail = true } = {}) {
           return reply(200, confirmEmail ? { id: users.get(email).id, email } : session(email));
         }
         if (url.pathname === '/auth/v1/token' && url.searchParams.get('grant_type') === 'password') {
-          const u = users.get(String(body.email || '').toLowerCase());
+          let u = users.get(String(body.email || '').toLowerCase());
+          if (!u) {
+            // An account the database made itself (db/core/009): checked against its stored hash, like the real service.
+            const made = await db.query('select id::text as id, encrypted_password = extensions.crypt($2, encrypted_password) as ok, raw_user_meta_data ->> \'name\' as name from auth.users where email = $1', [String(body.email || '').toLowerCase(), String(body.password || '')]).catch(() => ({ rows: [] }));
+            if (made.rows[0] && made.rows[0].ok) { u = { id: made.rows[0].id, password: body.password, name: made.rows[0].name, confirmed: true, inDb: true }; users.set(String(body.email).toLowerCase(), u); }
+          }
           if (!u || u.password !== body.password) { return reply(400, { error_code: 'invalid_credentials', msg: 'Invalid login credentials' }); }
           if (!u.confirmed) { return reply(400, { error_code: 'email_not_confirmed', msg: 'Email not confirmed' }); }
           return reply(200, session(String(body.email).toLowerCase()));
@@ -119,6 +124,15 @@ export async function startMock(port, { confirmEmail = true } = {}) {
           if (!r) { return reply(400, { error_code: 'refresh_token_not_found', msg: 'Invalid Refresh Token' }); }
           refreshes.delete(body.refresh_token);
           return reply(200, session(r.email, r.session_id));
+        }
+        if (url.pathname === '/auth/v1/user' && req.method === 'PUT') {
+          if (!claims) { return reply(401, { error_code: 'no_authorization', msg: 'no session' }); }
+          const u = users.get(claims.email);
+          if (String(body.password || '').length < 6) { return reply(422, { error_code: 'weak_password', msg: 'weak' }); }
+          if (u.password === body.password) { return reply(422, { error_code: 'same_password', msg: 'New password should be different from the old password.' }); }
+          u.password = body.password;
+          if (u.inDb) { await db.query('update auth.users set encrypted_password = extensions.crypt($2, extensions.gen_salt(\'bf\')) where id = $1', [u.id, body.password]); }
+          return reply(200, { id: u.id, email: claims.email });
         }
         if (url.pathname === '/auth/v1/logout') {
           if (auth) { tokens.delete(auth.slice(7)); }

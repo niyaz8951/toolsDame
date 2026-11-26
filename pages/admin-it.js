@@ -14,6 +14,7 @@
 
   var me = null;
   var firstAdmin = null;
+  var byEmailOff = false;
   var idTouched = false;
   var act = null;
   var loadAudit = null;
@@ -42,6 +43,12 @@
       buttons([yes, ui.confirmButton('Refuse', '', status(u, 'disabled', u.name + ' is refused. The account is switched off.'))])]);
   }
 
+  // An account made by IT signs in with a username; its inner address is not shown.
+  function shown(email) {
+    var d = api.userDomain;
+    return email.slice(-d.length) === d ? 'username: ' + email.slice(0, -d.length) : email;
+  }
+
   function personRow(body, u) {
     var state = ui.el('span');
     state.appendChild(ui.el('span', 'hub-pill' + (u.status === 'active' ? ' hub-pill-ok' : ''),
@@ -58,7 +65,7 @@
     } else {
       change = buttons([ui.confirmButton('Switch on', '', status(u, 'active', u.name + ' is switched on again.'))]);
     }
-    ui.addRow(body, [u.name + (u.is_me ? ' (you)' : ''), u.email, state, change]);
+    ui.addRow(body, [u.name + (u.is_me ? ' (you)' : ''), shown(u.email), state, change]);
   }
 
   function spaceBlock(s) {
@@ -95,6 +102,88 @@
       act('dame_space_delete', { p_space: s.id, p_confirm: typed }, s.name + ' is deleted. Its id ' + s.id + ' will never be used again.');
     }));
     return box;
+  }
+
+  // A temporary password a person can read out: 14 characters without look-alikes (no 0 O 1 l I).
+  function generate() {
+    var sets = ['abcdefghijkmnpqrstuvwxyz', 'ABCDEFGHJKLMNPQRSTUVWXYZ', '23456789'];
+    var all = sets.join('');
+    var bytes = new Uint32Array(14);
+    crypto.getRandomValues(bytes);
+    var out = Array.prototype.map.call(bytes, function (b, i) { var set = i < 3 ? sets[i] : all; return set[b % set.length]; });
+    for (var i = out.length - 1; i > 0; i -= 1) { var j = bytes[i] % (i + 1); var t = out[i]; out[i] = out[j]; out[j] = t; }
+    return out.join('').replace(/(.{5})(.{5})(.{4})/, '$1-$2-$3');
+  }
+
+  // The "New user" window: username, display name, temporary password.
+  function newUser() {
+    var back = ui.el('div', 'hub-focus-back');
+    var box = ui.el('form', 'hub-focus hub-focus-small');
+    box.method = 'post';
+    box.noValidate = true;
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', 'New user');
+    box.appendChild(ui.el('h2', null, 'New user'));
+    box.appendChild(ui.el('p', 'dame-muted', 'The person signs in with this username and the temporary password, and must choose a new password at the first sign-in. No email is needed.'));
+    function field(label, id, hint) {
+      var l = ui.el('label', 'hub-field', label);
+      var i = ui.el('input', 'dame-input');
+      i.type = 'text';
+      i.id = id;
+      i.autocomplete = 'off';
+      i.spellcheck = false;
+      l.appendChild(i);
+      box.appendChild(l);
+      if (hint) { box.appendChild(ui.el('p', 'dame-hint', hint)); }
+      return i;
+    }
+    var user = field('Username', 'nu-username', '3 to 30 characters: small letters, digits, dot, dash, underscore.');
+    user.maxLength = 30;
+    var name = field('Display name', 'nu-name', '');
+    name.maxLength = 80;
+    var pass = field('Temporary password', 'nu-password', 'At least 10 characters with a small letter, a capital letter and a digit. Tell it to the person by voice, not in writing.');
+    pass.maxLength = 72;
+    var gen = ui.el('button', 'dame-btn hub-small', 'Generate');
+    gen.type = 'button';
+    gen.addEventListener('click', function () { pass.value = generate(); pass.focus(); pass.select(); });
+    box.appendChild(gen);
+    var msg = ui.el('p', 'hub-msg');
+    msg.hidden = true;
+    msg.setAttribute('role', 'alert');
+    box.appendChild(msg);
+    var foot = ui.el('div', 'dame-row hub-focus-foot');
+    var create = ui.el('button', 'dame-btn dame-btn-primary', 'Create');
+    create.type = 'submit';
+    create.id = 'nu-create';
+    var cancel = ui.el('button', 'dame-btn', 'Cancel');
+    cancel.type = 'button';
+    function close() { back.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(ev) { if (ev.key === 'Escape') { close(); } }
+    cancel.addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+    foot.appendChild(create);
+    foot.appendChild(cancel);
+    box.appendChild(foot);
+    box.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      create.disabled = true;
+      ui.say(msg, '');
+      try {
+        var made = await api.rpc('dame_user_create', { p_username: user.value, p_name: name.value, p_temp_password: pass.value });
+        close();
+        await load();
+        ui.say($('msg'), 'The account ' + made.username + ' (' + made.name + ') is made. Tell the person the username and the temporary password by voice. At the first sign-in the site asks for a new password.', 'ok');
+        $('msg').scrollIntoView({ block: 'nearest' });
+      } catch (err) {
+        if (err && err.code === 'server') { ui.say(msg, 'This part is not switched on yet: the owner pastes db/core/009_new_user.sql into the database first.', 'warn'); }
+        else { ui.sayError(msg, err); }
+        create.disabled = false;
+      }
+    });
+    back.appendChild(box);
+    document.body.appendChild(back);
+    user.focus();
   }
 
   function showFirstAdmin() {
@@ -135,7 +224,8 @@
     $('domains-warn').hidden = !!settings.signup_domains;
 
     var added = ui.clear($('added'));
-    $('form-add').hidden = got[3] === null;
+    byEmailOff = got[3] === null;
+    if (byEmailOff) { $('form-add').hidden = true; }
     $('added-title').hidden = !(got[3] && got[3].length);
     if (got[3] === null) {
       added.appendChild(ui.el('li', null, 'This part is not switched on yet: the owner pastes db/core/007_add_people.sql into the database first.'));
@@ -178,6 +268,11 @@
       act('dame_setting_set', { p_key: 'signup_domains', p_value: $('domains').value }, 'Saved. ' +
         ($('domains').value.trim() ? 'Only these email domains may ask for access now.' : 'Any email address may ask for access.'));
     });
+    $('by-email').addEventListener('click', function () {
+      $('by-email-text').hidden = !$('by-email-text').hidden;
+      $('form-add').hidden = byEmailOff || $('by-email-text').hidden;
+    });
+    $('new-user').addEventListener('click', newUser);
     $('form-add').addEventListener('submit', async function (ev) {
       ev.preventDefault();
       var email = $('add-email').value.trim();

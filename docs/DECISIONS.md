@@ -105,6 +105,12 @@
 - The IT admin adds people from the IT admin page. Built differently from the earlier hub on purpose: the hub wrote the account and a temporary password straight into the sign-in service's tables. Here the email is approved in advance and the person signs up himself. Reasons: no one ever knows another person's password; nothing depends on the inner tables of Supabase Auth; the same step works with company sign-in on the target.
 - A usage guide is plain text, 4000 characters, shown as text.
 
+## Owner, 2026-11-26 (new user as in the DAME hub)
+- The owner asked for the hub's way: IT makes an account with a username and a temporary password, no email. Built in `009_new_user.sql`. This replaces the earlier choice "by email only" as the first way; adding by email stays.
+- What it costs, said plainly: (1) the IT admin knows the temporary password until the first sign-in; (2) the function writes one row into each of Supabase's own tables `auth.users` and `auth.identities`, which Supabase does not promise to keep stable; (3) such an account has no email, so a forgotten password needs IT.
+- What limits it: only IT admins can call it; the password is stored only as a one-way hash and is never in the audit; the database itself refuses the account everywhere until the password was replaced, and checks that by looking at the stored hash; the sign-in service refuses re-using the temporary password.
+- Not part of the target: with company sign-in, IT's directory makes accounts.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

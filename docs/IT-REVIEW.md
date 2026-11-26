@@ -47,6 +47,7 @@ Result: 103 checks, all passed. Together with the other tests: five SQL test fil
 ## Open, accepted for the first demo (sample data only)
 | Gap | Why it can wait | Closed by |
 |---|---|---|
+| Accounts made by IT with a temporary password: IT knows it until the first sign-in; the function writes into Supabase Auth's own tables; no email means no self-service reset | Owner's decision for the demo; forced change is enforced by the database | Company sign-in on the target |
 | Adding a person and the domain rule trust the email address: they are only as strong as the confirmation email | Supabase confirms email by default; the owner keeps it on | IT's sign-in on the target |
 | Email + password, no company sign-in, no MFA | Stand-in by design | IT's sign-in on the target |
 | Password strength is whatever the Supabase project is set to | One dashboard setting (owner step) | Owner now; IT's sign-in later |
@@ -65,6 +66,6 @@ Result: 103 checks, all passed. Together with the other tests: five SQL test fil
 
 ## Not yet proven on the real project
 - A real upload to Supabase Storage (the stand-in copies its rules; the real thing may answer differently).
-- `004_tables.sql`, `005_hardening.sql`, `006_help.sql` and `007_add_people.sql` have not been run there.
+- `004_tables.sql`, `005_hardening.sql`, `006_help.sql`, `007_add_people.sql`, `008_space_look.sql` and `009_new_user.sql` have not been run there. 009 is the one most tied to Supabase itself: it must be tried there before it is relied on.
 - The Supabase Security Advisor after 004 and 005.
 Until these three are done, "works" means "works locally".

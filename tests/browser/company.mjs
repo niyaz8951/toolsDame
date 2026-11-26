@@ -428,6 +428,7 @@ try {
   // ------------------------------------------------------------------ IT adds a person directly
   await it.page.goto(SITE + 'admin/it.html');
   await it.page.waitForSelector('#body:not([hidden])');
+  await it.page.click('#by-email');
   await it.page.fill('#add-name', 'Added Amal');
   await it.page.fill('#add-email', 'Amal@Partner-Firm.test');
   await it.page.click('#form-add button[type=submit]');
@@ -453,6 +454,56 @@ try {
   check(/Hello, Added Amal/.test(await ad2.textContent('#hello')) && (await ad2.locator('#it-card').isHidden()), 'the added person signs up with his own password and is in at once, under the name IT wrote, although outside the work domain, and not as IT');
   check((await ad2.evaluate(() => window.DameApi.rpc('dame_space_get', { p_space: 'finance' }).then(() => 'ALLOWED', (e) => e.code))) === 'not_allowed', 'being added gives an account, not access to any department');
 
+  // ------------------------------------------------------------------ IT makes an account: username and temporary password
+  await it.page.click('#new-user');
+  await it.page.waitForSelector('.hub-focus-small');
+  await it.page.fill('#nu-username', 'Omar.Factory');
+  await it.page.fill('#nu-name', 'Omar Factory');
+  await it.page.fill('#nu-password', 'weak');
+  await it.page.click('#nu-create');
+  await it.page.waitForSelector('.hub-focus-small .hub-msg:not([hidden])');
+  check(/at least 10 characters/.test(await it.page.textContent('.hub-focus-small .hub-msg')), 'IT: a weak temporary password is refused by the database, in words');
+  await it.page.click('.hub-focus-small button:text-is("Generate")');
+  const temp = await it.page.inputValue('#nu-password');
+  check(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{14,}$/.test(temp), 'IT: Generate writes a temporary password that can be read out');
+  await it.page.click('#nu-create');
+  await said(it.page, 'The account omar.factory (Omar Factory) is made');
+  check(/username: omar\.factory/.test(await it.page.textContent('#people')) && !(await it.page.textContent('#body')).includes(temp), 'IT: the new account is in the people list by its username; the password is shown nowhere');
+  check((await rpc(mk.lead, 'dame_user_create', { p_username: 'sneak.in', p_name: 'Sneak', p_temp_password: 'Temp-Pass-12345' })).code === 'not_allowed', 'a department admin cannot make accounts');
+  const omarCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const om = await omarCtx.newPage();
+  await om.goto(SITE);
+  await om.waitForSelector('#panel-signin:not([hidden])');
+  await om.fill('#si-email', 'Omar.Factory');
+  await om.fill('#si-password', temp);
+  await om.click('#form-signin button[type=submit]');
+  await om.waitForSelector('#panel-newpw:not([hidden])');
+  check(true, 'the new person signs in with username and temporary password and is asked for his own password');
+  const early = await om.evaluate(async () => { const out = []; for (const n of ['dame_me', 'dame_spaces_list']) { out.push(await window.DameApi.rpc(n, {}).then(() => 'ALLOWED', (e) => e.code)); } return out.join(); });
+  check(early === 'must_change,must_change', 'before that, the database opens nothing for him (' + early + ')');
+  await om.goto(SITE + 'hub.html');
+  await om.waitForSelector('#panel-newpw:not([hidden])');
+  check(new URL(om.url()).pathname.endsWith('/index.html') || new URL(om.url()).pathname.endsWith('/toolsDame/'), 'opening the hub by its address sends him back to choose a password');
+  await om.fill('#np-password', temp);
+  await om.fill('#np-password2', temp);
+  await om.click('#form-newpw button[type=submit]');
+  await om.waitForSelector('#np-msg:not([hidden])');
+  check(/must differ from the temporary one/.test(await om.textContent('#np-msg')), 'keeping the temporary password is refused');
+  await om.fill('#np-password', 'My-Own-Pass-2026');
+  await om.fill('#np-password2', 'My-Own-Pass-2026');
+  await om.click('#form-newpw button[type=submit]');
+  await om.waitForURL(SITE + 'hub.html');
+  await om.waitForSelector('#main:not([hidden])');
+  check(/Hello, Omar Factory/.test(await om.textContent('#hello')) && (await om.locator('#it-card').isHidden()), 'with his own password he is in, as an ordinary person with no spaces yet');
+  await om.evaluate(() => window.DameApi.signOut());
+  await om.goto(SITE);
+  await om.waitForSelector('#panel-signin:not([hidden])');
+  await om.fill('#si-email', 'omar.factory');
+  await om.fill('#si-password', temp);
+  await om.click('#form-signin button[type=submit]');
+  await om.waitForSelector('#si-msg:not([hidden])');
+  check(!(await om.evaluate(() => window.DameApi.signedIn())), 'the temporary password no longer works');
+
   // ------------------------------------------------------------------ switching off and deleting
   const fa = DEPTS.find((d) => d.id === 'factory');
   check((await rpc(it, 'dame_space_set_active', { p_space: 'factory', p_active: false })).ok, 'IT switches the Factory space off');
@@ -472,7 +523,7 @@ try {
   // ------------------------------------------------------------------ the end state
   check((await mock.sql('select count(*)::int as n from core.security_check()')).rows[0].n === 0, 'the database\'s own security check finds nothing after the whole rehearsal');
   const paths = [...new Set(mock.calls.map((c) => c.path.replace(/\/storage\/v1\/object\/.*/, '/storage/v1/object/...')))];
-  check(paths.every((p) => /^\/(auth\/v1\/(signup|token|logout)|rest\/v1\/rpc\/dame_[a-z_]+|storage\/v1\/object\/\.\.\.)$/.test(p)), 'in the whole rehearsal the pages called only sign-in, dame_* functions and the file store (' + mock.calls.length + ' calls)');
+  check(paths.every((p) => /^\/(auth\/v1\/(signup|token|logout|user)|rest\/v1\/rpc\/dame_[a-z_]+|storage\/v1\/object\/\.\.\.)$/.test(p)), 'in the whole rehearsal the pages called only sign-in, dame_* functions and the file store (' + mock.calls.length + ' calls)');
   figures.calls = mock.calls.length;
   check(problems.length === 0, 'no page error, blocked load or dialog in any of the ' + figures.people + ' sessions' + (problems.length ? ' -> ' + problems.slice(0, 4).join(' | ') : ''));
 } catch (err) {

@@ -242,10 +242,34 @@
 
   // ---------------------------------------------------------------- sign-in
 
+  // An account made by IT has a username, not an email: the sign-in service knows it under this address.
+  var USER_DOMAIN = '@users.dame.internal';
+
   async function signIn(email, password) {
-    var res = await post('/auth/v1/token?grant_type=password', { email: email, password: password });
+    var who = String(email).trim().toLowerCase();
+    if (who.indexOf('@') === -1) { who += USER_DOMAIN; }
+    var res = await post('/auth/v1/token?grant_type=password', { email: who, password: password });
     if (!res.ok || !res.data || !res.data.access_token) { throw authError(res.status, res.data); }
     writeSession(res.data, Date.now());
+  }
+
+  // The signed-in person chooses a new password (first sign-in of an account made by IT).
+  async function setPassword(password) {
+    var res;
+    try {
+      res = await fetch(url + '/auth/v1/user', {
+        method: 'PUT', headers: { 'apikey': key, 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + await token() },
+        body: JSON.stringify({ password: password }), cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer'
+      });
+    } catch (e) {
+      throw new DameError('offline', 'The server cannot be reached. Check your connection and try again.');
+    }
+    var data = null;
+    try { data = await res.json(); } catch (e2) { /* empty answer */ }
+    if (!res.ok) {
+      if (data && (data.error_code === 'same_password')) { throw new DameError('same_password', 'The new password must differ from the temporary one.', res.status); }
+      throw authError(res.status, data);
+    }
   }
 
   // Returns 'signed_in', or 'confirm_email' when the person must open the link first.
@@ -276,6 +300,8 @@
     keyProblem: keyProblem,
     signedIn: function () { return readSession() !== null; },
     signIn: signIn,
+    setPassword: setPassword,
+    userDomain: USER_DOMAIN,
     signUp: signUp,
     signOut: signOut,
     rpc: rpc,

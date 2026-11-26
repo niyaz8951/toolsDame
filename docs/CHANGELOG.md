@@ -2,6 +2,15 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - New user: username and temporary password, as in the DAME hub
+Added (owner's decision, see DECISIONS)
+- `db/core/009_new_user.sql`: `dame_user_create(username, name, temporary password)`, `dame_password_done()`. `core.require_user` refuses an account everywhere until its temporary password is replaced; `dame_request_access` tells the start page.
+- IT admin page: "New user" window (username, display name, temporary password, Generate). "Add by work email" stays as the second way.
+- Start page: sign in with "work email or username"; "Choose your own password" at the first sign-in.
+- Tests: `tests/sql/009_new_user_test.sql`; the rehearsal plays the whole path. The stand-in for Supabase Auth learned accounts made by the database and changing a password.
+
+SQL to paste: `009_new_user.sql`, its test (after 008).
+
 ## 2026-11-26 - The review window opens every time; empty form fields
 Fixed (found by the owner with a pasted tracker page)
 - The window with a page's tables and columns opened only when something had to be made. Now it opens after every check of a page that lists tables, also when they already exist, so the columns can be seen and more can be added.

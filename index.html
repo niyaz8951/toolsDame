@@ -38,8 +38,8 @@
   <section class="dame-card" id="panel-signin" hidden>
     <h2>Sign in</h2>
     <form id="form-signin" method="post" novalidate>
-      <label class="hub-field">Work email
-        <input class="dame-input" id="si-email" type="email" autocomplete="username" required maxlength="254">
+      <label class="hub-field">Work email or username
+        <input class="dame-input" id="si-email" type="text" inputmode="email" autocapitalize="none" spellcheck="false" autocomplete="username" required maxlength="254">
       </label>
       <label class="hub-field">Password
         <input class="dame-input" id="si-password" type="password" autocomplete="current-password" required maxlength="200">
@@ -72,6 +72,24 @@
       <div class="dame-row">
         <button class="dame-btn dame-btn-primary" type="submit">Request access</button>
         <button class="dame-btn" type="button" id="to-signin">I have an account</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="dame-card" id="panel-newpw" hidden>
+    <h2>Choose your own password</h2>
+    <p class="dame-muted">You signed in with a temporary password from IT. Choose a password only you know. Nothing opens before that.</p>
+    <form id="form-newpw" method="post" novalidate>
+      <label class="hub-field">New password (at least 10 characters, with a small letter, a capital letter and a digit)
+        <input class="dame-input" id="np-password" type="password" autocomplete="new-password" required maxlength="72">
+      </label>
+      <label class="hub-field">The same password again
+        <input class="dame-input" id="np-password2" type="password" autocomplete="new-password" required maxlength="72">
+      </label>
+      <p class="hub-msg" id="np-msg" role="alert" hidden></p>
+      <div class="dame-row">
+        <button class="dame-btn dame-btn-primary" type="submit">Save my password</button>
+        <button class="dame-btn" type="button" id="np-out">Sign out</button>
       </div>
     </form>
   </section>
