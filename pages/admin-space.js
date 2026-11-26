@@ -142,7 +142,9 @@
   }
 
   function slug(text) {
-    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
+    var id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
+    // An id needs three characters: a short name like "DX" or "QA" gets a plain ending.
+    return id && id.length < 3 ? id + '-tool' : id;
   }
 
   async function start() {

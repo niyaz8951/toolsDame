@@ -64,6 +64,22 @@
     });
   }
 
+  // When the tool's own code stops with an error, the site is told, so that the
+  // person who builds the tool sees why instead of a page that does nothing.
+  var reported = 0;
+  function report(message) {
+    if (reported >= 3) { return; }
+    reported += 1;
+    connected.then(function () {
+      try { port.postMessage({ id: 0, action: 'error', args: { message: String(message || 'unknown problem').slice(0, 500) } }); } catch (e) { /* not told */ }
+    });
+  }
+  window.addEventListener('error', function (ev) { report(ev.message); });
+  window.addEventListener('unhandledrejection', function (ev) { report((ev.reason && ev.reason.message) || ev.reason); });
+
+  // Marks the page as a tool, so plain HTML gets the site's look (see dame.css).
+  document.documentElement.classList.add('dame-tool');
+
   var ready = null;
 
   function table(name) {
@@ -101,7 +117,6 @@
     if (!a) { return; }
     var href = a.getAttribute('href') || '';
     if (href.charAt(0) === '#') { return; }
-    if (a.hasAttribute('download') && /^(blob:|data:)/i.test(href)) { return; }
     ev.preventDefault();
     if (/^[a-z0-9][a-z0-9._-]{0,59}\.html$/.test(href)) {
       call('page', { name: href }).catch(function (e) { toast(e.message); });
@@ -113,17 +128,15 @@
   }, true);
 
   // Saves a file the tool made (text, bytes or a Blob) to the person's computer.
-  function download(name, data, type) {
-    var blob = (typeof Blob !== 'undefined' && data instanceof Blob) ? data
-      : new Blob([data], { type: type || 'application/octet-stream' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = String(name || 'download').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').slice(0, 120);
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  // The tool cannot download by itself: the site's page does it, for harmless kinds of file.
+  function download(name, data) {
+    var ready = (typeof Blob !== 'undefined' && data instanceof Blob) ? data.arrayBuffer() : Promise.resolve(data);
+    return ready.then(function (bytes) {
+      return call('download', { name: String(name || 'download'), data: bytes });
+    }).catch(function (e) {
+      toast(e.message);
+      throw e;
+    });
   }
 
   // Lets the screen catch up during long work: await Dame.pause();

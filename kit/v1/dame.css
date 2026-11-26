@@ -173,3 +173,22 @@ a { color: var(--dame-accent); }
 .dame-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) { .dame-progress span { transition: none; } }
+
+/* ---------------------------------------------------------------------------
+ * Plain HTML inside a tool. A page that uses none of the building blocks
+ * still gets the site's spacing, fields, buttons and tables. These rules
+ * weigh nothing (:where), so any class or rule of the tool wins over them.
+ * ------------------------------------------------------------------------- */
+:where(.dame-tool body:not(:has(.dame-page))) { max-width: 1040px; margin: 0 auto; padding: 24px var(--dame-gap) 48px; }
+:where(.dame-tool input:not([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="color"], [class]),
+       .dame-tool select:not([class]), .dame-tool textarea:not([class])) {
+  min-height: 40px; max-width: 100%; padding: 8px 10px; border: 1px solid var(--dame-line); border-radius: 8px;
+  background: var(--dame-surface); color: var(--dame-text); font: inherit;
+}
+:where(.dame-tool button:not([class])) {
+  min-height: 40px; padding: 8px 16px; border: 1px solid var(--dame-line); border-radius: 8px;
+  background: var(--dame-surface); color: var(--dame-text); font: inherit; cursor: pointer;
+}
+:where(.dame-tool table:not([class])) { border-collapse: collapse; max-width: 100%; }
+:where(.dame-tool table:not([class]) :is(th, td)) { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--dame-line); vertical-align: top; }
+:where(.dame-tool label:not([class])) { display: inline-block; margin: 0 12px 12px 0; }

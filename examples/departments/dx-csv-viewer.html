@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+  examples/departments/dx-csv-viewer.html - DX: open a CSV file, see it as a table, save a cleaned copy.
+  A stand-alone example tool for the department rehearsal (tests/browser/company.mjs),
+  written from the starter kit the way a team would get it from the AI.
+  Serves: contract 4 (Tool kit). Must not change: one file; the two kit lines;
+  no header, sign-in or outside address; only building blocks of dame.css;
+  invented sample values only.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSV viewer</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+<style>
+  /* Only what the building blocks do not cover. No fonts, no colours. */
+</style>
+</head>
+<body>
+<main class="dame-page">
+  <div class="dame-head"><h1>CSV viewer</h1><p id="hello">Open a CSV file, see it as a table, save a cleaned copy. The file stays in your browser.</p></div>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>The file</h2><button class="dame-btn dame-btn-small" type="button" id="save" disabled>Download cleaned CSV</button></div>
+    <div class="dame-drop" id="drop"><strong>Choose a CSV file or drop it here</strong><span>.csv or .txt, one file</span></div>
+    <p class="dame-hint" id="note">No file chosen yet.</p>
+  </section>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>Table</h2></div>
+    <p class="dame-empty" id="empty">Nothing to show yet. Choose a file above.</p>
+    <div class="dame-stats" id="stats" hidden></div>
+    <div class="dame-scroll"><table class="dame-table" id="table" hidden><thead><tr id="head"></tr></thead><tbody id="body"></tbody></table></div>
+  </section>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function num(id) { var v = parseFloat($(id).value); return isNaN(v) ? null : v; }
+  function stat(box, value, label) {
+    var d = document.createElement('div'); d.className = 'dame-stat';
+    var b = document.createElement('b'); b.textContent = value;
+    var s = document.createElement('span'); s.textContent = label;
+    d.append(b, s); box.appendChild(d);
+  }
+  Dame.ready().then(function (me) { $('hello').textContent = 'Hello, ' + me.name + '. Open a CSV file, see it as a table, save a cleaned copy. The file stays in your browser.'; });
+  var rows = [];
+  function parse(text) {
+    var out = [], row = [], cell = '', quoted = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (quoted) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') { quoted = false; } else { cell += c; } }
+      else if (c === '"') { quoted = true; }
+      else if (c === ',') { row.push(cell.trim()); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') { i++; } row.push(cell.trim()); cell = ''; if (row.some(Boolean)) { out.push(row); } row = []; }
+      else { cell += c; }
+    }
+    row.push(cell.trim()); if (row.some(Boolean)) { out.push(row); }
+    return out;
+  }
+  Dame.drop($('drop'), { accept: ['.csv', '.txt'], multiple: false }, function (files) {
+    files[0].text().then(function (text) {
+      rows = parse(text);
+      $('note').textContent = files[0].name + ': ' + Math.max(rows.length - 1, 0) + ' rows.';
+      var box = $('stats'); box.textContent = ''; box.hidden = !rows.length;
+      stat(box, Math.max(rows.length - 1, 0), 'rows'); stat(box, rows.length ? rows[0].length : 0, 'columns');
+      $('head').textContent = ''; $('body').textContent = '';
+      (rows[0] || []).forEach(function (h) { var th = document.createElement('th'); th.textContent = h; $('head').appendChild(th); });
+      rows.slice(1, 201).forEach(function (r) {
+        var tr = document.createElement('tr');
+        r.forEach(function (v) { var td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+        $('body').appendChild(tr);
+      });
+      $('table').hidden = !rows.length; $('empty').hidden = !!rows.length; $('save').disabled = !rows.length;
+    });
+  });
+  $('save').addEventListener('click', function () {
+    var esc = function (v) { return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    Dame.download('cleaned.csv', rows.map(function (r) { return r.map(esc).join(','); }).join('\r\n'));
+  });
+})();
+</script>
+</body>
+</html>

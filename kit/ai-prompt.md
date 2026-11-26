@@ -29,6 +29,8 @@ What it must do:
 - `Dame.download('result.csv', textOrBytesOrBlob)` saves a file the tool made to the person's computer.
 - `Dame.progress(element, 0.4)` sets a `dame-progress` bar; the number goes from 0 to 1.
 - `await Dame.pause()` lets the screen update during long work.
+- `await Dame.people()` gives `[{ id, name }]`, the people who have this tool.
+- A file can be saved only as xlsx, csv, txt, json, pdf, png, jpg, docx, pptx, xml or md, and only with `Dame.download`.
 - A link to an outside address (`<a href="https://...">`) asks the person before it opens.
 
 {{DATA}}{{LIBS}}## Building blocks (use these classes and no others, except your own small additions for layout)

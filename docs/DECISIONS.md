@@ -80,6 +80,15 @@
 - **The test space** (IT admin page, one press): the space "Test space" with two empty tools, Converter and Tracker, to be built by hand with the ready-made pages.
 - From the walk as a basic user, fixed here: one page is accepted whatever its file is called; a page that uses the browser's storage is stopped at the check; the starter kit is not copied without a description; ready-made pages are on the site, not only in the repo.
 
+## Built in the hardening round (say if any should change)
+- Who may ask for access is a site setting (`signup_domains`), empty by default so the demo keeps working; IT is warned on the page while it is empty.
+- A sign-in is audited once per session, when the site first sees it.
+- Downloads from a tool are saved by the shell, never by the frame. Allowed kinds: xlsx, xlsm, csv, txt, json, pdf, png, jpg, jpeg, docx, pptx, xml, md. No html, no programs, no scripts, no archives.
+- Limits per open tool: 300 requests in 10 seconds, 20 saved files a minute, 100 MB a file.
+- A tool's script error is shown in words to its managers only; other users are told to tell the manager.
+- Charts: not now. Later as a small building block in the kit (bars and lines from a table), so no second library has to be trusted.
+- Review before live, quotas, export: later, as ranked in `IT-REVIEW.md`.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

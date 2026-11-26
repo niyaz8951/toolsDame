@@ -184,6 +184,13 @@
     var paths = Object.keys(map);
 
     function problem(t) { if (problems.indexOf(t) < 0) { problems.push(t); } }
+    // A file as the page names it; if the folders were lost when choosing, the one file with that name.
+    function locate(target) {
+      if (map[target]) { return target; }
+      var base = target.split('/').pop();
+      var same = paths.filter(function (p) { return p.split('/').pop() === base; });
+      return same.length === 1 ? same[0] : target;
+    }
     function note(t) { if (notes.indexOf(t) < 0) { notes.push(t); } }
 
     // url(...) inside styles: a chosen file is put inside; an outside address is a problem.
@@ -207,7 +214,7 @@
         ref = ref.trim();
         if (/^data:/i.test(ref) || ref.charAt(0) === '#') { return all; }
         if (outside(ref)) { problem(where + ' loads ' + ref + ' from outside the site. Add that file to the upload and point to it by its name.'); return 'url("")'; }
-        var target = resolve(from, ref);
+        var target = locate(resolve(from, ref));
         var uri = map[target] ? dataUri(target, map[target]) : '';
         if (!uri) { problem(where + ' points to ' + ref + ', which is not among the chosen files (or is not a picture or font). Add it or remove the line.'); return 'url("")'; }
         return 'url("' + uri + '")';
@@ -287,7 +294,7 @@
         var ref = n.getAttribute('href');
         if (ref === KIT_CSS) { return; }
         if (outside(ref)) { problem(name + ' loads the style sheet ' + ref + ' from outside the site. Add the file to the upload and point to it by its name.'); n.remove(); return; }
-        var target = resolve(name, ref);
+        var target = locate(resolve(name, ref));
         if (!map[target]) { problem(name + ' asks for the style sheet ' + ref + ', which is not among the chosen files. Add it.'); n.remove(); return; }
         var style = doc.createElement('style');
         style.textContent = styles(text(map[target]), target, target);
@@ -310,7 +317,7 @@
         var js = n.textContent;
         if (ref !== null) {
           if (outside(ref)) { problem(name + ' loads the script ' + ref + ' from outside the site. Add the file to the upload and point to it by its name.'); n.remove(); return; }
-          var target = resolve(name, ref);
+          var target = locate(resolve(name, ref));
           if (!map[target]) { problem(name + ' asks for the script ' + ref + ', which is not among the chosen files. Add it.'); n.remove(); return; }
           js = text(map[target]);
           var wait = n.hasAttribute('defer') || type === 'module';
@@ -334,7 +341,7 @@
           var ref = n.getAttribute(attr);
           if (!ref || /^data:/i.test(ref)) { return; }
           if (outside(ref)) { problem(name + ' shows ' + ref + ' from outside the site. Add the file to the upload and point to it by its name.'); n.removeAttribute(attr); return; }
-          var target = resolve(name, ref);
+          var target = locate(resolve(name, ref));
           var uri = map[target] ? dataUri(target, map[target]) : '';
           if (!uri) { problem(name + ' shows ' + ref + ', which is not among the chosen files (or is of a kind this site cannot pack). Add it or remove it.'); n.removeAttribute(attr); return; }
           n.setAttribute(attr, uri);
@@ -353,6 +360,10 @@
           problem(name + ' links to ' + ref + ', which is not a page of this tool. Link to a page next to index.html, or to a full outside address.');
         }
       });
+
+      if (!doc.querySelector('[class*="dame-"]')) {
+        note(name + ' uses none of the site\'s building blocks. It will work and get the site\'s basic look, but not its layout. The starter kit makes the AI use them.');
+      }
 
       // The kit first, so it is in place before any of the tool's own code runs.
       shelfLines.reverse().forEach(function (n) { head.insertBefore(n, head.firstChild); });

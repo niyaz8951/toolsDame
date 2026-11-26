@@ -9,7 +9,10 @@
  *    message line, and every message on it is checked here (known action,
  *    this page's own tool only, size capped) and again by the database;
  *  - a page is run only if its fingerprint equals the one recorded at upload;
- *  - an outside link opens only after the person confirms.
+ *  - an outside link opens only after the person confirms;
+ *  - a file the tool made is saved by this page, not by the tool, and only if
+ *    it is of a harmless kind; the sealed frame itself cannot download;
+ *  - a tool that asks too fast is slowed down, so it cannot flood the database.
  */
 (function () {
   'use strict';
@@ -21,8 +24,14 @@
   var POLICY = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; " +
     "media-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; child-src 'none'; " +
     "worker-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'";
-  var SANDBOX = 'allow-scripts allow-forms allow-modals allow-downloads';
+  var SANDBOX = 'allow-scripts allow-forms allow-modals';
   var MAX_MESSAGE = 262144;
+  var MAX_FILE = 100 * 1024 * 1024;
+  // A tool may hand the person a file it made, of these kinds only. Nothing that runs when opened.
+  var FILE_OK = /\.(xlsx|xlsm|csv|txt|json|pdf|png|jpg|jpeg|docx|pptx|xml|md)$/i;
+  var stamps = [];       // times of the tool's recent requests
+  var saved = [];        // times of recent file saves
+  var reports = 0;       // problems the tool reported
 
   var space = '';
   var tool = '';
@@ -96,6 +105,43 @@
   function answer(id, result) { if (line) { line.postMessage({ id: id, ok: true, result: result }); } }
   function refuse(id, message, code) { if (line) { line.postMessage({ id: id, ok: false, message: message, code: code || 'refused' }); } }
 
+  // Saves a file the tool made. The tool cannot save by itself: the frame has no download right.
+  function save(id, args) {
+    var name = String(args.name || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').slice(0, 120);
+    var data = args.data;
+    var size = typeof data === 'string' ? data.length : (data && data.byteLength);
+    var now = Date.now();
+    saved = saved.filter(function (t) { return now - t < 60000; });
+    if (!FILE_OK.test(name)) { refuse(id, 'A tool can save these kinds of file only: xlsx, csv, txt, json, pdf, png, jpg, docx, pptx, xml, md.', 'bad_request'); return; }
+    if (!(typeof data === 'string' || data instanceof ArrayBuffer || ArrayBuffer.isView(data)) || !(size >= 0)) { refuse(id, 'This cannot be saved as a file.', 'bad_request'); return; }
+    if (size > MAX_FILE) { refuse(id, 'This file is larger than 100 MB.', 'too_large'); return; }
+    if (saved.length >= 20) { refuse(id, 'Too many files at once. Wait a minute.', 'too_many'); return; }
+    saved.push(now);
+    var url = URL.createObjectURL(new Blob([data], { type: 'application/octet-stream' }));
+    var a = ui.el('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+    answer(id, true);
+  }
+
+  // The tool's own script failed. Its manager is told what, in words he can hand to the AI.
+  var lastProblem = '';
+  function problem(args) {
+    reports += 1;
+    if (reports > 1) { return; }
+    lastProblem = String(args.message || 'unknown problem').slice(0, 500);
+    var builderSees = info.is_manager;
+    $('oops-text').textContent = builderSees
+      ? 'The tool\'s own code stopped with this problem: ' + lastProblem
+      : 'Something in this tool did not work. If it does not do what you expect, tell its manager.';
+    $('oops-copy').hidden = !builderSees;
+    $('oops').hidden = false;
+  }
+
   var asked = null;
   function ask(url) {
     asked = url;
@@ -109,6 +155,12 @@
   function onMessage(ev) {
     var d = ev.data;
     if (!d || typeof d !== 'object' || typeof d.id !== 'number' || typeof d.action !== 'string') { return; }
+    var now = Date.now();
+    stamps = stamps.filter(function (t) { return now - t < 10000; });
+    if (stamps.length >= 300) { refuse(d.id, 'This tool is asking too fast. Wait a moment.', 'too_many'); return; }
+    stamps.push(now);
+    if (d.action === 'download') { save(d.id, (d.args && typeof d.args === 'object') ? d.args : {}); return; }
+    if (d.action === 'error') { problem((d.args && typeof d.args === 'object') ? d.args : {}); return; }
     var size = 0;
     try { size = JSON.stringify(d).length; } catch (e) { size = MAX_MESSAGE + 1; }
     if (size > MAX_MESSAGE) { refuse(d.id, 'This is too much to send at once.', 'too_large'); return; }
@@ -124,6 +176,7 @@
     } else if (d.action === 'link') {
       var url = String(args.url || '');
       if (!/^(https?:\/\/|mailto:)[^\s]{1,2000}$/i.test(url)) { refuse(d.id, 'This link cannot be opened.', 'bad_request'); return; }
+      if (asked) { refuse(d.id, 'Another link is waiting for an answer.', 'too_many'); return; }
       answer(d.id, true);
       ask(url);
     } else if (/^table\.(list|get|add|update|remove)$/.test(d.action)) {
@@ -262,6 +315,14 @@
       asked = null;
     });
     $('ask-no').addEventListener('click', function () { $('ask').hidden = true; asked = null; });
+    $('oops-close').addEventListener('click', function () { $('oops').hidden = true; });
+    $('oops-copy').addEventListener('click', function () {
+      var text = 'When the index.html you gave me runs on the DAME site, its script stops with this problem:\n\n' + lastProblem +
+        '\n\nRemember the rules of the starter kit (no browser storage, no outside calls, no workers; data only through Dame.table). ' +
+        'Correct it and give me the complete index.html again, in one code block.';
+      navigator.clipboard.writeText(text).then(function () { $('oops-copy').textContent = 'Copied. Paste it into the AI.'; },
+        function () { $('oops-text').textContent = text; });
+    });
 
     var loaded = await Promise.all([kit('kit/v1/dame.css'), kit('kit/v1/dame.js'), hostReady()]);
     kitCss = loaded[0];

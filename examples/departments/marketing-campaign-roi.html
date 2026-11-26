@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+  examples/departments/marketing-campaign-roi.html - Marketing: what a campaign brought back for what it cost.
+  A stand-alone example tool for the department rehearsal (tests/browser/company.mjs),
+  written from the starter kit the way a team would get it from the AI.
+  Serves: contract 4 (Tool kit). Must not change: one file; the two kit lines;
+  no header, sign-in or outside address; only building blocks of dame.css;
+  invented sample values only.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campaign return</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+<style>
+  /* Only what the building blocks do not cover. No fonts, no colours. */
+</style>
+</head>
+<body>
+<main class="dame-page">
+  <div class="dame-head"><h1>Campaign return</h1><p id="hello">What a campaign brought back for what it cost.</p></div>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>The campaign</h2></div>
+    <div class="dame-grid">
+      <label class="dame-field">Spend <input class="dame-input" id="spend" type="number" step="any" value=""></label>
+      <label class="dame-field">Leads <input class="dame-input" id="leads" type="number" step="any" value=""></label>
+      <label class="dame-field">Leads that become orders, in % <input class="dame-input" id="rate" type="number" step="any" value=""></label>
+      <label class="dame-field">Average order value <input class="dame-input" id="value" type="number" step="any" value=""></label>
+    </div>
+  </section>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>Result</h2></div>
+    <p class="dame-empty" id="empty">Fill the boxes above.</p>
+    <div class="dame-stats" id="stats" hidden></div>
+    <p class="dame-note dame-note-warn" id="warn" hidden></p>
+  </section>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function num(id) { var v = parseFloat($(id).value); return isNaN(v) ? null : v; }
+  function stat(box, value, label) {
+    var d = document.createElement('div'); d.className = 'dame-stat';
+    var b = document.createElement('b'); b.textContent = value;
+    var s = document.createElement('span'); s.textContent = label;
+    d.append(b, s); box.appendChild(d);
+  }
+  Dame.ready().then(function (me) { $('hello').textContent = 'Hello, ' + me.name + '. What a campaign brought back for what it cost.'; });
+  function show(pairs, warn) {
+    var box = $('stats'); box.textContent = '';
+    box.hidden = !pairs; $('empty').hidden = !!pairs;
+    (pairs || []).forEach(function (p) { stat(box, p[0], p[1]); });
+    $('warn').textContent = warn || ''; $('warn').hidden = !warn;
+  }
+  function calc() {
+    var spend = num('spend'), leads = num('leads'), rate = num('rate'), value = num('value');
+    if ([spend, leads, rate, value].some(function (v) { return v === null; })) { show(null); return; }
+    if (spend <= 0 || leads < 0 || rate < 0 || rate > 100 || value < 0) { show(null, 'Spend must be above zero and the rate between 0 and 100.'); return; }
+    var orders = leads * rate / 100, back = orders * value;
+    show([[orders.toFixed(1), 'orders expected'], [Math.round(back).toLocaleString(), 'value of those orders'],
+          [((back - spend) / spend * 100).toFixed(0) + '%', 'return on spend'], [leads ? (spend / leads).toFixed(2) : '0', 'cost per lead']]);
+  }
+  ['spend', 'leads', 'rate', 'value'].forEach(function (id) { $(id).addEventListener('input', calc); });
+})();
+</script>
+</body>
+</html>

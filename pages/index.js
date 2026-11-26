@@ -79,7 +79,11 @@
         await next();
         return;
       } catch (err) {
-        if (err.code !== 'signed_out' && err.code !== 'session_ended') {
+        if (err.code === 'not_allowed') {
+          // An address the site does not accept (see "who may ask for access"): signed out again, told why.
+          await api.signOut();
+          ui.sayError($('notice'), err);
+        } else if (err.code !== 'signed_out' && err.code !== 'session_ended') {
           ui.sayError($('notice'), err);
         } else {
           ui.say($('notice'), err.message, '');
@@ -106,6 +110,7 @@
       ui.say($('notice'), '');
       await next();
     } catch (err) {
+      if (err && err.code === 'not_allowed') { await api.signOut(); }
       ui.sayError($('si-msg'), err);
       show('panel-signin');
     } finally {

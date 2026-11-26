@@ -2,6 +2,23 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - Hardening, the builder's rough edges, the department rehearsal
+Added
+- `db/core/005_hardening.sql`: setting `signup_domains` (who may ask for access), `dame_settings_get`, sign-ins written to the audit. Replaces `core.require_login`, `dame_request_access`, `dame_setting_set`.
+- Shell: `Dame.download` is now carried out by the site (allow-list of 13 file kinds, 100 MB, 20 a minute); 300 requests per 10 seconds per open tool; a tool's script errors shown in a strip (manager: the error and "Copy for the AI"; user: "tell its manager").
+- Builder: with a page pasted in step 3 the starter kit asks the AI to rebuild that page; files chosen without their folders are matched by name; a note when a page uses no building block; "Open the preview" and "Make live" appear right after the upload.
+- `kit/v1/dame.css`: plain HTML (headings, fields, buttons, tables) inside a tool looks like the site by itself. Additions only.
+- IT admin page: "Who may ask for access". A two-letter name now gets a valid id suggestion.
+- `examples/departments/`: six stand-alone tools. `tests/browser/company.mjs`: the rehearsal. `docs/IT-REVIEW.md`.
+Changed
+- The tool's frame lost `allow-downloads` (`sandbox="allow-scripts allow-forms allow-modals"`).
+- Hostile tool: 33 attempts (new: five file saves, a direct download, a flood).
+
+Decided: charts wait; when built they will be a block of the kit, not a library. See DECISIONS.
+
+SQL to paste, in order: `004_tables.sql`, its test, `005_hardening.sql`, its test.
+Owner: the ten steps in `STATUS.md`.
+
 ## 2026-11-26 - Phase 4: tables from the site, the data service, the test space
 Added
 - `db/core/004_tables.sql`: `dame_table_create`, `dame_table_add_column`, `dame_table_drop`, `dame_tables_list`; `dame_rows_list / _get / _add / _update / _remove`; `dame_tool_people`. Deleting a tool now deletes its tables.

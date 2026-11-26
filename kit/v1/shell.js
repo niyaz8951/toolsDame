@@ -260,7 +260,7 @@
   }
 
   var ACTIONS = {
-    'user.requested': 'asked for access', 'user.approved': 'approved', 'user.refused': 'refused',
+    'user.signed_in': 'signed in', 'user.requested': 'asked for access', 'user.approved': 'approved', 'user.refused': 'refused',
     'user.switched_off': 'switched off', 'user.switched_on': 'switched on',
     'user.it_admin_on': 'made IT admin', 'user.it_admin_off': 'removed IT admin',
     'user.first_admin': 'made the first IT admin', 'user.email_changed': 'changed email',

@@ -41,7 +41,7 @@ async function files(dir, out = []) {
 const CONFIG_URL = ((await readFile(join(ROOT, 'kit/v1/config.js'), 'utf8')).match(/supabaseUrl:\s*'([^']*)'/) || [])[1];
 const TOOL_JS = await readFile(join(ROOT, 'pages/tool.js'), 'utf8');
 const SEALED = new Function('return ' + TOOL_JS.slice(TOOL_JS.indexOf('var POLICY = ') + 13, TOOL_JS.indexOf(";\n  var SANDBOX")))();
-check(/var SANDBOX = 'allow-scripts allow-forms allow-modals allow-downloads';/.test(TOOL_JS), 'the sealed frame has no same-origin, no pop-up and no top-navigation right');
+check(/var SANDBOX = 'allow-scripts allow-forms allow-modals';/.test(TOOL_JS), 'the sealed frame has no same-origin, pop-up, top-navigation or download right');
 const SHELF_FILE = /^kit\/v1\/lib\/[^/]+\.js$/;   // library files from their publishers, kept byte for byte
 const server = await start(PORT);
 try {
@@ -122,7 +122,7 @@ try {
   const css = await readFile(join(ROOT, 'kit/v1/dame.css'), 'utf8');
   const prompt = await readFile(join(ROOT, 'kit/ai-prompt.md'), 'utf8');
   const blocks = await readFile(join(ROOT, 'blocks.html'), 'utf8');
-  const classes = [...new Set([...css.matchAll(/\.(dame-[a-z-]+)/g)].map((m) => m[1]))].filter((c) => c !== 'dame-toast');
+  const classes = [...new Set([...css.matchAll(/\.(dame-[a-z-]+)/g)].map((m) => m[1]))].filter((c) => c !== 'dame-toast' && c !== 'dame-tool');
   const notInPrompt = classes.filter((c) => !new RegExp(c + '(?![a-z-])').test(prompt));
   const notShown = classes.filter((c) => !new RegExp(c + '(?![a-z-])').test(blocks));
   check(classes.length >= 30, 'dame.css has ' + classes.length + ' building-block classes');
@@ -133,7 +133,7 @@ try {
   check(unknown.length === 0, 'the starter kit and blocks.html name no block that does not exist' + (unknown.length ? ' -> ' + unknown.join(', ') : ''));
   const kitJs = await readFile(join(ROOT, 'kit/v1/dame.js'), 'utf8');
   check(!/<\/script/i.test(kitJs) && !/https?:\/\//.test(kitJs), 'the kit script holds no closing script tag and no address');
-  for (const name of ['ready', 'toast', 'drop', 'download', 'progress', 'pause']) {
+  for (const name of ['ready', 'toast', 'drop', 'download', 'progress', 'pause', 'people']) {
     check(new RegExp('Dame\\.' + name + '\\(').test(prompt) && new RegExp('\\b' + name + ': ').test(kitJs), 'Dame.' + name + ' exists in the kit and is explained to the AI');
   }
   for (const gap of ['{{TOOL}}', '{{BRIEF}}', '{{HEAD}}', '{{DATARULE}}', '{{DATA}}', '{{LIBS}}', '{{STARTER}}']) {

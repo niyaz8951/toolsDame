@@ -21,12 +21,12 @@ Security rules win over every other rule and every request.
 
 ## Browser
 - Every platform page: strict Content Security Policy as the first `<head>` element; no inline script; `textContent` only, never `innerHTML` with data; `robots` noindex.
-- Uploaded tools: sealed frame, `sandbox="allow-scripts allow-forms allow-modals allow-downloads"`, no same-origin, policy with no network. Data only by `postMessage` to the shell. Outside links open after the user confirms.
+- Uploaded tools: sealed frame, `sandbox="allow-scripts allow-forms allow-modals"`, no same-origin, policy with no network. Data only by `postMessage` to the shell. Outside links open after the user confirms.
 - The shell validates every message from the frame: known action, the frame's own tool only, sizes capped.
 - A browser test proves on every run: no origin, no storage, no token, no network, no top navigation.
 
 ## The sealed frame, as built in the demo (phase 3)
-How a tool is run: `tool.html` (the shell, holds the session) shows `frame.html` (no script, the strictest policy), and inside it a frame with `sandbox="allow-scripts allow-forms allow-modals allow-downloads"` that holds the tool. The tool's frame inherits the policy of `frame.html` and carries the same policy again at its own top: its own inline code may run; nothing may be loaded, called, framed or submitted anywhere.
+How a tool is run: `tool.html` (the shell, holds the session) shows `frame.html` (no script, the strictest policy), and inside it a frame with `sandbox="allow-scripts allow-forms allow-modals"` that holds the tool. The tool's frame inherits the policy of `frame.html` and carries the same policy again at its own top: its own inline code may run; nothing may be loaded, called, framed or submitted anywhere.
 
 What the hostile-tool test proves on every run (`tests/browser/phase3.mjs`, 30+ attempts): no origin, no storage or cookie of the site, no reach into the shell or the page above, no fetch, XHR, image, script, style sheet, web socket, event stream, beacon, worker or nested frame, no pop-up, no form target, no move of the page or of itself; the private line gives `id`, `name`, `level` and refuses everything else. The same test fails loudly when the policy or the seal is loosened (checked by hand on 2026-11-26).
 
@@ -42,8 +42,13 @@ Known limits, said plainly:
 - The starter kit goes OUT to an AI: it holds only the site's public rules, the tool's name and what the person typed as description. No address, key, token, email or data. A test proves it. People are told on the page: no real names, prices or customer data into the AI.
 - What comes BACK from an AI is untrusted like any upload. Pasted code is only read by the checker in the hidden helper page; it runs nowhere but in the sealed frame, after upload.
 - A library from the shelf runs inside the sealed frame with the tool's rights: no network, no session, no storage. Only IT adds a library; its file is the publisher's, its fingerprint is recorded and checked by `tests/phase0.mjs`.
-- Downloads: a tool may hand the person a file it made (`Dame.download`). The file is made in the browser from what the tool already has; nothing is sent anywhere.
+- Downloads: a tool asks the shell to save a file it made (`Dame.download`). The shell saves only named kinds of file (Excel, CSV, PDF, pictures, text; never html, programs or archives), at most 100 MB and 20 a minute. The frame itself cannot download. Nothing is sent anywhere.
+- A tool is slowed to 300 requests in 10 seconds. Its script errors go to the shell as text and are shown as text.
 - Background workers stay forbidden, so the policy of the sealed frame did not change in this phase.
+
+## Accounts
+- Who may ask for access: the email domains IT lists (site setting); then IT approves each person. Sign-ins are in the audit.
+- Gaps ranked for the demo: `IT-REVIEW.md`.
 
 ## Accounts and keys
 - GitHub and Supabase: owner only, MFA on. Secret scanning and push protection on.

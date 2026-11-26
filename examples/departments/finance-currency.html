@@ -1,0 +1,80 @@
+<!doctype html>
+<!--
+  examples/departments/finance-currency.html - Finance: convert an amount with a rate you type in.
+  A stand-alone example tool for the department rehearsal (tests/browser/company.mjs),
+  written from the starter kit the way a team would get it from the AI.
+  Serves: contract 4 (Tool kit). Must not change: one file; the two kit lines;
+  no header, sign-in or outside address; only building blocks of dame.css;
+  invented sample values only.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Currency converter</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+<style>
+  /* Only what the building blocks do not cover. No fonts, no colours. */
+</style>
+</head>
+<body>
+<main class="dame-page">
+  <div class="dame-head"><h1>Currency converter</h1><p id="hello">Convert an amount with the rate you type in. No rate is fetched from anywhere.</p></div>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>Amount and rate</h2>
+      <div class="dame-toggle" role="group" aria-label="Direction" id="dir">
+        <button type="button" data-dir="mul" aria-pressed="true">Amount x rate</button><button type="button" data-dir="div" aria-pressed="false">Amount / rate</button>
+      </div>
+    </div>
+    <div class="dame-grid">
+      <label class="dame-field">Amount <input class="dame-input" id="amount" type="number" step="any" value=""></label>
+      <label class="dame-field">Rate <input class="dame-input" id="rate" type="number" step="any" value="3.6725"></label>
+      <label class="dame-field">Bank fee, in % <input class="dame-input" id="fee" type="number" step="any" value="0"></label>
+    </div>
+  </section>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>Result</h2></div>
+    <p class="dame-empty" id="empty">Fill the boxes above.</p>
+    <div class="dame-stats" id="stats" hidden></div>
+    <p class="dame-note dame-note-warn" id="warn" hidden></p>
+  </section>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function num(id) { var v = parseFloat($(id).value); return isNaN(v) ? null : v; }
+  function stat(box, value, label) {
+    var d = document.createElement('div'); d.className = 'dame-stat';
+    var b = document.createElement('b'); b.textContent = value;
+    var s = document.createElement('span'); s.textContent = label;
+    d.append(b, s); box.appendChild(d);
+  }
+  Dame.ready().then(function (me) { $('hello').textContent = 'Hello, ' + me.name + '. Convert an amount with the rate you type in. No rate is fetched from anywhere.'; });
+  function show(pairs, warn) {
+    var box = $('stats'); box.textContent = '';
+    box.hidden = !pairs; $('empty').hidden = !!pairs;
+    (pairs || []).forEach(function (p) { stat(box, p[0], p[1]); });
+    $('warn').textContent = warn || ''; $('warn').hidden = !warn;
+  }
+  var dir = 'mul';
+  function calc() {
+    var amount = num('amount'), rate = num('rate'), fee = num('fee');
+    if (amount === null || rate === null || fee === null) { show(null); return; }
+    if (rate <= 0 || fee < 0 || fee > 100) { show(null, 'The rate must be above zero and the fee between 0 and 100.'); return; }
+    var out = dir === 'mul' ? amount * rate : amount / rate, cost = out * fee / 100;
+    show([[out.toFixed(2), 'converted'], [cost.toFixed(2), 'bank fee'], [(out - cost).toFixed(2), 'after the fee']]);
+  }
+  ['amount', 'rate', 'fee'].forEach(function (id) { $(id).addEventListener('input', calc); });
+  Array.prototype.forEach.call(document.querySelectorAll('#dir button'), function (b) {
+    b.addEventListener('click', function () {
+      dir = b.getAttribute('data-dir');
+      Array.prototype.forEach.call(b.parentNode.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      calc();
+    });
+  });
+})();
+</script>
+</body>
+</html>

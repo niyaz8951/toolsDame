@@ -123,11 +123,17 @@
     $('test-open').hidden = !hasTest;
     $('test-open').href = api.href('admin/space.html') + '?space=test-space';
 
+    var settings = await api.rpc('dame_settings_get') || {};
+    if (document.activeElement !== $('domains')) { $('domains').value = String(settings.signup_domains || '').split(',').join(', '); }
+    $('domains-warn').hidden = !!settings.signup_domains;
+
     await loadAudit();
   }
 
   function slug(text) {
-    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
+    var id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
+    // An id needs three characters: a short name like "DX" or "QA" gets a plain ending.
+    return id && id.length < 3 ? id + '-team' : id;
   }
 
   async function start() {
@@ -143,6 +149,10 @@
     });
 
     $('ai-mode').value = me.ai_mode;
+    $('domains-save').addEventListener('click', function () {
+      act('dame_setting_set', { p_key: 'signup_domains', p_value: $('domains').value }, 'Saved. ' +
+        ($('domains').value.trim() ? 'Only these email domains may ask for access now.' : 'Any email address may ask for access.'));
+    });
     $('ai-save').addEventListener('click', function () {
       act('dame_setting_set', { p_key: 'ai_mode', p_value: $('ai-mode').value }, 'Setting saved.');
     });

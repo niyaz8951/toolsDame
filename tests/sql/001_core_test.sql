@@ -89,6 +89,8 @@ begin
     -- A site in use already has an IT admin; the test needs a clean start.
     -- (Undone at the end like everything else.)
     update core.profiles set is_it = false where is_it;
+    -- The test people use made-up addresses: for the test, any address may ask for access.
+    update core.settings set value = '' where key = 'signup_domains';
 
     -- ------------------------------------------------- 1. signed-out visitor
     perform dame_test.expect('visitor: dame_site_info allowed', 'ok',

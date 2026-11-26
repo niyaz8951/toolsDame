@@ -94,6 +94,7 @@ async function run(width, height, label) {
   const browser = await chromium.launch({ executablePath: process.env.CHROME || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   const problems = [];
   const popups = [];
+  const downloads = [];                               // every file any page saved
   const T = label + ': ';
   let quiet = false;                                  // true while the hostile tool is expected to make noise
 
@@ -102,6 +103,7 @@ async function run(width, height, label) {
     const ctx = await browser.newContext({ viewport: { width, height } });
     ctx.on('page', (p) => { if (ctx.pages().length > 1) { popups.push(p.url()); } });
     const page = await ctx.newPage();
+    page.on('download', (d) => downloads.push(d.suggestedFilename()));
     page.on('console', (m) => {
       if (!quiet && m.type() === 'error' && !/Failed to load resource.*(40[013])/.test(m.text())) { problems.push(m.text()); }
     });
@@ -309,9 +311,9 @@ async function run(width, height, label) {
     const info = result.nestedRealmInfo;
     delete result.nestedRealmInfo;
     const leaked = Object.keys(result).filter((k) => !/^blocked/.test(String(result[k])));
-    check(Object.keys(result).length >= 30, T + 'hostile tool: ' + Object.keys(result).length + ' attempts were made');
+    check(Object.keys(result).length >= 33, T + 'hostile tool: ' + Object.keys(result).length + ' attempts were made');
     check(leaked.length === 0, T + 'hostile tool: every attempt is blocked' + (leaked.length ? ' -> ' + leaked.map((k) => k + ': ' + result[k]).join(' | ') : ''));
-    for (const k of ['origin', 'localStorage', 'topStorage', 'topDocument', 'fetchApi', 'websocket', 'worker', 'portAbuse']) {
+    for (const k of ['origin', 'localStorage', 'topStorage', 'topDocument', 'fetchApi', 'websocket', 'worker', 'portAbuse', 'portFiles', 'flood']) {
       console.log('        ' + k + ': ' + result[k]);
     }
     console.log('        (not asserted) ' + info);
@@ -320,6 +322,9 @@ async function run(width, height, label) {
     check(leaks.length === 0, T + 'hostile tool: no request of the tool reached any server' + (leaks.length ? ' -> ' + leaks.join(' | ') : ''));
     check(cy.page.url() === SITE + 'tool.html?space=lab&tool=hostile', T + 'hostile tool: the page was not moved');
     check(popups.length === 0, T + 'hostile tool: no window was opened');
+    check(!downloads.some((d) => /LEAK/.test(d)), T + 'hostile tool: no file reached the person\'s computer' + (downloads.some((d) => /LEAK/.test(d)) ? ' -> ' + downloads.join(', ') : ''));
+    const rowCalls = mock.calls.filter((c) => /dame_rows_list/.test(c.path)).length;
+    check(rowCalls <= 320, T + 'hostile tool: of 600 fast requests only ' + rowCalls + ' reached the database');
     check(await cy.page.locator('.hub-bar .hub-brand').isVisible() && (await cy.page.evaluate(() => typeof window.DameApi.rpc)) === 'function', T + 'hostile tool: the shell is untouched');
     check((await cy.page.evaluate(() => window.DameApi.rpc('dame_me').then((m) => m.name))) === 'Cy Reader', T + 'hostile tool: the user\'s session is still his own');
     const toolCalls = mock.calls.filter((c) => /rpc/.test(c.path));
@@ -368,6 +373,56 @@ async function run(width, height, label) {
     f = await sealed(ben.page, '#hello:has-text("Hello, Ben Admin")');
     check((await f.textContent('h1')) === 'Secret Tool', T + 'the starter page runs with the tool\'s own name, minutes after the tile was made');
     check(await fits(ben.page), T + 'the builder page and the starter tool fit the screen');
+
+    // --- a tool whose own code fails: its builder is told why, a user is not left guessing
+    await ben.page.goto(SITE + 'admin/tool.html?space=lab&tool=secret');
+    await ben.page.waitForSelector('#needs input[value="exceljs"]');
+    await ben.page.fill('#code', '<h2>Plain page</h2><label>kW <input id="kw"></label> <button id="go">Go</button><table><tr><td>a</td></tr></table><script>document.getElementById("go").onclick = function () { notThere.run(); };</scr' + 'ipt>');
+    await ben.page.click('#code-check');
+    await ben.page.waitForSelector('#up-report li.hub-ok');
+    check(/uses none of the site's building blocks/.test(await ben.page.textContent('#up-report')), T + 'a page without building blocks passes, with a note that says so');
+    await ben.page.click('#up-send');
+    await ben.page.waitForSelector('#after-upload:not([hidden])');
+    check(await ben.page.locator('#after-preview').isVisible() && await ben.page.locator('#after-live button').isVisible(), T + 'after the upload, Open the preview and Make live are right there');
+    await ben.page.click('#after-live button');
+    await ben.page.click('#after-live button');
+    await said(ben.page, 'Version 2 is live');
+    await mock.sql(`insert into core.tool_access (space, tool, user_id, level, added_by) values ('lab', 'secret', '${cy.id}', 'read', '${ben.id}')`);
+    quiet = true;
+    await openTool(ben.page, 'secret');
+    f = await sealed(ben.page, '#go');
+    const plain = await f.evaluate(() => ({ pad: parseFloat(getComputedStyle(document.body).paddingLeft), border: getComputedStyle(document.getElementById('kw')).borderRadius, button: getComputedStyle(document.getElementById('go')).borderRadius }));
+    check(plain.pad >= 16 && plain.border === '8px' && plain.button === '8px', T + 'plain HTML gets the site\'s spacing, fields and buttons by itself');
+    await f.click('#go');
+    await ben.page.waitForSelector('#oops:not([hidden])');
+    check(/notThere is not defined/.test(await ben.page.textContent('#oops-text')) && await ben.page.locator('#oops-copy').isVisible(), T + 'when a tool\'s code fails, its builder sees the error in words');
+    await ben.page.click('#oops-copy');
+    check(/notThere is not defined/.test(await ben.page.evaluate(() => navigator.clipboard.readText())), T + 'and can copy it as a message for the AI');
+    await openTool(cy.page, 'secret');
+    f = await sealed(cy.page, '#go');
+    await f.click('#go');
+    await cy.page.waitForSelector('#oops:not([hidden])');
+    check(/tell its manager/.test(await cy.page.textContent('#oops-text')) && !/notThere/.test(await cy.page.textContent('#oops-text')) && !(await cy.page.locator('#oops-copy').isVisible()), T + 'an ordinary user is told to tell the manager, without the technical words');
+    quiet = false;
+
+    // --- "I already have a page": the kit asks the AI to rebuild it
+    await ben.page.goto(SITE + 'admin/tool.html?space=lab&tool=secret');
+    await ben.page.waitForSelector('#needs input[value="exceljs"]');
+    await ben.page.fill('#brief', 'Rebuild my existing duct calculator for this site.');
+    await ben.page.fill('#code', '<html><body><h1>Duct OLDPAGE calculator</h1></body></html>');
+    await ben.page.click('#kit-copy');
+    const convertKit = await ben.page.evaluate(() => navigator.clipboard.readText());
+    check(/The page I already have/.test(convertKit) && /Duct OLDPAGE calculator/.test(convertKit) && /Rebuild this page as a DAME tool/.test(convertKit), T + 'with a page pasted first, the starter kit asks the AI to rebuild that page');
+    await ben.page.fill('#code', '');
+    await ben.page.fill('#brief', 'short');
+    await ben.page.click('#kit-copy');
+    await ben.page.waitForSelector('#msg.hub-warn');
+    check(/First say in step 1/.test(await ben.page.textContent('#msg')), T + 'without a description the starter kit is not copied');
+    await upload(ben.page, [
+      { name: 'index.html', mimeType: 'text/html', buffer: Buffer.from('<main class="dame-page"><link rel="stylesheet" href="css/look.css"><img src="images/dot.png" alt=""><script src="js/run.js"></scr' + 'ipt></main>') },
+      { name: 'look.css', mimeType: 'text/css', buffer: Buffer.from('.x{margin:0}') }, { name: 'run.js', mimeType: 'text/javascript', buffer: Buffer.from('document.title="x";') },
+      { name: 'dot.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64') }]);
+    check(/The check passed/.test(await ben.page.textContent('#up-report')), T + 'files chosen without their folders are still found by name');
 
     // --- the reference tool: Excel in, Excel out, with the shelf library, inside the sealed frame
     await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=parts');

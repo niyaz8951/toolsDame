@@ -58,6 +58,7 @@
       </div>
     </div>
     <div class="dame-stats" id="stats"></div>
+    <p class="dame-note" id="cut" hidden>Showing the newest 1,000 rows. Older rows are kept and are not shown here.</p>
     <p class="dame-empty" id="empty" hidden>No rows yet. Add the first one above.</p>
     <div class="dame-scroll">
       <table class="dame-table" id="table" hidden>
@@ -261,6 +262,7 @@
   function load() {
     return table.list({ sort: '-created_at', limit: 1000 }).then(function (list) {
       rows = list;
+      $('cut').hidden = list.length < 1000;
       trouble(null);
       draw();
     });

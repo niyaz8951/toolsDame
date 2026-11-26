@@ -218,7 +218,14 @@
       page = page.replace('<script src="/_dame/v1/dame.js"></script>',
         '<script src="/_dame/v1/dame.js"></script>\n' + libs.map(function (l) { return l.line; }).join('\n'));
     }
-    return template
+    // A page the person already has (pasted in step 3) is handed over to be rebuilt.
+    var existing = $('code').value.trim();
+    var convert = (existing && /<[a-z!][\s\S]*>/i.test(existing))
+      ? '\n## The page I already have\nRebuild this page as a DAME tool. Keep what it does and its words. Replace its look with the building blocks, ' +
+        'remove everything the rules forbid (outside files, own header, own fonts, browser storage), and after the code tell me in one line anything it did that a DAME tool cannot do.\n' +
+        '```html\n' + existing.slice(0, 60000) + '\n```\n'
+      : '';
+    return (template + convert)
       .split('{{TOOL}}').join(toolName)
       .split('{{BRIEF}}').join(brief)
       .split('{{HEAD}}').join(head)
@@ -326,6 +333,7 @@
     packed = null;
     plan = null;
     lastProblems = [];
+    $('after-upload').hidden = true;
     $('tables-need').hidden = true;
     $('up-send').disabled = true;
     $('fix-copy').hidden = true;
@@ -386,6 +394,14 @@
       mark(4, false);
       await load();
       ui.say($('msg'), 'Version ' + version + ' is uploaded and is the preview. Open the preview, try it, then press Make live.', 'ok');
+      // The next two things to do, right where the person is.
+      $('after-text').textContent = 'Version ' + version + ' is uploaded. Only admins and managers see it until you make it live.';
+      $('after-preview').href = toolUrl(true);
+      ui.clear($('after-live')).appendChild(ui.confirmButton('Make live', '', function () {
+        $('after-upload').hidden = true;
+        act('dame_version_make_live', { p_space: space, p_tool: tool, p_version: version }, 'Version ' + version + ' is live. Everyone with the tool gets it now.');
+      }));
+      $('after-upload').hidden = false;
     } catch (err) {
       report([['The upload stopped. Nothing went live. Press Check the code again to retry.', 'hub-warn']]);
       $('up-files').value = '';

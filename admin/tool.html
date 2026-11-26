@@ -57,6 +57,7 @@
         <li id="step-2">
           <h3>Give the starter kit to the AI</h3>
           <p id="kit-text">The starter kit is one text: the rules of this site, the building blocks, a starting page and your description. Copy it, paste it into the approved AI and send it. Put no real names, prices or customer data into the AI.</p>
+          <p class="dame-muted" id="kit-convert">Already have a page? Paste its code into the box of step 3 first. The kit then asks the AI to rebuild that page for this site.</p>
           <div class="dame-row" id="kit-buttons">
             <button class="dame-btn dame-btn-primary" type="button" id="kit-copy">Copy the starter kit</button>
             <button class="dame-btn" type="button" id="kit-save">Download it as a file</button>
@@ -110,7 +111,14 @@
             <input class="dame-input" id="up-note" type="text" maxlength="200" autocomplete="off">
           </label>
           <button class="dame-btn dame-btn-primary" type="button" id="up-send" disabled>Upload as a new version</button>
-          <p class="dame-muted">The upload becomes the preview: only admins and managers see it. Open the preview, try it, then press Make live in the list below. An older version can be brought back at any time.</p>
+          <div class="dame-card hub-msg hub-ok" id="after-upload" hidden>
+            <p id="after-text"></p>
+            <div class="dame-row">
+              <a class="dame-btn dame-btn-primary" id="after-preview" href="../hub.html">Open the preview</a>
+              <span id="after-live"></span>
+            </div>
+          </div>
+          <p class="dame-muted">The upload becomes the preview: only admins and managers see it. Try it, then make it live. An older version can be brought back at any time in the list below.</p>
         </li>
       </ol>
 

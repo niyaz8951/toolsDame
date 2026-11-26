@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+  examples/departments/applied-part-load.html - Applied: one weighted efficiency figure from four load points.
+  A stand-alone example tool for the department rehearsal (tests/browser/company.mjs),
+  written from the starter kit the way a team would get it from the AI.
+  Serves: contract 4 (Tool kit). Must not change: one file; the two kit lines;
+  no header, sign-in or outside address; only building blocks of dame.css;
+  invented sample values only.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Part-load efficiency</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+<style>
+  /* Only what the building blocks do not cover. No fonts, no colours. */
+</style>
+</head>
+<body>
+<main class="dame-page">
+  <div class="dame-head"><h1>Part-load efficiency</h1><p id="hello">One weighted efficiency figure from the four load points (weights 1, 42, 45 and 12 percent).</p></div>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>Efficiency at each load</h2></div>
+    <div class="dame-grid">
+      <label class="dame-field">At 100% load <input class="dame-input" id="a" type="number" step="any" value=""></label>
+      <label class="dame-field">At 75% load <input class="dame-input" id="b" type="number" step="any" value=""></label>
+      <label class="dame-field">At 50% load <input class="dame-input" id="c" type="number" step="any" value=""></label>
+      <label class="dame-field">At 25% load <input class="dame-input" id="d" type="number" step="any" value=""></label>
+    </div>
+    <p class="dame-hint">Type the efficiency (for example COP or EER) at each load point.</p>
+  </section>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>Result</h2></div>
+    <p class="dame-empty" id="empty">Fill the boxes above.</p>
+    <div class="dame-stats" id="stats" hidden></div>
+    <p class="dame-note dame-note-warn" id="warn" hidden></p>
+  </section>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function num(id) { var v = parseFloat($(id).value); return isNaN(v) ? null : v; }
+  function stat(box, value, label) {
+    var d = document.createElement('div'); d.className = 'dame-stat';
+    var b = document.createElement('b'); b.textContent = value;
+    var s = document.createElement('span'); s.textContent = label;
+    d.append(b, s); box.appendChild(d);
+  }
+  Dame.ready().then(function (me) { $('hello').textContent = 'Hello, ' + me.name + '. One weighted efficiency figure from the four load points (weights 1, 42, 45 and 12 percent).'; });
+  function show(pairs, warn) {
+    var box = $('stats'); box.textContent = '';
+    box.hidden = !pairs; $('empty').hidden = !!pairs;
+    (pairs || []).forEach(function (p) { stat(box, p[0], p[1]); });
+    $('warn').textContent = warn || ''; $('warn').hidden = !warn;
+  }
+  function calc() {
+    var v = ['a', 'b', 'c', 'd'].map(num);
+    if (v.some(function (x) { return x === null; })) { show(null); return; }
+    if (v.some(function (x) { return x <= 0; })) { show(null, 'Each efficiency must be above zero.'); return; }
+    var weighted = 0.01 * v[0] + 0.42 * v[1] + 0.45 * v[2] + 0.12 * v[3];
+    show([[weighted.toFixed(2), 'weighted part-load value'], [v[0].toFixed(2), 'at full load'], [(weighted / v[0] * 100 - 100).toFixed(0) + '%', 'part load against full load']]);
+  }
+  ['a', 'b', 'c', 'd'].forEach(function (id) { $(id).addEventListener('input', calc); });
+})();
+</script>
+</body>
+</html>

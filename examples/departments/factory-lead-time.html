@@ -1,0 +1,72 @@
+<!doctype html>
+<!--
+  examples/departments/factory-lead-time.html - Factory: the delivery date from order date, production days and shipping.
+  A stand-alone example tool for the department rehearsal (tests/browser/company.mjs),
+  written from the starter kit the way a team would get it from the AI.
+  Serves: contract 4 (Tool kit). Must not change: one file; the two kit lines;
+  no header, sign-in or outside address; only building blocks of dame.css;
+  invented sample values only.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delivery date</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+<style>
+  /* Only what the building blocks do not cover. No fonts, no colours. */
+</style>
+</head>
+<body>
+<main class="dame-page">
+  <div class="dame-head"><h1>Delivery date</h1><p id="hello">The delivery date from the order date, the production days and the shipping days.</p></div>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>The order</h2></div>
+    <div class="dame-grid">
+      <label class="dame-field">Order date <input class="dame-input" id="start" type="date" value=""></label>
+      <label class="dame-field">Production, working days <input class="dame-input" id="prod" type="number" step="any" value="20"></label>
+      <label class="dame-field">Shipping, calendar days <input class="dame-input" id="ship" type="number" step="any" value="14"></label>
+    </div>
+    <label class="dame-check"><input type="checkbox" id="five" checked> <span>Production works five days a week<em>Off means every day counts</em></span></label>
+  </section>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>Result</h2></div>
+    <p class="dame-empty" id="empty">Fill the boxes above.</p>
+    <div class="dame-stats" id="stats" hidden></div>
+    <p class="dame-note dame-note-warn" id="warn" hidden></p>
+  </section>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function num(id) { var v = parseFloat($(id).value); return isNaN(v) ? null : v; }
+  function stat(box, value, label) {
+    var d = document.createElement('div'); d.className = 'dame-stat';
+    var b = document.createElement('b'); b.textContent = value;
+    var s = document.createElement('span'); s.textContent = label;
+    d.append(b, s); box.appendChild(d);
+  }
+  Dame.ready().then(function (me) { $('hello').textContent = 'Hello, ' + me.name + '. The delivery date from the order date, the production days and the shipping days.'; });
+  function show(pairs, warn) {
+    var box = $('stats'); box.textContent = '';
+    box.hidden = !pairs; $('empty').hidden = !!pairs;
+    (pairs || []).forEach(function (p) { stat(box, p[0], p[1]); });
+    $('warn').textContent = warn || ''; $('warn').hidden = !warn;
+  }
+  function calc() {
+    var start = $('start').value, prod = num('prod'), ship = num('ship');
+    if (!start || prod === null || ship === null) { show(null); return; }
+    if (prod < 0 || ship < 0 || prod > 2000 || ship > 2000) { show(null, 'Days must be between 0 and 2000.'); return; }
+    var d = new Date(start + 'T00:00:00Z'), left = Math.round(prod);
+    while (left > 0) { d.setUTCDate(d.getUTCDate() + 1); var day = d.getUTCDay(); if (!$('five').checked || (day !== 0 && day !== 6)) { left--; } }
+    var ready = d.toISOString().slice(0, 10);
+    d.setUTCDate(d.getUTCDate() + Math.round(ship));
+    show([[ready, 'ready at the factory'], [d.toISOString().slice(0, 10), 'delivered'], [Math.round((d - new Date(start + 'T00:00:00Z')) / 86400000), 'days in all']]);
+  }
+  ['start', 'prod', 'ship', 'five'].forEach(function (id) { $(id).addEventListener('input', calc); });
+})();
+</script>
+</body>
+</html>

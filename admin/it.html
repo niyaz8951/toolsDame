@@ -64,6 +64,15 @@
       </label>
       <p class="dame-muted">The site calls no AI. The button only copies a text that a person gives to the approved AI.</p>
       <button class="dame-btn dame-btn-primary" type="button" id="ai-save">Save</button>
+
+      <div class="hub-block">
+        <label class="hub-field">Who may ask for access: email domains, with commas (for example company.com, company.ae)
+          <input class="dame-input" id="domains" type="text" maxlength="600" autocomplete="off" placeholder="empty = anyone with any email address">
+        </label>
+        <p class="hub-msg hub-warn" id="domains-warn" hidden>Right now anyone on the internet with an email address can ask for access. Nobody gets in without your approval, but the waiting list can fill with strangers. Name your work domains.</p>
+        <p class="dame-muted">People who already have an account are not affected. A new account with another address gets no request at all.</p>
+        <button class="dame-btn dame-btn-primary" type="button" id="domains-save">Save</button>
+      </div>
     </section>
 
     <section class="dame-card">

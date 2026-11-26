@@ -1,0 +1,66 @@
+<!doctype html>
+<!--
+  examples/departments/product-code-reader.html - Product team: split a model code into its parts (an invented code scheme).
+  A stand-alone example tool for the department rehearsal (tests/browser/company.mjs),
+  written from the starter kit the way a team would get it from the AI.
+  Serves: contract 4 (Tool kit). Must not change: one file; the two kit lines;
+  no header, sign-in or outside address; only building blocks of dame.css;
+  invented sample values only.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model code reader</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+<style>
+  /* Only what the building blocks do not cover. No fonts, no colours. */
+</style>
+</head>
+<body>
+<main class="dame-page">
+  <div class="dame-head"><h1>Model code reader</h1><p id="hello">Type a model code and see what each part means. The scheme here is an invented sample.</p></div>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>The code</h2></div>
+    <label class="dame-field">Model code, like ZX-120-H-A2 <input class="dame-input" id="code" type="text" maxlength="40" autocomplete="off"></label>
+    <p class="dame-note dame-note-warn" id="warn" hidden></p>
+  </section>
+  <section class="dame-card">
+    <div class="dame-card-head"><h2>Its parts</h2></div>
+    <p class="dame-empty" id="empty">Type a code above.</p>
+    <div class="dame-scroll"><table class="dame-table" id="table" hidden><thead><tr><th>Part</th><th>Value</th><th>Meaning</th></tr></thead><tbody id="body"></tbody></table></div>
+  </section>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function num(id) { var v = parseFloat($(id).value); return isNaN(v) ? null : v; }
+  function stat(box, value, label) {
+    var d = document.createElement('div'); d.className = 'dame-stat';
+    var b = document.createElement('b'); b.textContent = value;
+    var s = document.createElement('span'); s.textContent = label;
+    d.append(b, s); box.appendChild(d);
+  }
+  Dame.ready().then(function (me) { $('hello').textContent = 'Hello, ' + me.name + '. Type a model code and see what each part means. The scheme here is an invented sample.'; });
+  var SERIES = { ZX: 'Sample series ZX', ZY: 'Sample series ZY' };
+  var TYPE = { H: 'Heat pump', C: 'Cooling only' };
+  $('code').addEventListener('input', function () {
+    var m = /^([A-Z]{2})-(\d{2,4})-([A-Z])-([A-Z])(\d)$/.exec($('code').value.trim().toUpperCase());
+    $('body').textContent = '';
+    $('table').hidden = !m; $('empty').hidden = !!m;
+    $('warn').hidden = !!m || !$('code').value.trim();
+    $('warn').textContent = 'This does not look like a model code. Write it like ZX-120-H-A2.';
+    if (!m) { return; }
+    [['Series', m[1], SERIES[m[1]] || 'Unknown series'], ['Size', m[2], m[2] + ' kW nominal'], ['Type', m[3], TYPE[m[3]] || 'Unknown type'],
+     ['Power supply', m[4], m[4] === 'A' ? '400 V, 3 phase' : 'Other supply'], ['Revision', m[5], 'Design revision ' + m[5]]].forEach(function (r) {
+      var tr = document.createElement('tr');
+      r.forEach(function (v, i) { var td = document.createElement('td'); if (i === 1) { td.className = 'dame-mono'; } td.textContent = v; tr.appendChild(td); });
+      $('body').appendChild(tr);
+    });
+  });
+})();
+</script>
+</body>
+</html>
