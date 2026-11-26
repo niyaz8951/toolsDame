@@ -2,7 +2,8 @@
  * kit/v1/shell.css - the look of the platform bar and hub-only parts.
  * Serves: "On every page". Kept apart from dame.css so that hub-only classes
  * (hub-*) never become part of the promise made to tools in contract 4.
- * Must not change: uses the variables of dame.css; no colours of its own.
+ * Must not change: uses the variables of dame.css; no colours of its own
+ * (white on the brand gradient and the yellow of the sun are the two exceptions).
  */
 .hub-bar {
   display: flex; align-items: center; gap: 12px;
@@ -143,3 +144,89 @@ textarea.dame-input { resize: vertical; line-height: 1.4; }
 .hub-back::before { content: "\2190"; margin-right: 6px; }
 .hub-trail a, .hub-brand { display: inline-flex; align-items: center; min-height: 34px; padding: 4px 12px; border: 1px solid var(--dame-line); border-radius: var(--dame-radius); background: var(--dame-bg); text-decoration: none; font-weight: 600; }
 .hub-trail a:hover, .hub-brand:hover { border-color: var(--dame-accent); }
+
+/* ---------------------------------------------------------------------------
+ * The look of the hub pages (2026-11-26), after the earlier DAME hub: a glass
+ * bar with the mark, a day and night button, a hero band, tiles that rise.
+ * ------------------------------------------------------------------------- */
+body { background: transparent; min-height: 100vh; min-height: 100dvh; }
+html { background: var(--dame-bg); }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1100px 620px at 8% -12%, var(--dame-glow-1), transparent 62%),
+              radial-gradient(900px 560px at 100% -4%, var(--dame-glow-2), transparent 60%),
+              radial-gradient(900px 700px at 50% 120%, var(--dame-glow-2), transparent 65%); }
+
+.hub-bar { min-height: 60px; z-index: 20; background: var(--dame-glass); -webkit-backdrop-filter: saturate(1.8) blur(18px); backdrop-filter: saturate(1.8) blur(18px); view-transition-name: hub-bar; }
+.hub-brand { gap: 10px; border: 0; background: none; padding: 0; font-weight: 750; letter-spacing: .02em; font-size: 1.02rem; }
+.hub-mark { width: 32px; height: 32px; border-radius: 10px; background: var(--dame-brand-grad); box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--dame-accent-2) 65%, transparent); position: relative; flex: none; display: inline-block; transition: transform .35s var(--dame-spring); }
+.hub-mark::after { content: ""; position: absolute; inset: 5px; background: #fff; -webkit-mask: url("icons/mark.svg") center / contain no-repeat; mask: url("icons/mark.svg") center / contain no-repeat; }
+.hub-brand:hover .hub-mark { transform: rotate(-8deg) scale(1.06); }
+.hub-title { font-weight: 600; }
+
+/* Day and night: one round button, sun and moon swap with a turn. */
+.hub-theme { position: relative; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--dame-line); background: var(--dame-surface); color: var(--dame-muted); cursor: pointer; padding: 0; overflow: hidden; flex: none; transition: border-color .2s var(--dame-ease), color .2s var(--dame-ease), transform .2s var(--dame-ease), box-shadow .2s var(--dame-ease); }
+.hub-theme:hover { color: var(--dame-accent); border-color: var(--dame-accent); box-shadow: 0 0 0 4px var(--dame-soft); }
+.hub-theme:active { transform: scale(.92); }
+.hub-theme::before, .hub-theme::after { content: ""; position: absolute; inset: 10px; background: currentColor; transition: transform .55s var(--dame-spring), opacity .3s var(--dame-ease); }
+.hub-theme::before { -webkit-mask: url("icons/moon.svg") center / contain no-repeat; mask: url("icons/moon.svg") center / contain no-repeat; }
+.hub-theme::after { -webkit-mask: url("icons/sun.svg") center / contain no-repeat; mask: url("icons/sun.svg") center / contain no-repeat; transform: rotate(-120deg) scale(.3); opacity: 0; }
+.hub-theme[data-night="true"] { color: #F6C64E; }
+.hub-theme[data-night="true"]::before { transform: rotate(120deg) scale(.3); opacity: 0; }
+.hub-theme[data-night="true"]::after { transform: none; opacity: 1; }
+/* The change of theme opens as a circle from the button; elsewhere a plain fade. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(hub-bar), ::view-transition-new(hub-bar) { animation: none; }
+html.hub-theme-fade, html.hub-theme-fade * { transition: background-color .35s var(--dame-ease), color .35s var(--dame-ease), border-color .35s var(--dame-ease) !important; }
+
+/* Hero band: the top of the hub and of a space. */
+.hub-hero { position: relative; overflow: hidden; isolation: isolate; padding: 34px 32px 30px; margin: 0 0 28px; border-radius: 24px; background: var(--dame-hero); color: #fff; box-shadow: var(--dame-shadow-lg); animation: hub-rise .5s var(--dame-ease) both; }
+.hub-hero::before { content: ""; position: absolute; z-index: -1; right: -40px; top: -60px; width: 300px; height: 300px; background: #fff; opacity: .08; -webkit-mask: url("icons/mark.svg") center / contain no-repeat; mask: url("icons/mark.svg") center / contain no-repeat; transform: rotate(-12deg); }
+.hub-hero::after { content: ""; position: absolute; z-index: -1; left: -10%; bottom: -70%; width: 70%; height: 140%; background: radial-gradient(closest-side, rgba(84,195,241,.38), transparent); }
+.hub-hero h1 { color: #fff; margin: 0 0 6px; font-size: 2.1rem; }
+.hub-hero p { margin: 0; color: rgba(255,255,255,.78); }
+.hub-kicker { margin: 0 0 8px !important; font-size: .82rem; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
+.hub-hero .hub-back { margin: 0 0 14px; background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.28); color: #fff; }
+.hub-hero .hub-back:hover { background: rgba(255,255,255,.28); }
+
+/* Tiles: an icon in the tile's colour, a lift on hover, an arrow that slides in. */
+.hub-tile { position: relative; overflow: hidden; border-top: 1px solid var(--dame-line); border-radius: 20px; padding: 22px 42px 22px 22px; box-shadow: var(--dame-shadow); transition: transform .3s var(--dame-ease), box-shadow .3s var(--dame-ease), border-color .3s var(--dame-ease); animation: hub-rise .5s var(--dame-ease) both; }
+.hub-tile::before { content: ""; position: absolute; inset: 0; background: radial-gradient(420px 160px at 0% 0%, color-mix(in srgb, var(--dame-accent) 14%, transparent), transparent 70%); opacity: 0; transition: opacity .3s var(--dame-ease); pointer-events: none; }
+.hub-tile::after { content: ""; position: absolute; right: 20px; top: 24px; width: 18px; height: 18px; background: var(--dame-accent); -webkit-mask: url("icons/arrow.svg") center / contain no-repeat; mask: url("icons/arrow.svg") center / contain no-repeat; opacity: 0; transform: translateX(-6px); transition: opacity .25s var(--dame-ease), transform .25s var(--dame-ease); }
+.hub-tile > * { position: relative; }
+.hub-tile:hover { transform: translateY(-3px); box-shadow: var(--dame-shadow-lg); }
+.hub-tile:hover::before, .hub-tile:focus-visible::before { opacity: 1; }
+.hub-tile:hover::after, .hub-tile:focus-visible::after { opacity: 1; transform: none; }
+.hub-tile:active { transform: scale(.985); }
+.hub-tile-icon { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 0 6px; color: #fff; font-weight: 700; font-size: 1.3rem;
+  background: linear-gradient(135deg, var(--dame-accent) 0%, color-mix(in srgb, var(--dame-accent) 60%, #fff) 100%); box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--dame-accent) 65%, transparent); transition: transform .35s var(--dame-spring); }
+.hub-tile:hover .hub-tile-icon { transform: scale(1.06) rotate(-4deg); }
+.hub-tiles > .hub-tile:nth-child(2) { animation-delay: .05s; } .hub-tiles > .hub-tile:nth-child(3) { animation-delay: .1s; }
+.hub-tiles > .hub-tile:nth-child(4) { animation-delay: .15s; } .hub-tiles > .hub-tile:nth-child(5) { animation-delay: .2s; }
+.hub-tiles > .hub-tile:nth-child(6) { animation-delay: .25s; } .hub-tiles > .hub-tile:nth-child(n+7) { animation-delay: .3s; }
+.hub-tile-off { box-shadow: none; }
+@keyframes hub-rise { from { opacity: 0; transform: translateY(10px); } }
+
+/* Sign-in: the mark above the card. */
+.hub-brand-block { text-align: center; margin: 24px 0; animation: hub-rise .5s var(--dame-ease) both; }
+.hub-logo { width: 68px; height: 68px; margin: 0 auto 16px; border-radius: 20px; background: var(--dame-brand-grad); box-shadow: 0 18px 40px -14px color-mix(in srgb, var(--dame-accent-2) 75%, transparent); position: relative; }
+.hub-logo::after { content: ""; position: absolute; inset: 14px; background: #fff; -webkit-mask: url("icons/mark.svg") center / contain no-repeat; mask: url("icons/mark.svg") center / contain no-repeat; }
+.hub-brand-block h1 { font-size: 1.6rem; font-weight: 750; letter-spacing: .04em; margin: 0; }
+.hub-brand-block p { margin: 4px 0 0; }
+.hub-narrow .dame-card { padding: 28px; box-shadow: var(--dame-shadow-lg); animation: hub-rise .5s .06s var(--dame-ease) both; }
+
+/* Small things in the same hand. */
+.dame-page > .dame-card, .dame-page > div > .dame-card { animation: hub-rise .5s var(--dame-ease) both; }
+.hub-msg { animation: hub-rise .3s var(--dame-ease) both; }
+.hub-choice { border-radius: 18px; transition: transform .3s var(--dame-ease), box-shadow .3s var(--dame-ease), border-color .3s var(--dame-ease); }
+.hub-choice:hover { transform: translateY(-3px); box-shadow: var(--dame-shadow-lg); }
+.hub-option { transition: border-color .2s var(--dame-ease), background .2s var(--dame-ease); }
+.hub-option:has(input:checked) { background: var(--dame-soft); }
+.hub-progress span { background: linear-gradient(90deg, var(--dame-accent), var(--dame-accent-2)); border-radius: 999px; transition: width .4s var(--dame-ease); }
+#wz section:not([hidden]) { animation: hub-rise .35s var(--dame-ease) both; }
+.hub-pill-ok { background: color-mix(in srgb, var(--dame-ok) 12%, transparent); border-color: transparent; }
+@media (max-width: 640px) {
+  .hub-hero { padding: 26px 20px 22px; border-radius: 20px; }
+  .hub-hero h1 { font-size: 1.6rem; }
+  .hub-hero::before { width: 200px; height: 200px; right: -50px; top: -40px; }
+  .hub-brand-text { display: none; }
+}

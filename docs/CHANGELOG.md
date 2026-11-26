@@ -2,6 +2,16 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - The look of the DAME hub: palette, mark, movement, day and night
+Changed (owner's decision, see DECISIONS)
+- `kit/v1/dame.css`: the hub's blue palette for day and night, soft shadows, rounder corners, gradient primary button, focus rings, a small rise when cards arrive. No class or variable renamed or removed; new variables added (`--dame-accent-2`, `--dame-on-accent`, `--dame-soft`, `--dame-surface-2`, shadows, easing).
+- `kit/v1/shell.css`: glass bar with the mark, hero band on the hub and on a space, tiles with an icon in their colour that lift on hover, the mark above the sign-in card.
+- Day and night button in the bar (sun and moon). The choice is kept in the browser (`dame.theme`), applied before the page is drawn by `kit/v1/theme.js`, and opens as a circle from the button where the browser can. Without a choice the device decides.
+- A running tool follows the button: the shell tells it over its private line; what the person typed stays. Tools need no change.
+- `kit/v1/icons/` (mark, sun, moon, arrow) and the tab icon. Motion is switched off for people who ask their device for less motion.
+
+SQL to paste: none. Owner: Ctrl+F5.
+
 ## 2026-11-26 - The builder as a guide, buttons, speed
 Changed
 - `admin/tool.html`: the builder starts with three choices (Build a new page / I already have a page / Use a ready-made page) and then shows one step at a time. The next step appears only when this one is done. "Start again" and "Back" on every step.

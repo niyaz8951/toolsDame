@@ -12,11 +12,14 @@ What is in this folder, and who uses it. Contract 4: v1 only gets additions.
 | `api.js` | hub pages | base path, config check, sign-in, session, `DameApi.rpc('dame_...')` |
 | `shell.js`, `shell.css` | hub pages | the platform bar, the page guard, small helpers; `hub-*` classes are not for tools |
 | `icon.svg` | hub pages | tab icon |
+| `theme.js` | hub pages, before they are drawn | sets day or night from the person's choice |
+| `icons/` | `shell.css` | the mark, sun, moon, arrow |
 
 ## What a tool may rely on (never renamed or removed)
 - The two lines in the page head, written exactly as in `docs/BEDROCK.md`.
 - Every `dame-*` class in `dame.css` (the building blocks; see `blocks.html`).
-- Variable a tool may set: `--dame-accent`. Variables a tool may read: `--dame-bg`, `--dame-surface`, `--dame-text`, `--dame-muted`, `--dame-line`, `--dame-ok`, `--dame-warn`, `--dame-radius`, `--dame-gap`.
+- Variable a tool may set: `--dame-accent`. Variables a tool may read: `--dame-bg`, `--dame-surface`, `--dame-text`, `--dame-muted`, `--dame-line`, `--dame-ok`, `--dame-warn`, `--dame-radius`, `--dame-gap`. Added 2026-11-26: `--dame-accent-2`, `--dame-on-accent`, `--dame-soft`, `--dame-surface-2`, `--dame-radius-sm`, `--dame-shadow`.
+- Day and night: the site sets `data-theme` on the tool's page and changes it when the person presses the button. A tool that uses only the variables above needs to do nothing; a tool with colours of its own would not follow.
 - The `Dame` object as written in `docs/BEDROCK.md`.
 - A link to another page of the same tool: `<a href="other.html">`. A link to an outside address asks the person first.
 

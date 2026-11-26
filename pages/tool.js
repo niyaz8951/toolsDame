@@ -99,8 +99,18 @@
     html = html.replace(LIB_LINE, function (all, id) {
       return libs[id] ? '<script>' + libs[id].replace(/<\/script/gi, '<\\/script') + '</script>' : '';
     });
+    // The tool starts in the person's theme (day or night); a later change comes over the line.
+    var theme = document.documentElement.getAttribute('data-theme');
+    if (theme === 'day' || theme === 'night') {
+      html = /<html\b/i.test(html) ? html.replace(/<html\b(?![^>]*\bdata-theme=)/i, '<html data-theme="' + theme + '"') : html;
+    }
     return '<!doctype html><meta http-equiv="Content-Security-Policy" content="' + POLICY + '">' + html;
   }
+
+  // The day and night button of the bar: the tool is told, it changes its own colours.
+  window.addEventListener('dame-theme', function (ev) {
+    if (line && (ev.detail === 'day' || ev.detail === 'night')) { line.postMessage({ event: 'theme', value: ev.detail }); }
+  });
 
   function answer(id, result) { if (line) { line.postMessage({ id: id, ok: true, result: result }); } }
   function refuse(id, message, code) { if (line) { line.postMessage({ id: id, ok: false, message: message, code: code || 'refused' }); } }
@@ -228,6 +238,8 @@
     line = channel.port1;
     line.onmessage = onMessage;
     inner.contentWindow.postMessage({ dame: 'init' }, '*', [channel.port2]);
+    var theme = document.documentElement.getAttribute('data-theme');
+    if (theme === 'day' || theme === 'night') { line.postMessage({ event: 'theme', value: theme }); }
   }
 
   async function show(name) {

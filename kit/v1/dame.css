@@ -3,32 +3,62 @@
  * Used by every hub page and by every tool (as /_dame/v1/dame.css).
  * Must not change: v1 only gets additions. No class or variable here is ever
  * renamed or removed. A tool sets only --dame-accent.
+ * The look (colours, day and night, movement) follows the earlier DAME hub,
+ * by the owner's decision of 2026-11-26; the values may change, the names not.
  * Nothing from outside: system fonts, no images, no imports.
  */
 :root {
-  --dame-accent: #0b63ce;
-  --dame-bg: #f4f6f9;
+  /* Day. The palette of the company's blue; a tool sets only --dame-accent. */
+  --dame-accent: #0078B8;        /* buttons, links, focus: dark enough to read on white */
+  --dame-accent-2: #0097E0;      /* the bright end of a gradient */
+  --dame-on-accent: #ffffff;
+  --dame-soft: #E3F3FC;
+  --dame-bg: #F3F7FA;
   --dame-surface: #ffffff;
-  --dame-text: #16202c;
-  --dame-muted: #5b6878;
-  --dame-line: #d9dfe7;
-  --dame-ok: #1a7f4b;
-  --dame-warn: #b3261e;
-  --dame-radius: 10px;
+  --dame-surface-2: #EAF2F8;
+  --dame-text: #12283A;
+  --dame-muted: #5A6F80;
+  --dame-line: #D5E1EA;
+  --dame-ok: #1B8A4B;
+  --dame-warn: #C0362C;
+  --dame-radius: 16px;
+  --dame-radius-sm: 10px;
   --dame-gap: 16px;
-  color-scheme: light dark;
+  --dame-shadow: 0 0 0 .5px rgba(11,42,74,.05), 0 1px 2px rgba(11,42,74,.04), 0 8px 28px rgba(11,42,74,.07);
+  --dame-shadow-lg: 0 0 0 .5px rgba(11,42,74,.06), 0 2px 6px rgba(11,42,74,.06), 0 18px 44px rgba(11,42,74,.13);
+  --dame-glass: rgba(255,255,255,.78);
+  --dame-glow-1: rgba(0,151,224,.13);
+  --dame-glow-2: rgba(84,195,241,.16);
+  --dame-brand-grad: linear-gradient(135deg, #0097E0 0%, #54C3F1 100%);
+  --dame-hero: linear-gradient(125deg, #0B2A4A 0%, #0A4F84 48%, #0097E0 100%);
+  --dame-ease: cubic-bezier(.2,.8,.2,1);
+  --dame-spring: cubic-bezier(.34,1.56,.64,1);
+  color-scheme: light;
 }
+/* Night: follows the device unless the person chose with the sun and moon button. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --dame-accent: #6aa9ff;
-    --dame-bg: #10151c;
-    --dame-surface: #19212b;
-    --dame-text: #e8edf3;
-    --dame-muted: #9aa7b6;
-    --dame-line: #2c3745;
-    --dame-ok: #5ecb8f;
-    --dame-warn: #ff8a80;
+  :root:not([data-theme="day"]) {
+    --dame-accent: #2FB0EC; --dame-accent-2: #54C3F1; --dame-on-accent: #06202F; --dame-soft: #0F3552;
+    --dame-bg: #061426; --dame-surface: #0D233A; --dame-surface-2: #14304B; --dame-text: #E6F0F7; --dame-muted: #9DB4C6; --dame-line: #24465F;
+    --dame-ok: #5FD08E; --dame-warn: #FF8A80;
+    --dame-shadow: 0 0 0 .5px rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    --dame-shadow-lg: 0 0 0 .5px rgba(255,255,255,.08), 0 2px 8px rgba(0,0,0,.35), 0 20px 48px rgba(0,0,0,.5);
+    --dame-glass: rgba(9,28,48,.72); --dame-glow-1: rgba(0,151,224,.26); --dame-glow-2: rgba(84,195,241,.12);
+    --dame-brand-grad: linear-gradient(135deg, #0A7FC4 0%, #2FB0EC 100%);
+    --dame-hero: linear-gradient(125deg, #0A2038 0%, #0B3A62 50%, #0E6AA5 100%);
+    color-scheme: dark;
   }
+}
+:root[data-theme="night"] {
+    --dame-accent: #2FB0EC; --dame-accent-2: #54C3F1; --dame-on-accent: #06202F; --dame-soft: #0F3552;
+    --dame-bg: #061426; --dame-surface: #0D233A; --dame-surface-2: #14304B; --dame-text: #E6F0F7; --dame-muted: #9DB4C6; --dame-line: #24465F;
+    --dame-ok: #5FD08E; --dame-warn: #FF8A80;
+    --dame-shadow: 0 0 0 .5px rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    --dame-shadow-lg: 0 0 0 .5px rgba(255,255,255,.08), 0 2px 8px rgba(0,0,0,.35), 0 20px 48px rgba(0,0,0,.5);
+    --dame-glass: rgba(9,28,48,.72); --dame-glow-1: rgba(0,151,224,.26); --dame-glow-2: rgba(84,195,241,.12);
+    --dame-brand-grad: linear-gradient(135deg, #0A7FC4 0%, #2FB0EC 100%);
+    --dame-hero: linear-gradient(125deg, #0A2038 0%, #0B3A62 50%, #0E6AA5 100%);
+    color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -192,3 +222,48 @@ a { color: var(--dame-accent); }
 :where(.dame-tool table:not([class])) { border-collapse: collapse; max-width: 100%; }
 :where(.dame-tool table:not([class]) :is(th, td)) { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--dame-line); vertical-align: top; }
 :where(.dame-tool label:not([class])) { display: inline-block; margin: 0 12px 12px 0; }
+
+/* ---------------------------------------------------------------------------
+ * The look (added 2026-11-26): soft shadows, rounder corners, gentle movement.
+ * Only values and additions: every class above keeps its name and its job.
+ * ------------------------------------------------------------------------- */
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif; }
+h1 { font-weight: 700; letter-spacing: -.025em; font-size: 1.8rem; }
+h2, h3 { font-weight: 650; letter-spacing: -.01em; }
+::selection { background: color-mix(in srgb, var(--dame-accent-2) 28%, transparent); }
+:focus-visible { outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--dame-accent-2) 30%, transparent); border-radius: 8px; }
+
+.dame-card { border-radius: 18px; padding: 20px; box-shadow: var(--dame-shadow); }
+.dame-btn { border-radius: var(--dame-radius-sm); font-weight: 500; transition: background .2s var(--dame-ease), border-color .2s var(--dame-ease), transform .2s var(--dame-ease), box-shadow .2s var(--dame-ease), filter .2s var(--dame-ease); }
+.dame-btn:hover { background: var(--dame-surface-2); }
+.dame-btn:active:not(:disabled) { transform: scale(.97); }
+.dame-btn-primary, .dame-btn-primary:hover {
+  background: linear-gradient(135deg, var(--dame-accent) 0%, color-mix(in srgb, var(--dame-accent) 55%, var(--dame-accent-2)) 100%);
+  border-color: transparent; color: var(--dame-on-accent);
+  box-shadow: 0 8px 22px -10px color-mix(in srgb, var(--dame-accent) 75%, transparent);
+}
+.dame-btn-primary:hover { filter: brightness(1.08) saturate(1.05); }
+.dame-btn-quiet:hover { background: var(--dame-soft); }
+.dame-input { border-radius: var(--dame-radius-sm); transition: border-color .2s var(--dame-ease), box-shadow .2s var(--dame-ease); }
+.dame-input:focus { outline: none; border-color: var(--dame-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--dame-accent-2) 24%, transparent); }
+.dame-table th { font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+.dame-toggle { border-radius: var(--dame-radius-sm); }
+.dame-toggle button[aria-pressed="true"] { color: var(--dame-on-accent); }
+.dame-drop { border-radius: 18px; transition: border-color .2s var(--dame-ease), background .2s var(--dame-ease); }
+.dame-drop:hover, .dame-drop.is-over { background: var(--dame-soft); }
+.dame-progress span { background: linear-gradient(90deg, var(--dame-accent), var(--dame-accent-2)); border-radius: 999px; transition: width .4s var(--dame-ease); }
+.dame-stat { box-shadow: var(--dame-shadow); }
+.dame-toast { border-radius: 999px; padding: 11px 18px; box-shadow: var(--dame-shadow-lg); animation: dame-pop .3s var(--dame-spring); }
+.dame-badge-ok { background: color-mix(in srgb, var(--dame-ok) 12%, transparent); border-color: transparent; }
+.dame-badge-warn { background: color-mix(in srgb, var(--dame-warn) 12%, transparent); border-color: transparent; }
+:where(.dame-tool input:not([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="color"], [class]),
+       .dame-tool select:not([class]), .dame-tool textarea:not([class]), .dame-tool button:not([class])) { border-radius: var(--dame-radius-sm); }
+/* A tool's cards arrive with a small rise, one after the other. */
+.dame-tool .dame-card, .dame-tool .dame-head { animation: dame-rise .5s var(--dame-ease) both; }
+.dame-tool .dame-card:nth-of-type(2) { animation-delay: .05s; } .dame-tool .dame-card:nth-of-type(n+3) { animation-delay: .1s; }
+@keyframes dame-rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes dame-pop { from { opacity: 0; transform: translate(-50%, 8px); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; }
+}

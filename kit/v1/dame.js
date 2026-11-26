@@ -39,6 +39,8 @@
       port = ev.ports[0];
       port.onmessage = function (m) {
         var d = m.data || {};
+        // The person pressed the day and night button of the site: the tool follows.
+        if (d.event === 'theme' && (d.value === 'day' || d.value === 'night')) { document.documentElement.setAttribute('data-theme', d.value); return; }
         var w = waiting[d.id];
         if (!w) { return; }
         delete waiting[d.id];

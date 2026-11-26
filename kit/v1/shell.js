@@ -47,14 +47,62 @@
     location.replace(api.href('index.html'));
   }
 
+  // ---- day and night. The choice is one word kept in this browser; kit/v1/theme.js applies it before the page is drawn.
+  var root = document.documentElement;
+  function isNight() {
+    var t = root.getAttribute('data-theme');
+    return t ? t === 'night' : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function themeButton() {
+    var btn = el('button', 'hub-theme');
+    btn.type = 'button';
+    function label() {
+      btn.setAttribute('data-night', String(isNight()));
+      btn.setAttribute('aria-label', isNight() ? 'Switch to the day theme' : 'Switch to the night theme');
+      btn.title = isNight() ? 'Day theme' : 'Night theme';
+    }
+    function apply(next) {
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('dame.theme', next); } catch (e) { /* kept for this page only */ }
+      label();
+      // A page that shows a tool passes the choice on to it.
+      window.dispatchEvent(new CustomEvent('dame-theme', { detail: next }));
+    }
+    btn.addEventListener('click', function () {
+      var next = isNight() ? 'day' : 'night';
+      var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (document.startViewTransition && !calm) {
+        // The new theme opens as a circle from the button.
+        var box = btn.getBoundingClientRect();
+        var x = box.left + box.width / 2;
+        var y = box.top + box.height / 2;
+        var r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+        document.startViewTransition(function () { apply(next); }).ready.then(function () {
+          root.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + r + 'px at ' + x + 'px ' + y + 'px)'] },
+            { duration: 480, easing: 'cubic-bezier(.2,.8,.2,1)', pseudoElement: '::view-transition-new(root)' });
+        }).catch(function () {});
+      } else {
+        root.classList.add('hub-theme-fade');
+        apply(next);
+        setTimeout(function () { root.classList.remove('hub-theme-fade'); }, 400);
+      }
+    });
+    label();
+    return btn;
+  }
+
   var header = el('header', 'hub-bar');
   var userBox = el('span', 'hub-user');
 
   function bar() {
-    var brand = el('a', 'hub-brand', 'DAME');
+    var brand = el('a', 'hub-brand');
+    brand.appendChild(el('span', 'hub-mark'));
+    brand.appendChild(el('span', 'hub-brand-text', 'DAME'));
+    brand.setAttribute('aria-label', 'DAME, to the hub');
     brand.href = api.href(api.signedIn() ? 'hub.html' : 'index.html');
     header.appendChild(brand);
     header.appendChild(el('span', 'hub-title', document.body.dataset.title || ''));
+    header.appendChild(themeButton());
     header.appendChild(userBox);
     header.appendChild(el('span', 'hub-tag', 'Demo'));
     document.body.insertBefore(header, document.body.firstChild);

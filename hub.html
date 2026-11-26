@@ -17,6 +17,7 @@
 <link rel="icon" href="kit/v1/icon.svg">
 <link rel="stylesheet" href="kit/v1/dame.css">
 <link rel="stylesheet" href="kit/v1/shell.css">
+<script src="kit/v1/theme.js"></script>
 <script src="kit/v1/config.js" defer></script>
 <script src="kit/v1/api.js" defer></script>
 <script src="kit/v1/shell.js" defer></script>
@@ -24,8 +25,11 @@
 </head>
 <body data-page="hub" data-title="Hub">
 <main class="dame-page" id="main" hidden>
-  <h1 id="hello">Hub</h1>
-  <p class="dame-muted">Your spaces. Each tile is one department.</p>
+  <div class="hub-hero">
+    <p class="hub-kicker">DAME</p>
+    <h1 id="hello">Hub</h1>
+    <p>Your spaces. Each tile is one department.</p>
+  </div>
   <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
   <div class="hub-tiles" id="spaces"></div>
   <p class="dame-empty" id="empty" hidden>You have no spaces yet. An IT admin creates a space; its admin then adds you or gives you a tool.</p>

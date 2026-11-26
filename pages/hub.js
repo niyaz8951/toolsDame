@@ -16,6 +16,7 @@
   function tile(space) {
     var a = ui.el('a', 'hub-tile');
     a.href = api.href('space.html') + '?space=' + encodeURIComponent(space.id);
+    a.appendChild(ui.el('span', 'hub-tile-icon', (space.name.trim().charAt(0) || 'S').toUpperCase()));
     a.appendChild(ui.el('span', 'hub-tile-name', space.name));
     if (space.description) { a.appendChild(ui.el('span', 'hub-tile-text', space.description)); }
     if (space.is_admin) { a.appendChild(ui.el('span', 'hub-pill', 'You are admin')); }

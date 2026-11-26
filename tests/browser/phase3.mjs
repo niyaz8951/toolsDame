@@ -215,7 +215,7 @@ async function run(width, height, label) {
     let f = await sealed(di.page, '#who:has-text("Hello, Di Manager")');
     check(/level on this tool: approve/.test(await f.textContent('#who')), T + 'the tool learns the user\'s name and level from the kit');
     check(await di.page.locator('#preview-pill').isVisible(), T + 'the preview is marked as a preview');
-    check((await f.evaluate(() => getComputedStyle(document.querySelector('.dame-btn-primary')).backgroundColor)) === 'rgb(10, 125, 108)', T + 'the kit theme and the tool\'s own style sheet are both in place');
+    check((await f.evaluate(() => getComputedStyle(document.querySelector('.dame-btn-primary')).backgroundImage)).includes('rgb(10, 125, 108)'), T + 'the kit theme and the tool\'s own style sheet are both in place');
     await f.fill('#kw', '35.17');
     check((await f.inputValue('#tr')) === '10', T + 'the tool\'s own script runs (35.17 kW = 10 TR)');
     await f.click('#toast');
@@ -416,7 +416,7 @@ async function run(width, height, label) {
     await openTool(ben.page, 'secret');
     f = await sealed(ben.page, '#go');
     const plain = await f.evaluate(() => ({ pad: parseFloat(getComputedStyle(document.body).paddingLeft), border: getComputedStyle(document.getElementById('kw')).borderRadius, button: getComputedStyle(document.getElementById('go')).borderRadius }));
-    check(plain.pad >= 16 && plain.border === '8px' && plain.button === '8px', T + 'plain HTML gets the site\'s spacing, fields and buttons by itself');
+    check(plain.pad >= 16 && plain.border === '10px' && plain.button === '10px', T + 'plain HTML gets the site\'s spacing, fields and buttons by itself');
     await f.click('#go');
     await ben.page.waitForSelector('#oops:not([hidden])');
     check(/notThere is not defined/.test(await ben.page.textContent('#oops-text')) && await ben.page.locator('#oops-copy').isVisible(), T + 'when a tool\'s code fails, its builder sees the error in words');

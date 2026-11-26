@@ -127,6 +127,18 @@ async function run(width, height, label) {
     await f.fill('#fields input >> nth=0', '35.168525');
     check((await f.inputValue('#fields input >> nth=1')) === '10' && /Hello, Ray Reader/.test(await f.textContent('#hello')), T + 'stand-alone: a reader uses it (35.17 kW = 10 TR); nothing is saved');
     check(mock.calls.every((c) => !/dame_rows|dame_table/.test(c.path)), T + 'stand-alone: it never touched the data service');
+    // --- day and night: the button of the bar, kept in this browser, followed by the tool
+    const before = await f.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    await ray.page.click('.hub-theme');
+    await f.waitForFunction(() => document.documentElement.getAttribute('data-theme') === 'night');
+    const night = await f.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    check(before !== night && (await ray.page.evaluate(() => localStorage.getItem('dame.theme'))) === 'night' && (await f.inputValue('#fields input >> nth=0')) === '35.168525', T + 'the day and night button changes the site and the running tool; what was typed stays');
+    await ray.page.reload();
+    f = await sealed(ray.page, '#fields input');
+    check((await ray.page.evaluate(() => document.documentElement.getAttribute('data-theme'))) === 'night' && (await f.evaluate(() => document.documentElement.getAttribute('data-theme'))) === 'night', T + 'the choice is kept: the page and the tool open in night again');
+    await ray.page.click('.hub-theme');
+    await f.waitForFunction(() => document.documentElement.getAttribute('data-theme') === 'day');
+    await f.fill('#fields input >> nth=0', '35.168525');
     await shot(ray.page, '1-converter');
     check(await fits(ray.page), T + 'the stand-alone tool fits the screen');
 

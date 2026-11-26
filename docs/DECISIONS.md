@@ -95,6 +95,11 @@
 - Anything clicked with the mouse looks like a button.
 - Pages must open fast: a page asks the database everything it needs at once.
 
+## Owner, 2026-11-26 (the look)
+- The site takes its look from the earlier DAME hub: the blue palette, the mark, the icons, the movement, the day and night button. This changes "nothing is taken from DAME HUB" for the look only. No code, data, table or structure of the hub is used; the hub repo was read, not touched.
+- Text on buttons uses a slightly darker blue than the hub (#0078B8) so that white text stays readable; the mark, the hero and the icons keep the hub's bright blue.
+- The theme choice is one word in the browser's storage of the site. A tool cannot read it; it is told "day" or "night" by the shell.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

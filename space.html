@@ -18,6 +18,7 @@
 <link rel="icon" href="kit/v1/icon.svg">
 <link rel="stylesheet" href="kit/v1/dame.css">
 <link rel="stylesheet" href="kit/v1/shell.css">
+<script src="kit/v1/theme.js"></script>
 <script src="kit/v1/config.js" defer></script>
 <script src="kit/v1/api.js" defer></script>
 <script src="kit/v1/shell.js" defer></script>
@@ -25,9 +26,11 @@
 </head>
 <body data-page="space" data-title="Space">
 <main class="dame-page" id="main" hidden>
-  <p><a class="dame-btn hub-small hub-back" href="hub.html">Back to the hub</a></p>
-  <h1 id="title">Space</h1>
-  <p class="dame-muted" id="text"></p>
+  <div class="hub-hero">
+    <a class="dame-btn hub-small hub-back" href="hub.html">Back to the hub</a>
+    <h1 id="title">Space</h1>
+    <p id="text"></p>
+  </div>
   <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
   <div class="hub-tiles" id="tools"></div>
   <p class="dame-empty" id="empty" hidden>No tools for you here yet. The space admin gives access to each tool.</p>

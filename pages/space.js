@@ -20,7 +20,7 @@
     var a = ui.el('a', 'hub-tile' + (t.active ? '' : ' hub-tile-off'));
     a.href = api.href('tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(t.id);
     if (/^#[0-9a-f]{6}$/.test(t.colour)) { a.style.setProperty('--dame-accent', t.colour); }
-    if (t.icon) { a.appendChild(ui.el('span', 'hub-tile-icon', t.icon)); }
+    a.appendChild(ui.el('span', 'hub-tile-icon', t.icon || (t.name.trim().charAt(0) || 'T').toUpperCase()));
     a.appendChild(ui.el('span', 'hub-tile-name', t.name));
     a.appendChild(ui.el('span', 'hub-tile-text', t.description));
     var pills = ui.el('span');

@@ -17,6 +17,7 @@
 - The builder: "I already have a page", plain HTML styled like the site, "Open the preview" and "Make live" right after the upload.
 - `tests/browser/company.mjs`: seven departments, 14 tools, 1,176 cross-department tries, all refused. Write-up: `docs/IT-REVIEW.md`.
 - The builder is a guide: three choices, then one step at a time; a database question in plain words; every link a button; pages load about twice as fast.
+- The look of the DAME hub: palette, mark, movement, a day and night button that tools follow.
 - Tests, all passing locally: five SQL test files, six browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
