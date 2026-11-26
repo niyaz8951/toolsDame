@@ -1,0 +1,319 @@
+/*
+ * tests/browser/phase3.mjs - the phase 3 test in a real browser, at desktop
+ * width and at 390 px: upload, checks, preview, make live, roll back, and
+ * THE HOSTILE-TOOL TEST: a tool written to break out cannot read a token,
+ * reach the network, the shell or another tool, or move the page.
+ * Serves: phase 3 test and SECURITY "Browser". Must not change: a later
+ * phase may add attempts to the hostile tool, never remove one. The pages are
+ * used exactly as they are in the repo; only the database address is pointed
+ * at the stand-in.
+ *
+ * Needs once:  npm install --no-save @electric-sql/pglite playwright-core
+ * Run:         node tests/browser/phase3.mjs        (exit code 0 = all passed)
+ */
+import { readFile, mkdir } from 'node:fs/promises';
+import { deflateRawSync } from 'node:zlib';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { chromium } from 'playwright-core';
+import { start } from '../../tools/serve.mjs';
+import { startMock, KEY } from './mock-supabase.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(HERE, '..', '..');
+const SHOTS = process.env.SHOTS || '';
+const SITE_PORT = 8161;
+const MOCK_PORT = 8162;
+const SITE = 'http://127.0.0.1:' + SITE_PORT + '/toolsDame/';
+const MOCK = 'http://127.0.0.1:' + MOCK_PORT;
+const CONFIG = await readFile(join(ROOT, 'kit/v1/config.js'), 'utf8');
+const REAL = (CONFIG.match(/supabaseUrl:\s*'([^']*)'/) || [])[1];
+const REAL_KEY = (CONFIG.match(/publishableKey:\s*'([^']*)'/) || [])[1];
+const PW = 'correct horse battery 42';
+
+let failed = 0;
+function check(ok, what) {
+  if (!ok) { failed += 1; }
+  console.log((ok ? 'ok    ' : 'FAIL  ') + what);
+}
+
+// ------------------------------------------------------------------ fixtures
+
+async function example() {
+  const out = [];
+  for (const name of ['index.html', 'about.html', 'style.css', 'app.js']) {
+    out.push({ name, mimeType: 'text/plain', buffer: await readFile(join(ROOT, 'examples/hello-tool', name)) });
+  }
+  return out;
+}
+
+function crc32(buf) {
+  let c = ~0;
+  for (let i = 0; i < buf.length; i += 1) {
+    c ^= buf[i];
+    for (let k = 0; k < 8; k += 1) { c = (c >>> 1) ^ (0xedb88320 & -(c & 1)); }
+  }
+  return ~c >>> 0;
+}
+
+// A plain zip, as a computer's "compress" makes it, with everything in one folder.
+function zip(files, folder) {
+  const parts = [];
+  const central = [];
+  let at = 0;
+  for (const f of files) {
+    const name = Buffer.from(folder + '/' + f.name);
+    const data = deflateRawSync(f.buffer);
+    const head = Buffer.alloc(30);
+    head.writeUInt32LE(0x04034b50, 0); head.writeUInt16LE(20, 4); head.writeUInt16LE(8, 8);
+    head.writeUInt32LE(crc32(f.buffer), 14); head.writeUInt32LE(data.length, 18); head.writeUInt32LE(f.buffer.length, 22);
+    head.writeUInt16LE(name.length, 26);
+    const cen = Buffer.alloc(46);
+    cen.writeUInt32LE(0x02014b50, 0); cen.writeUInt16LE(20, 4); cen.writeUInt16LE(20, 6); cen.writeUInt16LE(8, 10);
+    cen.writeUInt32LE(crc32(f.buffer), 16); cen.writeUInt32LE(data.length, 20); cen.writeUInt32LE(f.buffer.length, 24);
+    cen.writeUInt16LE(name.length, 28); cen.writeUInt32LE(at, 42);
+    parts.push(head, name, data);
+    central.push(cen, name);
+    at += 30 + name.length + data.length;
+  }
+  const dir = Buffer.concat(central);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(files.length, 8); end.writeUInt16LE(files.length, 10);
+  end.writeUInt32LE(dir.length, 12); end.writeUInt32LE(at, 16);
+  return Buffer.concat([...parts, dir, end]);
+}
+
+// ------------------------------------------------------------------ the run
+
+async function run(width, height, label) {
+  const asked = [];                                   // every address either server was asked for
+  const mock = await startMock(MOCK_PORT);
+  const site = await start(SITE_PORT, (rel, text) => text.split(REAL).join(MOCK).split(REAL_KEY).join(KEY), (u) => asked.push('site ' + u));
+  const browser = await chromium.launch({ executablePath: process.env.CHROME || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const problems = [];
+  const popups = [];
+  const T = label + ': ';
+  let quiet = false;                                  // true while the hostile tool is expected to make noise
+
+  async function person(email, name) {
+    const id = await mock.addUser(email, name, PW, false);
+    const ctx = await browser.newContext({ viewport: { width, height } });
+    ctx.on('page', (p) => { if (ctx.pages().length > 1) { popups.push(p.url()); } });
+    const page = await ctx.newPage();
+    page.on('console', (m) => {
+      if (!quiet && m.type() === 'error' && !/Failed to load resource.*(40[013])/.test(m.text())) { problems.push(m.text()); }
+    });
+    page.on('pageerror', (e) => { if (!quiet) { problems.push(String(e)); } });
+    page.on('dialog', (d) => { problems.push('dialog opened: ' + d.message()); d.dismiss(); });
+    await page.goto(SITE);
+    await page.waitForSelector('#panel-signin:not([hidden])');
+    await page.fill('#si-email', email);
+    await page.fill('#si-password', PW);
+    await page.click('#form-signin button[type=submit]');
+    await page.waitForURL(SITE + 'hub.html');
+    await page.waitForSelector('#main:not([hidden])');
+    return { page, id };
+  }
+  const fits = async (page) => (await page.evaluate(() => document.documentElement.scrollWidth)) <= width;
+  const shot = async (page, name) => {
+    if (SHOTS) { await mkdir(SHOTS, { recursive: true }); await page.screenshot({ path: join(SHOTS, label + '-' + name + '.png'), fullPage: true }); }
+  };
+  const said = async (page, text) => {
+    try { await page.waitForSelector('#msg.hub-ok:has-text("' + text + '")', { timeout: 10000 }); }
+    catch (e) { throw new Error('expected "' + text + '", the page says: ' + (await page.textContent('#msg')) + ' / ' + (await page.textContent('#up-report').catch(() => ''))); }
+  };
+  const refused = async (page, path) => {
+    await page.goto(SITE + path);
+    await page.waitForSelector('#msg:not([hidden])');
+    return (await page.textContent('#msg')) + ((await page.locator('#frame').isVisible().catch(() => false)) ? ' [TOOL SHOWN]' : '');
+  };
+  // The sealed frame of the tool, once it holds what we wait for.
+  async function sealed(page, selector) {
+    for (let i = 0; i < 100; i += 1) {
+      for (const f of page.frames()) {
+        if (f.url() === 'about:srcdoc' && await f.locator(selector).count().catch(() => 0)) { return f; }
+      }
+      await page.waitForTimeout(100);
+    }
+    throw new Error('the tool did not show ' + selector);
+  }
+  const openTool = async (page, tool, extra = '') => { await page.goto(SITE + 'tool.html?space=lab&tool=' + tool + extra); };
+  async function upload(page, files, note) {
+    await page.setInputFiles('#up-files', files);
+    await page.waitForSelector('#up-report li.hub-ok, #up-report li.hub-warn');
+    if (note) { await page.fill('#up-note', note); }
+  }
+  const twice = async (page, box, labelText) => {
+    await page.click(box + ' button:text-is("' + labelText + '")');
+    await page.click(box + ' button:text-is("Press again to confirm")');
+  };
+
+  try {
+    const ben = await person('ben@test.dame', 'Ben Admin');
+    const di = await person('di@test.dame', 'Di Manager');
+    const cy = await person('cy@test.dame', 'Cy Reader');
+    const zed = await person('zed@test.dame', 'Zed Outside');
+    await mock.sql(`insert into core.spaces (id, name, created_by) values ('lab', 'Lab', '${ben.id}')`);
+    await mock.sql(`insert into core.space_admins (space, user_id, added_by) values ('lab', '${ben.id}', '${ben.id}')`);
+    await mock.sql(`insert into core.tools (space, id, name, icon, created_by) values ('lab', 'hello', 'Hello', 'H', '${ben.id}'), ('lab', 'hostile', 'Hostile', '', '${ben.id}'), ('lab', 'secret', 'Secret', '', '${ben.id}')`);
+    await mock.sql(`insert into core.tool_managers (space, tool, user_id, added_by) values ('lab', 'hello', '${di.id}', '${ben.id}'), ('lab', 'hostile', '${di.id}', '${ben.id}')`);
+    await mock.sql(`insert into core.tool_access (space, tool, user_id, level, added_by) values ('lab', 'hello', '${cy.id}', 'read', '${ben.id}'), ('lab', 'hostile', '${cy.id}', 'read', '${ben.id}')`);
+
+    // --- nothing uploaded yet
+    await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=hello');
+    await di.page.waitForSelector('#body:not([hidden])');
+    check(/Nothing is live yet/.test(await di.page.textContent('#ver-state')) && await di.page.locator('#versions-empty').isVisible(), T + 'a new tool has no version and says so');
+    check(/not published yet/.test(await refused(cy.page, 'tool.html?space=lab&tool=hello')), T + 'a reader is told the tool is not published');
+    check(/Nothing is live yet/.test(await refused(di.page, 'tool.html?space=lab&tool=hello')), T + 'its manager is told what to do next');
+
+    // --- the checks before upload
+    await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=hello');
+    await di.page.waitForSelector('#body:not([hidden])');
+    const bad = '<!doctype html><html><head><title>x</title><script src="https://cdn.example.com/lib.js?LEAK-upload"></script>' +
+      '<link rel="stylesheet" href="missing.css"></head><body><img src="//img.example.com/a.png"><iframe src="x.html"></iframe><a href="nowhere.html">x</a></body></html>';
+    await upload(di.page, [{ name: 'index.html', mimeType: 'text/html', buffer: Buffer.from(bad) }]);
+    const report = await di.page.textContent('#up-report');
+    check(/does not load the kit/.test(report) && /from outside the site/.test(report) && /missing\.css, which is not among/.test(report) && /<iframe>/.test(report) && /nowhere\.html, which is not a page/.test(report), T + 'a bad upload is explained line by line');
+    check(await di.page.locator('#up-send').isDisabled(), T + 'a version with a problem cannot be uploaded');
+    await upload(di.page, [{ name: 'home.html', mimeType: 'text/html', buffer: Buffer.from('<p>x</p>') }]);
+    check(/no page named index\.html/.test(await di.page.textContent('#up-report')), T + 'a tool without index.html is refused');
+    await upload(di.page, [{ name: 'tool.zip', mimeType: 'application/zip', buffer: Buffer.from('not a zip at all') }]);
+    check(/zip cannot be read/.test(await di.page.textContent('#up-report')), T + 'a broken zip is refused in plain words');
+    check(!asked.some((u) => /LEAK/.test(u)) && !mock.calls.some((c) => /LEAK/.test(c.path)), T + 'checking files loads nothing they point to');
+
+    // --- upload version 1 from loose files
+    await upload(di.page, await example(), 'first');
+    check(/Ready to upload: (about\.html, index\.html|index\.html, about\.html)/.test(await di.page.textContent('#up-report')), T + 'the example tool passes the checks');
+    await shot(di.page, '1-upload-ready');
+    await di.page.click('#up-send');
+    await said(di.page, 'Version 1 is uploaded and is the preview');
+    check((await di.page.locator('#versions tr').count()) === 1 && /Preview/.test(await di.page.textContent('#versions')), T + 'version 1 is listed as the preview');
+    check(mock.storedNames().sort().join(',') === 'lab/hello/1/about.html,lab/hello/1/index.html', T + 'each page is stored as one file under space/tool/version');
+    check(await fits(di.page), T + 'tool admin page fits the screen');
+
+    // --- preview: managers only
+    await openTool(di.page, 'hello', '&preview=1');
+    let f = await sealed(di.page, '#who:has-text("Hello, Di Manager")');
+    check(/level on this tool: approve/.test(await f.textContent('#who')), T + 'the tool learns the user\'s name and level from the kit');
+    check(await di.page.locator('#preview-pill').isVisible(), T + 'the preview is marked as a preview');
+    check((await f.evaluate(() => getComputedStyle(document.querySelector('.dame-btn-primary')).backgroundColor)) === 'rgb(10, 125, 108)', T + 'the kit theme and the tool\'s own style sheet are both in place');
+    await f.fill('#kw', '35.17');
+    check((await f.inputValue('#tr')) === '10', T + 'the tool\'s own script runs (35.17 kW = 10 TR)');
+    await f.click('#toast');
+    check(await f.locator('.dame-toast:has-text("A message from the tool.")').isVisible(), T + 'Dame.toast shows a message');
+    await f.click('#save');
+    await f.waitForSelector('#saved:has-text("tables arrive in phase 4")');
+    check(true, T + 'saving is refused with a plain sentence until phase 4');
+    await f.click('a:has-text("An outside link")');
+    await di.page.waitForSelector('#ask:not([hidden])');
+    check(/example\.org/.test(await di.page.textContent('#ask-url')) && popups.length === 0, T + 'an outside link asks first and opens nothing by itself');
+    await di.page.click('#ask-no');
+    await shot(di.page, '2-preview');
+    await f.click('a:has-text("Second page")');
+    f = await sealed(di.page, 'h1:has-text("Second page")');
+    await f.click('a:has-text("Back to the first page")');
+    f = await sealed(di.page, '#who:has-text("Hello, Di Manager")');
+    check(true, T + 'the tool moves between its own pages');
+    check(await fits(di.page), T + 'the tool page fits the screen');
+    check(/do not look after this tool/.test(await refused(cy.page, 'tool.html?space=lab&tool=hello&preview=1')), T + 'a reader cannot open the preview');
+    check(/not published yet/.test(await refused(cy.page, 'tool.html?space=lab&tool=hello')), T + 'a preview is not live');
+    const peek = await cy.page.evaluate(() => window.DameApi.fileBytes('lab/hello/1/index.html').then(() => 'READ', (e) => e.code));
+    check(peek === 'file', T + 'a reader cannot fetch the preview files directly (' + peek + ')');
+
+    // --- make live
+    await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=hello');
+    await di.page.waitForSelector('#body:not([hidden])');
+    await di.page.click('#versions button:text-is("Make live")');
+    check(/Nothing is live yet/.test(await di.page.textContent('#ver-state')), T + 'one press on Make live changes nothing');
+    await di.page.click('#versions button:text-is("Press again to confirm")');
+    await said(di.page, 'Version 1 is live');
+    await openTool(cy.page, 'hello');
+    f = await sealed(cy.page, '#who:has-text("Hello, Cy Reader")');
+    check(/level on this tool: read/.test(await f.textContent('#who')), T + 'a reader opens the live tool with his own level');
+    check(!(await cy.page.locator('#admin').isVisible()) && !(await cy.page.locator('#preview-pill').isVisible()), T + 'a reader sees no admin link and no preview mark');
+    await shot(cy.page, '3-live');
+    check(/does not allow this/.test(await refused(zed.page, 'tool.html?space=lab&tool=hello')), T + 'a person without the tool cannot open it');
+    const out1 = await zed.page.evaluate(() => window.DameApi.fileBytes('lab/hello/1/index.html').then(() => 'READ', (e) => e.code));
+    const out2 = await zed.page.evaluate(() => window.DameApi.fileSend('lab/hello/1/evil.html', new Blob(['x'], { type: 'text/html' })).then(() => 'WRITTEN', (e) => e.code));
+    const out3 = await cy.page.evaluate(() => window.DameApi.fileSend('lab/hello/1/index.html', new Blob(['x'], { type: 'text/html' })).then(() => 'WRITTEN', (e) => e.code));
+    const out4 = await di.page.evaluate(() => window.DameApi.fileSend('lab/hello/1/index.html', new Blob(['x'], { type: 'text/html' })).then(() => 'WRITTEN', (e) => e.code));
+    check([out1, out2, out3, out4].join(',') === 'file,upload,upload,upload', T + 'the file store refuses outsiders, readers writing, and any change to a ready version (' + [out1, out2, out3, out4].join(',') + ')');
+
+    // --- version 2 from a zip, then roll back
+    const v2 = (await example()).map((x) => x.name === 'index.html' ? { ...x, buffer: Buffer.from(x.buffer.toString().replace('<h1>Hello tool</h1>', '<h1>Hello tool, version two</h1>')) } : x);
+    await upload(di.page, [{ name: 'hello.zip', mimeType: 'application/zip', buffer: zip(v2, 'hello-tool') }], 'second');
+    check(/Ready to upload/.test(await di.page.textContent('#up-report')), T + 'a zip with the files in a folder is read');
+    await di.page.click('#up-send');
+    await said(di.page, 'Version 2 is uploaded and is the preview');
+    await openTool(cy.page, 'hello');
+    f = await sealed(cy.page, 'h1');
+    check((await f.textContent('h1')) === 'Hello tool', T + 'readers keep version 1 while version 2 is only a preview');
+    await twice(di.page, '#versions tr:has-text("second")', 'Make live');
+    await said(di.page, 'Version 2 is live');
+    await openTool(cy.page, 'hello');
+    f = await sealed(cy.page, 'h1:has-text("version two")');
+    check(true, T + 'after Make live readers get version 2');
+    await twice(di.page, '#versions tr:has-text("first")', 'Roll back to this');
+    await said(di.page, 'Rolled back: version 1 is live again');
+    await openTool(cy.page, 'hello');
+    f = await sealed(cy.page, 'h1');
+    check((await f.textContent('h1')) === 'Hello tool', T + 'roll back brings version 1 back for everyone');
+    check(/rolled back/.test(await di.page.textContent('#audit tr >> nth=0')) && /version 2 > 1/.test(await di.page.textContent('#audit tr >> nth=0')), T + 'the roll back is at the top of the tool\'s audit');
+    await shot(di.page, '4-versions');
+
+    // --- a stored file changed behind the platform's back is not run
+    mock.tamper('lab/hello/1/index.html', '<!doctype html><html><body><h1 id="evil">changed</h1></body></html>');
+    check(/is not the one that was uploaded/.test(await refused(cy.page, 'tool.html?space=lab&tool=hello')), T + 'a stored page that was changed is refused, not run');
+
+    // --- THE HOSTILE TOOL
+    const hostile = (await readFile(join(HERE, 'fixtures/hostile/index.html'), 'utf8')).split('__SITE__').join(SITE).split('__MOCK__').join(MOCK);
+    await di.page.goto(SITE + 'admin/tool.html?space=lab&tool=hostile');
+    await di.page.waitForSelector('#body:not([hidden])');
+    await upload(di.page, [{ name: 'index.html', mimeType: 'text/html', buffer: Buffer.from(hostile) }]);
+    check(/Ready to upload/.test(await di.page.textContent('#up-report')) && /tries to call a server/.test(await di.page.textContent('#up-report')), T + 'hostile tool: the checks let it through with a note (the frame is the wall, not the checks)');
+    await di.page.click('#up-send');
+    await said(di.page, 'Version 1 is uploaded');
+    await twice(di.page, '#versions', 'Make live');
+    await said(di.page, 'Version 1 is live');
+
+    asked.length = 0;
+    mock.calls.length = 0;
+    quiet = true;
+    await openTool(cy.page, 'hostile');
+    f = await sealed(cy.page, '#out[data-done]');
+    const result = JSON.parse(await f.textContent('#out'));
+    const info = result.nestedRealmInfo;
+    delete result.nestedRealmInfo;
+    const leaked = Object.keys(result).filter((k) => !/^blocked/.test(String(result[k])));
+    check(Object.keys(result).length >= 30, T + 'hostile tool: ' + Object.keys(result).length + ' attempts were made');
+    check(leaked.length === 0, T + 'hostile tool: every attempt is blocked' + (leaked.length ? ' -> ' + leaked.map((k) => k + ': ' + result[k]).join(' | ') : ''));
+    for (const k of ['origin', 'localStorage', 'topStorage', 'topDocument', 'fetchApi', 'websocket', 'worker', 'portAbuse']) {
+      console.log('        ' + k + ': ' + result[k]);
+    }
+    console.log('        (not asserted) ' + info);
+    await cy.page.waitForTimeout(2500);                 // the page-replacing moves happen now
+    const leaks = asked.filter((u) => /LEAK/.test(u)).concat(mock.calls.filter((c) => /LEAK/.test(c.path)).map((c) => 'api ' + c.path));
+    check(leaks.length === 0, T + 'hostile tool: no request of the tool reached any server' + (leaks.length ? ' -> ' + leaks.join(' | ') : ''));
+    check(cy.page.url() === SITE + 'tool.html?space=lab&tool=hostile', T + 'hostile tool: the page was not moved');
+    check(popups.length === 0, T + 'hostile tool: no window was opened');
+    check(await cy.page.locator('.hub-bar .hub-brand').isVisible() && (await cy.page.evaluate(() => typeof window.DameApi.rpc)) === 'function', T + 'hostile tool: the shell is untouched');
+    check((await cy.page.evaluate(() => window.DameApi.rpc('dame_me').then((m) => m.name))) === 'Cy Reader', T + 'hostile tool: the user\'s session is still his own');
+    const toolCalls = mock.calls.filter((c) => /rpc/.test(c.path)).map((c) => c.path.split('/').pop());
+    check(toolCalls.every((n) => ['dame_me', 'dame_tool_open'].includes(n)), T + 'hostile tool: the shell made no call on its behalf (' + [...new Set(toolCalls)].join(', ') + ')');
+    await shot(cy.page, '5-hostile');
+    quiet = false;
+
+    check(problems.length === 0, T + 'no page error, blocked load or dialog outside the hostile test' + (problems.length ? ' -> ' + problems.slice(0, 4).join(' | ') : ''));
+  } catch (err) {
+    check(false, label + ': the test stopped: ' + String(err).split('\n').slice(0, 3).join(' ') + (problems.length ? ' | ' + problems.slice(0, 4).join(' | ') : ''));
+  } finally {
+    await browser.close();
+    site.close();
+    mock.server.close();
+  }
+}
+
+await run(1280, 800, 'desktop');
+await run(390, 844, 'phone');
+console.log(failed ? '\n' + failed + ' check(s) FAILED' : '\nAll checks passed');
+process.exit(failed ? 1 : 0);

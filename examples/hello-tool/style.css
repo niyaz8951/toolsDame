@@ -1,0 +1,9 @@
+/*
+ * examples/hello-tool/style.css - the example tool's own few styles.
+ * Serves: site rule 1 (use dame.css; a tool sets only its accent colour).
+ * Must not change: no colours of its own except the accent, no outside font.
+ */
+:root { --dame-accent: #0a7d6c; }
+.hello-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.hello-grid label { font-weight: 600; font-size: .95rem; }
+.hello-grid .dame-input { margin-top: 6px; }

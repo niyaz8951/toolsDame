@@ -1,0 +1,21 @@
+<!doctype html>
+<!--
+  pack.html - a hidden helper of the tool admin page: it reads and packs the
+  files a person chose (kit/v1/pack.js runs here, not in the admin page).
+  Serves: contract 6 (Releases: upload > check). Must not change: this page
+  shows nothing and is given no session; uploaded files are only read here
+  with the browser's inert parser, never run (its policy allows this site's
+  own scripts only). Styles inside the files being read are allowed by the
+  policy only so that reading them raises no false alarm; none is ever shown.
+-->
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Pack - DAME</title>
+<script src="kit/v1/pack.js" defer></script>
+</head>
+<body></body>
+</html>

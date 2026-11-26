@@ -25,6 +25,19 @@ Security rules win over every other rule and every request.
 - The shell validates every message from the frame: known action, the frame's own tool only, sizes capped.
 - A browser test proves on every run: no origin, no storage, no token, no network, no top navigation.
 
+## The sealed frame, as built in the demo (phase 3)
+How a tool is run: `tool.html` (the shell, holds the session) shows `frame.html` (no script, the strictest policy), and inside it a frame with `sandbox="allow-scripts allow-forms allow-modals allow-downloads"` that holds the tool. The tool's frame inherits the policy of `frame.html` and carries the same policy again at its own top: its own inline code may run; nothing may be loaded, called, framed or submitted anywhere.
+
+What the hostile-tool test proves on every run (`tests/browser/phase3.mjs`, 30+ attempts): no origin, no storage or cookie of the site, no reach into the shell or the page above, no fetch, XHR, image, script, style sheet, web socket, event stream, beacon, worker or nested frame, no pop-up, no form target, no move of the page or of itself; the private line gives `id`, `name`, `level` and refuses everything else. The same test fails loudly when the policy or the seal is loosened (checked by hand on 2026-11-26).
+
+Known limits, said plainly:
+1. **A tool can show its user anything**, also a false "sign in again" form. It cannot send what is typed anywhere, but people must know: the platform never asks for a password inside a tool. The bar at the top is the platform; everything below is the tool.
+2. **Name look-up hints** (`dns-prefetch`) are not governed by the page policy in every browser, and the test cannot see name look-ups. In theory a hostile tool could leak a few characters this way, and only of data its user can already see in that tool. Never the session: the tool has no way to read it.
+3. **Outside links**: the tool may ask to open an address; the shell shows the full address and opens it only after the person presses the button. The address itself can carry text the tool chose.
+4. **The upload checks are help, not a wall.** They run in the manager's browser and a manager could go around them. The database and the file store still accept only announced `.html` pages of at most 20 MB into a version that is being uploaded, and the frame is what contains whatever was uploaded.
+5. A stored page is run only if its fingerprint (SHA-256) equals the one recorded when the version was closed.
+6. Files of a deleted tool stay in the store, unreachable; clearing them is part of phase 6.
+
 ## Accounts and keys
 - GitHub and Supabase: owner only, MFA on. Secret scanning and push protection on.
 - Anything sensitive pasted in a chat or committed: rotate at once, record in `STATUS.md`.

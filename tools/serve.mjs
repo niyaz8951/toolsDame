@@ -32,10 +32,12 @@ function send(res, code, type, body) {
   res.end(body);
 }
 
-// transform is for tests only: (path, text) => text, applied to text files.
-export function start(port = 8080, transform = null) {
+// transform and seen are for tests only: transform(path, text) => text is applied
+// to text files; seen(address) is told every request.
+export function start(port = 8080, transform = null, seen = null) {
   const server = createServer(async (req, res) => {
     try {
+      if (seen) { seen(req.url); }   // tests only: every address asked for
       if (req.method !== 'GET' && req.method !== 'HEAD') { return send(res, 405, TYPES['.txt'], 'Only GET.'); }
       const path = decodeURIComponent(new URL(req.url, 'http://local').pathname);
       if (path === '/' || path === PREFIX.slice(0, -1)) {

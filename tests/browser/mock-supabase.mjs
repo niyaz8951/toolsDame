@@ -21,6 +21,7 @@ function lit(v) {
   if (v === null || v === undefined) { return 'null'; }
   if (typeof v === 'boolean') { return v ? 'true' : 'false'; }
   if (typeof v === 'number' && Number.isFinite(v)) { return String(v); }
+  if (typeof v === 'object') { return "'" + JSON.stringify(v).replace(/'/g, "''") + "'::jsonb"; }
   return "'" + String(v).replace(/'/g, "''") + "'";
 }
 
@@ -36,6 +37,7 @@ export async function startMock(port, { confirmEmail = true } = {}) {
   const refreshes = new Map();  // refresh token -> { email, session_id }
   let queue = Promise.resolve();
   const calls = [];
+  const stored = new Map();     // file name -> bytes
 
   function session(email, sessionId) {
     const u = users.get(email);
@@ -70,17 +72,20 @@ export async function startMock(port, { confirmEmail = true } = {}) {
   const server = createServer((req, res) => {
     const cors = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'apikey, authorization, content-type',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      'Access-Control-Allow-Headers': 'apikey, authorization, content-type, x-upsert, cache-control',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
     };
     const reply = (status, body) => {
       res.writeHead(status, { ...cors, 'Content-Type': 'application/json' });
       res.end(body === undefined ? '' : JSON.stringify(body));
     };
     if (req.method === 'OPTIONS') { res.writeHead(204, cors); return res.end(); }
-    let raw = '';
-    req.on('data', (c) => { raw += c; });
+    const chunks = [];
+    req.on('data', (c) => { chunks.push(c); });
     req.on('end', () => {
+      const bytes = Buffer.concat(chunks);
+      const isFile = req.url.startsWith('/storage/v1/');
+      const raw = isFile ? '' : bytes.toString('utf8');
       queue = queue.then(async () => {
         const url = new URL(req.url, 'http://mock');
         const auth = req.headers.authorization || '';
@@ -124,6 +129,41 @@ export async function startMock(port, { confirmEmail = true } = {}) {
           const out = await rpc(m[1], body, claims);
           return reply(out.status, out.body);
         }
+        // The file store. Like Supabase Storage, it asks the database's own
+        // row rules (the two dame_tools_* policies) for every single file.
+        const up = /^\/storage\/v1\/object\/tools\/(.+)$/.exec(url.pathname);
+        if (up && req.method === 'POST') {
+          if (!claims) { return reply(400, { statusCode: '403', error: 'Unauthorized', message: 'no token' }); }
+          const name = decodeURIComponent(up[1]);
+          const bucket = (await db.query("select file_size_limit, allowed_mime_types from storage.buckets where id = 'tools'")).rows[0];
+          if (!bucket) { return reply(400, { statusCode: '404', error: 'Bucket not found' }); }
+          if (!bucket.allowed_mime_types.includes(String(req.headers['content-type']))) { return reply(400, { statusCode: '415', error: 'invalid_mime_type' }); }
+          if (bytes.length > Number(bucket.file_size_limit)) { return reply(400, { statusCode: '413', error: 'Payload too large' }); }
+          try {
+            await db.exec("begin; select set_config('request.jwt.claims', " + lit(JSON.stringify(claims)) + ", true); set local role authenticated; " +
+              "insert into storage.objects (bucket_id, name, owner, metadata) values ('tools', " + lit(name) + ", " + lit(claims.sub) + ", " +
+              lit(JSON.stringify({ size: bytes.length, mimetype: 'text/html' })) + "); commit;");
+          } catch (err) {
+            await db.exec('rollback');
+            return err.code === '23505' ? reply(400, { statusCode: '409', error: 'Duplicate' })
+              : reply(400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+          }
+          stored.set(name, bytes);
+          return reply(200, { Key: 'tools/' + name });
+        }
+        const down = /^\/storage\/v1\/object\/authenticated\/tools\/(.+)$/.exec(url.pathname);
+        if (down && req.method === 'GET') {
+          const name = decodeURIComponent(down[1]);
+          let seen = false;
+          if (claims) {
+            const out = await db.exec("begin; select set_config('request.jwt.claims', " + lit(JSON.stringify(claims)) + ", true); set local role authenticated; " +
+              "select count(*)::int as n from storage.objects where bucket_id = 'tools' and name = " + lit(name) + "; commit;");
+            seen = out[3].rows[0].n === 1;
+          }
+          if (!seen || !stored.has(name)) { return reply(400, { statusCode: '404', error: 'not_found', message: 'Object not found' }); }
+          res.writeHead(200, { ...cors, 'Content-Type': 'text/html' });
+          return res.end(stored.get(name));
+        }
         return reply(404, { message: 'not found' });
       }).catch((err) => { reply(500, { message: String(err) }); });
     });
@@ -140,7 +180,10 @@ export async function startMock(port, { confirmEmail = true } = {}) {
       await db.query('insert into core.profiles (id, email, name, status, is_it) values ($1, $2, $3, $4, $5)', [id, email, name, 'active', isIt]);
       return id;
     },
-    expireTokens() { tokens.clear(); },   // access tokens run out; renewal tokens stay
+    expireTokens() { tokens.clear(); },
+    // Someone changes a stored file behind the platform's back.
+    tamper(name, text) { if (!stored.has(name)) { throw new Error('no such file ' + name); } stored.set(name, Buffer.from(text)); },
+    storedNames() { return [...stored.keys()]; },   // access tokens run out; renewal tokens stay
     sql(text) { return db.query(text); }
   };
 }

@@ -87,3 +87,17 @@ p.hub-msg:not(.dame-card) { margin: 0 0 14px; }
 .hub-tile-off { opacity: .6; }
 .hub-chosen { margin: 6px 0 12px; }
 .hub-list .hub-person > .hub-grow { color: var(--dame-text); font-size: 1rem; }
+
+/* Phase 3: the tool runner and the Files part of the tool admin page. */
+html:has(body.hub-runner), body.hub-runner { height: 100%; }
+body.hub-runner { display: flex; flex-direction: column; }
+.hub-runner .hub-bar { position: static; flex: none; }
+.hub-strip { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 6px var(--dame-gap); font-size: .92rem; border-bottom: 1px solid var(--dame-line); background: var(--dame-bg); }
+.hub-strip .hub-pill { margin: 0; border-color: var(--dame-warn); color: var(--dame-warn); }
+.hub-frame { flex: 1 1 auto; width: 100%; min-height: 0; border: 0; background: var(--dame-bg); }
+.hub-ask { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px var(--dame-gap); background: var(--dame-surface); border-bottom: 2px solid var(--dame-warn); }
+.hub-ask-url { font-family: ui-monospace, Consolas, monospace; font-size: .9rem; overflow-wrap: anywhere; flex: 1 1 200px; }
+.hub-report li { padding: 8px 0 8px 12px; border-left: 4px solid var(--dame-line); border-bottom: 0; margin: 0 0 6px; }
+.hub-report li.hub-warn { border-left-color: var(--dame-warn); font-weight: 400; }
+.hub-report li.hub-ok { border-left-color: var(--dame-ok); }
+input[type=file].dame-input { padding: 10px; }

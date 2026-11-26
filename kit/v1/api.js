@@ -196,6 +196,50 @@
       (code || 'http_' + res.status).slice(0, 40), res.status);
   }
 
+  // ---------------------------------------------------------------- files
+  // A tool's pages live in the private store "tools". The store asks the
+  // database, for every single file, whether this user may read or write it.
+
+  function filePath(path) {
+    return '/storage/v1/object/' + String(path).split('/').map(encodeURIComponent).join('/');
+  }
+
+  async function fileCall(method, route, body) {
+    if (state() !== 'set') {
+      throw new DameError('not_connected', 'The site is not connected to its database. Tell an IT admin.');
+    }
+    var headers = { 'apikey': key, 'Authorization': 'Bearer ' + await token() };
+    if (body) { headers['Content-Type'] = 'text/html'; headers['x-upsert'] = 'false'; }
+    try {
+      return await fetch(url + route, {
+        method: method, headers: headers, body: body || undefined,
+        cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer'
+      });
+    } catch (e) {
+      throw new DameError('offline', 'The server cannot be reached. Check your connection and try again.');
+    }
+  }
+
+  // Stores one page of a version that is being uploaded. path: space/tool/version/page.html
+  async function fileSend(path, blob) {
+    var res = await fileCall('POST', filePath('tools/' + path), blob);
+    if (!res.ok) {
+      var data = null;
+      try { data = await res.json(); } catch (e) { /* no details */ }
+      throw new DameError('upload', 'The page ' + String(path).split('/').pop() + ' could not be stored. Try the upload again; ' +
+        'if it happens again, tell an IT admin this code: ' + String((data && (data.error || data.statusCode)) || 'http_' + res.status).slice(0, 40), res.status);
+    }
+  }
+
+  // Reads one stored page as bytes, if this user may.
+  async function fileBytes(path) {
+    var res = await fileCall('GET', filePath('authenticated/tools/' + path));
+    if (!res.ok) {
+      throw new DameError('file', 'This page of the tool could not be loaded. Reload; if it happens again, ask the tool\'s manager.', res.status);
+    }
+    return res.arrayBuffer();
+  }
+
   // ---------------------------------------------------------------- sign-in
 
   async function signIn(email, password) {
@@ -235,6 +279,8 @@
     signUp: signUp,
     signOut: signOut,
     rpc: rpc,
+    fileSend: fileSend,
+    fileBytes: fileBytes,
     setNotice: setNotice,
     takeNotice: takeNotice
   });

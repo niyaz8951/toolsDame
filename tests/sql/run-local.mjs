@@ -48,7 +48,7 @@ for (const name of (await readdir(HERE)).filter((f) => /_test\.sql$/.test(f)).so
     for (const r of bad) { console.log('        ' + r.test + ' | expected ' + r.expected + ' | got ' + r.got); }
     if (process.argv.includes('--all') && round === 1) { for (const r of rows) { console.log('        ' + (r.pass ? 'ok   ' : 'FAIL ') + r.test); } }
   }
-  const left = await db.query("select (select count(*) from core.profiles) + (select count(*) from core.audit) + (select count(*) from core.sessions) + (select count(*) from core.spaces) + (select count(*) from core.retired_ids) as n, to_regnamespace('dame_test') is null as clean");
+  const left = await db.query("select (select count(*) from core.profiles) + (select count(*) from core.audit) + (select count(*) from core.sessions) + (select count(*) from core.spaces) + (select count(*) from core.retired_ids) + (select count(*) from core.tool_versions) + (select count(*) from storage.objects) as n, to_regnamespace('dame_test') is null as clean");
   const tidy = Number(left.rows[0].n) === 0 && left.rows[0].clean;
   if (!tidy) { failed += 1; }
   console.log((tidy ? 'ok    ' : 'FAIL  ') + name + ' leaves nothing behind');

@@ -1,0 +1,46 @@
+<!doctype html>
+<!--
+  examples/hello-tool/index.html - a first tool to upload, to see the platform work.
+  Serves: contract 4 (Tool kit). Must not change: the two kit lines below are
+  written exactly like this in every tool. No address, key or data in the file.
+  To try it: tool admin page > Files and versions > choose all four files of
+  this folder > Upload version > Open the preview > Make live.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hello tool</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<main class="dame-page">
+  <h1>Hello tool</h1>
+  <p class="dame-muted" id="who">Asking the platform who you are.</p>
+
+  <div class="dame-card">
+    <h2>Cooling capacity converter</h2>
+    <p class="dame-muted">Type a value in any box; the others follow.</p>
+    <div class="hello-grid">
+      <label>kW <input class="dame-input" id="kw" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>TR <input class="dame-input" id="tr" type="number" min="0" step="any" inputmode="decimal"></label>
+      <label>Btu/h <input class="dame-input" id="btu" type="number" min="0" step="any" inputmode="decimal"></label>
+    </div>
+  </div>
+
+  <div class="dame-card">
+    <h2>What a tool can do</h2>
+    <div class="dame-row">
+      <button class="dame-btn dame-btn-primary" type="button" id="toast">Show a message</button>
+      <a class="dame-btn" href="about.html">Second page</a>
+      <a class="dame-btn" href="https://example.org/">An outside link</a>
+      <button class="dame-btn" type="button" id="save">Try to save a row</button>
+    </div>
+    <p class="dame-muted" id="saved"></p>
+  </div>
+</main>
+</body>
+</html>

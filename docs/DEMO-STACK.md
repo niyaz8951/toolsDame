@@ -7,6 +7,8 @@ The demo proves the idea and the contracts. It is not the production design: rea
 | Company sign-in (Entra ID, MFA) | Supabase Auth, email + password, approval by an IT admin | No SSO, no company MFA, leavers disabled by hand |
 | One session, 12 hours, ended at sign-out or switch-off | `core.sessions`: only a person's newest sign-in is honoured, for 12 hours | The sign-in service itself still thinks older sessions are alive; only the `dame_*` functions refuse them |
 | Proof of email, password rules | Supabase defaults: confirmation link by email; the page asks for 12 characters | Built-in sender: a few emails an hour; the 12-character rule is only in the page unless set in Supabase |
+| The site's own address | Shared with every other Pages site of the same GitHub account | A script on any of them could read a DAME session kept in the browser. Accepted by the owner for the demo; sample data only |
+| The tool's own address (`/<space>/<tool>/`) and server-sent policy | `tool.html?space=..&tool=..` runs the tool in a sealed frame inside `frame.html`; the policy is inherited from that page and repeated in the tool's page | No address of its own for a tool; limits listed in SECURITY "The sealed frame" |
 | Hub app and API | Static pages on GitHub Pages + `dame_*` functions in Supabase | Page code is public (it holds no data) |
 | Security headers sent by the server | GitHub Pages sends none of ours: the policy is a tag at the top of each page; hub pages refuse by script to run inside a frame | A tag cannot forbid framing or report violations; the script check is weaker than the header |
 | Core database server | Schema `core` in the one Supabase database | Same server as the spaces |

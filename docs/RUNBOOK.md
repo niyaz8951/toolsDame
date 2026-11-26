@@ -22,6 +22,7 @@ node tests/phase0.mjs
 node tests/sql/run-local.mjs
 node tests/browser/phase1.mjs
 node tests/browser/phase2.mjs
+node tests/browser/phase3.mjs     (includes the hostile-tool test)
 ```
 
 ## Switch on GitHub Pages (once)

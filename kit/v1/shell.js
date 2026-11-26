@@ -272,7 +272,8 @@
     'tool.created': 'created the tool', 'tool.changed': 'changed the tool',
     'tool.switched_off': 'switched the tool off', 'tool.switched_on': 'switched the tool on',
     'tool.deleted': 'deleted the tool', 'tool.manager_added': 'named manager', 'tool.manager_removed': 'removed manager',
-    'tool.access_set': 'gave access', 'tool.access_removed': 'took access away'
+    'tool.access_set': 'gave access', 'tool.access_removed': 'took access away',
+    'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back'
   };
 
   // Fills an audit table page by page. fetchPage(beforeId) returns the rows.
@@ -286,8 +287,9 @@
         var where = [a.space, a.tool].filter(Boolean).join(' / ');
         var about = a.target || '';
         var d = a.detail || {};
-        if (d.from !== undefined && d.to !== undefined) { about += (about ? ': ' : '') + d.from + ' > ' + d.to; }
+        if (d.from !== undefined && d.to !== undefined) { about += (about ? ': ' : '') + (/^version\./.test(a.action) ? 'version ' : '') + d.from + ' > ' + d.to; }
         else if (d.name) { about += (about ? ', ' : '') + d.name; }
+        else if (d.version) { about += 'version ' + d.version + (d.note ? ': ' + d.note : ''); }
         addRow(body, [when(a.at), a.actor, ACTIONS[a.action] || a.action, where, about]);
       });
       if (rows.length) { oldest = rows[rows.length - 1].id; }

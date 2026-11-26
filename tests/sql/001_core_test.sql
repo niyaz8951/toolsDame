@@ -95,7 +95,8 @@ begin
       dame_test.run('anon', null, 'select public.dame_site_info()'));
     for f in select p.oid::regproc::text as name, p.pronargs from pg_proc p
              join pg_namespace n on n.oid = p.pronamespace
-             where n.nspname = 'public' and p.proname like 'dame\_%' and p.proname <> 'dame_site_info'
+             where n.nspname = 'public' and p.proname like 'dame\_%'
+               and p.proname not in ('dame_site_info', 'dame_file_allowed')  -- the file check answers no instead of refusing; tested in 003
              order by 1
     loop
       v_call := format('select %s(%s)', f.name, array_to_string(array_fill('null'::text, array[f.pronargs]), ','));
@@ -162,7 +163,7 @@ begin
     for f in select p.oid::regproc::text as name, p.pronargs from pg_proc p
              join pg_namespace n on n.oid = p.pronamespace
              where n.nspname = 'public' and p.proname like 'dame\_%'
-               and p.proname not in ('dame_site_info', 'dame_request_access', 'dame_sign_out')
+               and p.proname not in ('dame_site_info', 'dame_request_access', 'dame_sign_out', 'dame_file_allowed')
              order by 1
     loop
       v_call := format('select %s(%s)', f.name, array_to_string(array_fill('null'::text, array[f.pronargs]), ','));

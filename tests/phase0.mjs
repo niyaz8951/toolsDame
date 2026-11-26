@@ -14,10 +14,11 @@ import { start } from '../tools/serve.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8137;
 const SITE = 'http://127.0.0.1:' + PORT + '/toolsDame/';
-const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.html',
+const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.html', 'pack.html',
   'admin/it.html', 'admin/space.html', 'admin/tool.html'];
 const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1/shell.js',
-  'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'pages/space.js', 'pages/admin-space.js', 'pages/admin-tool.js', 'kit/v1/icon.svg', 'kit/ai-prompt.md', 'kit/dame.schema.json',
+  'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'pages/space.js', 'pages/admin-space.js', 'pages/admin-tool.js', 'pages/tool.js', 'kit/v1/pack.js',
+  'examples/hello-tool/index.html', 'examples/hello-tool/about.html', 'examples/hello-tool/style.css', 'examples/hello-tool/app.js', 'kit/v1/icon.svg', 'kit/ai-prompt.md', 'kit/dame.schema.json',
   'help/index.md', 'help/hub.md', 'help/space.md', 'help/tool.md',
   'help/admin-it.md', 'help/admin-space.md', 'help/admin-tool.md'];
 
@@ -37,6 +38,9 @@ async function files(dir, out = []) {
 }
 
 const CONFIG_URL = ((await readFile(join(ROOT, 'kit/v1/config.js'), 'utf8')).match(/supabaseUrl:\s*'([^']*)'/) || [])[1];
+const TOOL_JS = await readFile(join(ROOT, 'pages/tool.js'), 'utf8');
+const SEALED = new Function('return ' + TOOL_JS.slice(TOOL_JS.indexOf('var POLICY = ') + 13, TOOL_JS.indexOf(";\n  var SANDBOX")))();
+check(/var SANDBOX = 'allow-scripts allow-forms allow-modals allow-downloads';/.test(TOOL_JS), 'the sealed frame has no same-origin, no pop-up and no top-navigation right');
 const server = await start(PORT);
 try {
   // 1. Every page opens and carries the page rules.
@@ -47,7 +51,16 @@ try {
     check(res.status === 200, name + ' opens');
     const head = html.slice(html.indexOf('<head>') + 6).trimStart();
     check(head.startsWith('<meta http-equiv="Content-Security-Policy"'), name + ' security policy is the first element of the head');
-    check(/default-src 'none'/.test(head) && !/unsafe-inline|unsafe-eval|\*/.test(head.split('>')[0]), name + ' policy starts from "nothing allowed", no unsafe or wildcard');
+    const policy = (head.match(/content="([^"]*)"/) || [])[1] || '';
+    if (page === 'frame.html') {
+      // The one page that allows inline code: the sealed frame inherits exactly this, and nothing reaches the network.
+      check(policy === SEALED, name + ' carries exactly the sealed-frame policy written in pages/tool.js');
+      check(/default-src 'none'/.test(policy) && /connect-src 'none'/.test(policy) && /frame-src 'none'/.test(policy) && /form-action 'none'/.test(policy) && !/https?:|\*|'self'|unsafe-eval/.test(policy), name + ' policy names no address at all');
+      check(!/<script/i.test(html), name + ' runs no script of its own');
+    } else {
+      const inline = policy.split(';').filter((d) => /unsafe-inline/.test(d)).map((d) => d.trim());
+      check(/default-src 'none'/.test(policy) && !/unsafe-eval|\*/.test(policy) && (inline.length === 0 || (page === 'pack.html' && inline.join() === "style-src 'unsafe-inline'")), name + ' policy starts from "nothing allowed", no unsafe or wildcard');
+    }
     check(/<meta name="robots" content="noindex/.test(html), name + ' is hidden from search engines');
     check(!/<script(?![^>]*\bsrc=)[^>]*>/i.test(html), name + ' has no inline script');
     check(!/\son[a-z]+\s*=|\sstyle\s*=|javascript:/i.test(html.replace(/<!--[\s\S]*?-->/g, '')), name + ' has no inline handler or style');

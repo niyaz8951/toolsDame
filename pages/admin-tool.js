@@ -1,9 +1,10 @@
 /*
- * pages/admin-tool.js - the tool admin page. Phase 2: access and audit.
- * Serves: contract 3 (Access), 7 (Audit); Files (6) and Data (5) come later.
+ * pages/admin-tool.js - the tool admin page: files and versions, access, audit.
+ * Serves: contract 6 (Releases), 3 (Access), 7 (Audit); Data (5) comes later.
  * Must not change: everything from the database is written with textContent;
  * each change calls one dame_* function and then reloads, so the page shows
- * what the database holds.
+ * what the database holds; the chosen files are only read by kit/v1/pack.js,
+ * never run; a version with a problem is not uploaded.
  */
 (function () {
   'use strict';
@@ -16,9 +17,14 @@
   var tool = '';
   var act = null;
   var loadAudit = null;
+  var packed = null;
   var LEVELS = [['read', 'Read'], ['contribute', 'Contribute'], ['edit', 'Edit'], ['approve', 'Approve']];
 
   function $(id) { return document.getElementById(id); }
+
+  function toolUrl(preview) {
+    return api.href('tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(tool) + (preview ? '&preview=1' : '');
+  }
 
   function levelSelect(person) {
     var s = ui.el('select', 'dame-input');
@@ -36,6 +42,34 @@
     return s;
   }
 
+  function size(bytes) {
+    return bytes < 1024 * 1024 ? Math.max(1, Math.round(bytes / 1024)) + ' KB' : (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  function versionRow(body, v, state) {
+    var pills = ui.el('span');
+    if (v.version === state.live) { pills.appendChild(ui.el('span', 'hub-pill hub-pill-ok', 'Live')); }
+    if (v.version === state.preview) { pills.appendChild(ui.el('span', 'hub-pill', 'Preview')); }
+    var does = ui.el('div', 'hub-actions');
+    if (v.version !== state.preview && v.version !== state.live) {
+      var pre = ui.el('button', 'dame-btn hub-small', 'Preview this');
+      pre.type = 'button';
+      pre.addEventListener('click', function () {
+        pre.disabled = true;
+        act('dame_version_preview', { p_space: space, p_tool: tool, p_version: v.version }, 'Version ' + v.version + ' is now the preview. Press Open the preview.');
+      });
+      does.appendChild(pre);
+    }
+    if (v.version !== state.live) {
+      var back = state.live !== null && v.version < state.live;
+      does.appendChild(ui.confirmButton(back ? 'Roll back to this' : 'Make live', '', function () {
+        act('dame_version_make_live', { p_space: space, p_tool: tool, p_version: v.version },
+          back ? 'Rolled back: version ' + v.version + ' is live again.' : 'Version ' + v.version + ' is live. Everyone with the tool gets it now.');
+      }));
+    }
+    ui.addRow(body, [v.version + (v.note ? ': ' + v.note : ''), ui.when(v.at), v.by, v.pages + ' (' + size(v.bytes) + ')', pills, does]);
+  }
+
   async function load() {
     var t = await api.rpc('dame_tool_admin_get', { p_space: space, p_tool: tool });
     document.title = t.name + ' admin - DAME';
@@ -49,12 +83,87 @@
     $('back').href = api.href(t.is_space_admin ? 'admin/space.html' : 'space.html') + '?space=' + encodeURIComponent(space);
     $('back').textContent = t.is_space_admin ? 'Back to the space admin page' : 'Back to the space';
 
+    var state = await api.rpc('dame_versions_list', { p_space: space, p_tool: tool });
+    $('ver-state').textContent = (state.live === null ? 'Nothing is live yet: people with the tool see "not published".' : 'Live: version ' + state.live + '.') +
+      (state.preview === null ? '' : ' Preview: version ' + state.preview + ' (only admins and managers see it).');
+    $('open-live').href = toolUrl(false);
+    $('open-live').hidden = state.live === null;
+    $('open-preview').href = toolUrl(true);
+    $('open-preview').hidden = state.preview === null;
+    var body = ui.clear($('versions'));
+    state.versions.forEach(function (v) { versionRow(body, v, state); });
+    $('versions-empty').hidden = state.versions.length > 0;
+
     ui.people($('access'), t.access, 'Nobody is named yet.', 'Take away', function (person) {
       act('dame_tool_access_set', { p_space: space, p_tool: tool, p_user: person.id, p_level: null },
         person.name + ' no longer has access by name.');
     }, levelSelect);
     ui.people($('managers'), t.managers, 'No manager. The space admins look after this tool.', '', null);
     await loadAudit();
+  }
+
+  // ------------------------------------------------------------------ upload
+
+  function report(lines) {
+    var list = ui.clear($('up-report'));
+    lines.forEach(function (l) { list.appendChild(ui.el('li', l[1], l[0])); });
+  }
+
+  async function chosen() {
+    packed = null;
+    $('up-send').disabled = true;
+    var files = $('up-files').files;
+    if (!files.length) { report([]); return; }
+    report([['Reading the files.', '']]);
+    try {
+      // The files are read in the hidden helper page pack.html, not in this page.
+      var packer = $('packer').contentWindow.DamePack;
+      if (!packer) { throw new Error('The file reader is still loading. Choose the files again in a moment.'); }
+      var result = await packer.pack(await packer.collect(files));
+      var lines = [];
+      result.problems.forEach(function (p) { lines.push(['Fix this: ' + p, 'hub-warn']); });
+      result.notes.forEach(function (n) { lines.push(['Note: ' + n, '']); });
+      if (!result.problems.length) {
+        lines.unshift(['Ready to upload: ' + result.pages.map(function (p) { return p.name; }).join(', ') + ' (' + size(result.total) + ' in all).', 'hub-ok']);
+        packed = result;
+        $('up-send').disabled = false;
+      } else {
+        lines.push(['Nothing was uploaded. Fix the files, then choose them again.', '']);
+      }
+      report(lines);
+    } catch (err) {
+      report([['Fix this: ' + ((err && err.message) || 'The files could not be read.'), 'hub-warn']]);
+    }
+  }
+
+  async function send() {
+    if (!packed) { return; }
+    var pages = packed.pages;
+    $('up-send').disabled = true;
+    ui.say($('msg'), '');
+    try {
+      var version = await api.rpc('dame_version_begin', {
+        p_space: space, p_tool: tool, p_note: $('up-note').value,
+        p_files: pages.map(function (p) { return { name: p.name, size: p.size, sha256: p.sha256 }; })
+      });
+      for (var i = 0; i < pages.length; i += 1) {
+        report([['Uploading page ' + (i + 1) + ' of ' + pages.length + ': ' + pages[i].name, '']]);
+        await api.fileSend(space + '/' + tool + '/' + version + '/' + pages[i].name, new Blob([pages[i].bytes], { type: 'text/html' }));
+      }
+      await api.rpc('dame_version_seal', { p_space: space, p_tool: tool, p_version: version });
+      packed = null;
+      $('up-files').value = '';
+      $('up-note').value = '';
+      report([]);
+      await load();
+      ui.say($('msg'), 'Version ' + version + ' is uploaded and is the preview. Open the preview, try it, then press Make live.', 'ok');
+    } catch (err) {
+      report([['The upload stopped. Nothing went live. Choose the files again to retry.', 'hub-warn']]);
+      $('up-files').value = '';
+      packed = null;
+      ui.sayError($('msg'), err);
+    }
+    $('msg').scrollIntoView({ block: 'nearest' });
   }
 
   async function start() {
@@ -74,6 +183,8 @@
       act('dame_tool_access_set', { p_space: space, p_tool: tool, p_user: person.id, p_level: $('new-level').value },
         person.name + ' now has the level ' + $('new-level').value + '.');
     }));
+    $('up-files').addEventListener('change', chosen);
+    $('up-send').addEventListener('click', send);
     await load();
     $('body').hidden = false;
   }

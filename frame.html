@@ -2,25 +2,20 @@
 <!--
   frame.html - the host of the sealed frame an uploaded tool runs in.
   Serves: SECURITY "Browser" (the wall between untrusted tool code and the
-  site). Must not change: this page is opened only by tool.html; it loads no
-  platform script that holds a session, and its policy is the tightest on the
-  site. Phase 0: runs no script at all. Built in phase 3 with the hostile-tool
-  test.
+  site). Must not change: this page runs no script and shows nothing by
+  itself. Its only job is its policy below: the sealed frame the shell puts
+  inside this page inherits it, so a tool may run its own inline code and can
+  load or call NOTHING: no network, no outside frame, no form target. The same
+  policy text is in pages/tool.js; change both or neither.
 -->
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; child-src 'none'; worker-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Frame - DAME</title>
-<link rel="stylesheet" href="kit/v1/dame.css">
 </head>
-<body>
-<main class="dame-page">
-  <p class="dame-empty">This page hosts a tool inside the Tool page. It is not opened on its own. Built in phase 3.</p>
-  <p><a href="index.html">Back to start</a></p>
-</main>
-</body>
+<body></body>
 </html>

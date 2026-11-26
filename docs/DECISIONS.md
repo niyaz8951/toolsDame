@@ -14,10 +14,10 @@
 | O3 | "Proceed with what works, optimise later." | The exact project address is written in each page's security policy and in `config.js`; `tests/phase0.mjs` fails if they differ. Changing the project means editing those lines; a helper script can come later. |
 | O4 | "Keep the default; IT will bring its own." | Supabase's default: a new account must open the link in a confirmation email before it can sign in, then waits for an IT admin. Limit: the built-in sender allows only a few emails an hour. |
 
-## Owner, 2026-11-26 (O1)
-- DAME is the single site: no other Pages site is to share its address.
-- To make that true, the owner checks every other repo of the account (Settings > Pages) and sets Pages to "None" where it is on. A repo served on its own custom domain is a different address and may stay.
-- Until that check is done: sample data only (already the rule in DEMO-STACK).
+## Owner, 2026-11-26 (O1, closed)
+- The account's other repos (the earlier DAME hub and others) are separate projects and stay as they are, Pages included.
+- Accepted risk for the demo: GitHub serves every Pages site of one account from one address, so a script on any of those sites could read a signed-in DAME session kept in the browser. Condition: sample data only (already the rule in DEMO-STACK).
+- IT's platform has its own address, so the risk does not carry over.
 
 ## Built in phase 1 (say if any should change)
 - A tool is named by its space and its id together: `core.require_tool(space, tool, level)`, `core.has_tool(user, space, tool, level)`. Tool ids are unique inside a space, not across the site.
@@ -36,6 +36,16 @@
 - Deleting needs the id typed in full, on the page and again in the database. Phase 2 deletes the core rows; files and tables are added to the same delete in phases 3 and 4.
 - People are looked up by name or email (at least 2 letters, 20 results, approved accounts only) by IT admins, space admins and tool managers. Members cannot look people up.
 - Not built yet from the Roles table: a space admin tightening site settings for his space. It belongs with the AI prompt in phase 5.
+
+## Built in phase 3 (say if any should change)
+- An upload is three steps: announce the pages (name, size, fingerprint), send the files, close the version. A closed version can never change: the database refuses it and the file store has no rule that allows a change or a delete.
+- A new version becomes the preview by itself. Make live and Roll back need two presses. Roll back is "Make live" of an older version; all versions are kept.
+- Only pages (`.html`) are stored. The browser packs style sheets, scripts, pictures and fonts into each page before upload.
+- The tool gets `{ id, name, level }` from `Dame.ready()` and nothing else about the user.
+- A tool moves between its own pages by plain links (`<a href="other.html">`); the kit and the shell do the rest.
+- Files are read and packed in a hidden helper page (`pack.html`), so the admin page itself never touches what is inside an upload.
+- `Dame.table` and `Dame.files` exist and answer "arrives in phase 4" until then.
+- `examples/hello-tool/` is a first tool to upload.
 
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |

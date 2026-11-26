@@ -1,0 +1,149 @@
+<!doctype html>
+<!--
+  tests/browser/fixtures/hostile/index.html - a tool written to break out. Test only.
+  Serves: SECURITY "Browser": "a browser test proves on every run: no origin,
+  no storage, no token, no network, no top navigation".
+  Must not change: every attempt writes "blocked ..." or "LEAKED ..." into the
+  result; the test fails on any LEAKED and on any request that carries the
+  word LEAK. __SITE__ and __MOCK__ are filled in by the test. Never upload
+  this to the real site: it is harmless there too, but it is not a tool.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hostile</title>
+<link rel="stylesheet" href="/_dame/v1/dame.css">
+<script src="/_dame/v1/dame.js"></script>
+</head>
+<body>
+<main class="dame-page"><h1>Hostile tool</h1><pre id="out">running</pre></main>
+<script>
+(function () {
+  var SITE = '__SITE__';
+  var MOCK = '__MOCK__';
+  var out = {};
+  var ports = [];
+
+  // The same private line the kit gets: a tool can listen for it too.
+  window.addEventListener('message', function (ev) { if (ev.ports && ev.ports[0]) { ports.push(ev.ports[0]); } });
+
+  function attempt(name, fn) {
+    try { var r = fn(); out[name] = r === undefined ? 'blocked' : r; } catch (e) { out[name] = 'blocked (' + e.name + ')'; }
+  }
+  function later(name, start, ms) {
+    return new Promise(function (resolve) {
+      var done = false;
+      function finish(v) { if (!done) { done = true; out[name] = v; resolve(); } }
+      try { start(finish); } catch (e) { finish('blocked (' + e.name + ')'); }
+      setTimeout(function () { finish('blocked (no answer)'); }, ms || 1500);
+    });
+  }
+
+  // --- who am I, what can I see
+  attempt('origin', function () { return window.origin === 'null' ? 'blocked (no origin)' : 'LEAKED origin ' + window.origin; });
+  attempt('localStorage', function () { return 'LEAKED ' + String(localStorage.getItem('dame.session')).slice(0, 20); });
+  attempt('sessionStorage', function () { return 'LEAKED ' + sessionStorage.length; });
+  attempt('cookie', function () { return 'LEAKED cookie [' + document.cookie + ']'; });
+  attempt('indexedDB', function () { indexedDB.open('x'); return 'blocked (opened nothing of the site: no origin)'; });
+  attempt('parentDocument', function () { return 'LEAKED ' + parent.document.title; });
+  attempt('topDocument', function () { return 'LEAKED ' + top.document.title; });
+  attempt('topApi', function () { return top.DameApi ? 'LEAKED DameApi' : 'blocked'; });
+  attempt('topStorage', function () { return 'LEAKED ' + String(top.localStorage.getItem('dame.session')).slice(0, 20); });
+  attempt('topLocationRead', function () { return 'LEAKED ' + top.location.href; });
+  attempt('topNavigate', function () { top.location.href = SITE + 'LEAK-topnav'; return 'blocked (see request log)'; });
+  attempt('parentNavigate', function () { parent.location.href = SITE + 'LEAK-parentnav'; return 'blocked (see request log)'; });
+  attempt('popup', function () { var w = window.open(SITE + 'LEAK-popup'); return w ? 'LEAKED popup opened' : 'blocked'; });
+  attempt('webrtc', function () { return typeof RTCPeerConnection === 'undefined' && typeof webkitRTCPeerConnection === 'undefined' ? 'blocked' : 'LEAKED RTCPeerConnection exists'; });
+  attempt('eval', function () { return eval('"LEAKED eval ran"'); });
+  attempt('forgeInit', function () { top.postMessage({ dame: 'init' }, '*'); top.postMessage({ id: 1, action: 'ready' }, '*'); return 'blocked (the shell listens to no window messages)'; });
+
+  var jobs = [];
+
+  // --- the network, every way
+  jobs.push(later('fetchSite', function (f) { fetch(SITE + 'kit/v1/config.js?LEAK-fetch-site').then(function (r) { f('LEAKED fetch ' + r.status); }, function () { f('blocked'); }); }));
+  jobs.push(later('fetchApi', function (f) { fetch(MOCK + '/rest/v1/rpc/dame_site_info?LEAK-fetch-api', { method: 'POST', body: '{}' }).then(function (r) { f('LEAKED fetch ' + r.status); }, function () { f('blocked'); }); }));
+  jobs.push(later('fetchNoCors', function (f) { fetch(MOCK + '/LEAK-nocors', { mode: 'no-cors' }).then(function () { f('LEAKED no-cors fetch'); }, function () { f('blocked'); }); }));
+  jobs.push(later('xhr', function (f) { var x = new XMLHttpRequest(); x.onload = function () { f('LEAKED xhr ' + x.status); }; x.onerror = function () { f('blocked'); }; x.open('GET', MOCK + '/LEAK-xhr'); x.send(); }));
+  jobs.push(later('image', function (f) { var i = new Image(); i.onload = function () { f('LEAKED image'); }; i.onerror = function () { f('blocked'); }; i.src = SITE + 'kit/v1/icon.svg?LEAK-img'; }));
+  jobs.push(later('script', function (f) { var s = document.createElement('script'); s.onload = function () { f('LEAKED script'); }; s.onerror = function () { f('blocked'); }; s.src = SITE + 'kit/v1/config.js?LEAK-script'; document.head.appendChild(s); }));
+  jobs.push(later('stylesheet', function (f) { var l = document.createElement('link'); l.rel = 'stylesheet'; l.onload = function () { f('LEAKED stylesheet'); }; l.onerror = function () { f('blocked'); }; l.href = SITE + 'kit/v1/dame.css?LEAK-css'; document.head.appendChild(l); }));
+  jobs.push(later('cssImport', function (f) { var s = document.createElement('style'); s.textContent = '@import url("' + MOCK + '/LEAK-import"); body { background-image: url("' + MOCK + '/LEAK-bg") }'; document.head.appendChild(s); setTimeout(function () { f('blocked (see request log)'); }, 600); }));
+  jobs.push(later('prefetch', function (f) { ['prefetch', 'preload', 'dns-prefetch', 'preconnect'].forEach(function (rel) { var l = document.createElement('link'); l.rel = rel; l.as = 'fetch'; l.href = MOCK + '/LEAK-' + rel; document.head.appendChild(l); }); setTimeout(function () { f('blocked (see request log)'); }, 600); }));
+  jobs.push(later('websocket', function (f) { var w = new WebSocket(MOCK.replace('http', 'ws') + '/LEAK-ws'); w.onopen = function () { f('LEAKED websocket'); }; w.onerror = function () { f('blocked'); }; }));
+  jobs.push(later('eventSource', function (f) { var e = new EventSource(MOCK + '/LEAK-sse'); e.onopen = function () { f('LEAKED event source'); }; e.onerror = function () { f('blocked'); }; }));
+  jobs.push(later('beacon', function (f) { navigator.sendBeacon(MOCK + '/LEAK-beacon', 'x'); f('blocked (see request log)'); }));
+  jobs.push(later('worker', function (f) {
+    var code = 'fetch("' + MOCK + '/LEAK-worker").then(function () { postMessage("LEAKED worker fetch"); }, function () { postMessage("blocked (worker ran, no network)"); });';
+    var w = new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })));
+    w.onmessage = function (m) { f(m.data); };
+    w.onerror = function () { f('blocked'); };
+  }));
+  jobs.push(later('nestedFrame', function (f) {
+    var fr = document.createElement('iframe');
+    document.body.appendChild(fr);
+    var info = 'RTC in a nested frame: ' + (fr.contentWindow && fr.contentWindow.RTCPeerConnection ? 'present' : 'absent');
+    out.nestedRealmInfo = info;
+    fr.contentWindow.fetch(MOCK + '/LEAK-nested').then(function () { f('LEAKED nested fetch'); }, function () { f('blocked'); });
+  }));
+  jobs.push(later('outsideFrame', function (f) { var fr = document.createElement('iframe'); fr.onload = function () { f('blocked (see request log)'); }; fr.src = SITE + 'index.html?LEAK-frame'; document.body.appendChild(fr); setTimeout(function () { f('blocked (see request log)'); }, 800); }));
+
+  // --- the private line: ask for things it must not give
+  jobs.push(later('portAbuse', function (f) {
+    var tries = 0;
+    (function waitPort() {
+      if (!ports.length) { tries += 1; if (tries > 40) { f('blocked (no line)'); return; } setTimeout(waitPort, 50); return; }
+      var port = ports[0];
+      var got = {};
+      // The kit owns the line's answers; ask through a second listener.
+      port.addEventListener('message', function (m) { got[m.data.id] = m.data; });
+      port.postMessage({ id: 9001, action: 'ready' });
+      port.postMessage({ id: 9002, action: 'token' });
+      port.postMessage({ id: 9003, action: 'table.list', args: { table: 'x', space: 'other-space', tool: 'other-tool' } });
+      port.postMessage({ id: 9004, action: 'page', args: { name: '../other-tool/1/index.html' } });
+      port.postMessage({ id: 9005, action: 'link', args: { url: 'javascript:alert(1)' } });
+      port.postMessage({ id: 9006, action: 'ready', args: { big: new Array(300001).join('x') } });
+      port.postMessage({ id: 9007, action: 'rpc', args: { name: 'dame_users_list' } });
+      port.postMessage('not an object');
+      port.postMessage({ id: 'x', action: 'ready' });
+      setTimeout(function () {
+        var ready = got[9001] && got[9001].result ? Object.keys(got[9001].result).sort().join(',') : 'none';
+        var refused = [9002, 9003, 9004, 9005, 9006, 9007].every(function (id) { return got[id] && got[id].ok === false; });
+        var text = JSON.stringify(got);
+        f(ready === 'id,level,name' && refused && !/access_token|refresh_token|at_|rt_|sb_publishable/.test(text)
+          ? 'blocked (ready gives id, level, name; six other requests refused)'
+          : 'LEAKED port: ready=' + ready + ' refused=' + refused + ' ' + text.slice(0, 300));
+      }, 700);
+    })();
+  }, 4000));
+
+  Promise.all(jobs).then(function () {
+    var el = document.getElementById('out');
+    el.textContent = JSON.stringify(out, null, 1);
+    el.setAttribute('data-done', '1');
+    // --- last: the moves that would replace this page if they worked
+    setTimeout(function () {
+      var form = document.createElement('form');
+      form.method = 'post';
+      form.action = MOCK + '/LEAK-form';
+      document.body.appendChild(form);
+      try { form.submit(); } catch (e) { /* blocked */ }
+    }, 200);
+    setTimeout(function () {
+      var m = document.createElement('meta');
+      m.httpEquiv = 'refresh';
+      m.content = '0;url=' + MOCK + '/LEAK-refresh';
+      document.head.appendChild(m);
+    }, 500);
+    setTimeout(function () {
+      var a = document.createElement('a');
+      a.href = MOCK + '/LEAK-anchor';
+      a.target = '_top';
+      document.body.appendChild(a);
+      try { a.click(); } catch (e) { /* blocked */ }
+    }, 800);
+    setTimeout(function () { try { location.href = MOCK + '/LEAK-selfnav'; } catch (e) { /* blocked */ } }, 1100);
+  });
+})();
+</script>
+</body>
+</html>

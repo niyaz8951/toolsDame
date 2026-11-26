@@ -1,15 +1,15 @@
 <!doctype html>
 <!--
-  admin/tool.html - tool admin: access now; Files, Data, help text and versions later.
+  admin/tool.html - tool admin: access, files and versions; Data and help text later.
   Serves: contract 3 (Access: a tool's manager gives and takes access to his
   tool), later 5 (Data) and 6 (Releases). Must not change: every action is
   refused by the database unless the user is an admin of the space or a manager
   of this tool. The security policy stays the first element of the head.
-  Files and versions arrive in phase 3, Data in phase 4.
+  A version is never changed after upload. Data arrives in phase 4.
 -->
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -31,6 +31,40 @@
   <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
 
   <div id="body" hidden>
+    <section class="dame-card">
+      <h2>Files and versions</h2>
+      <p id="ver-state"></p>
+      <div class="dame-row">
+        <a class="dame-btn dame-btn-primary" id="open-live" href="../hub.html" hidden>Open the tool</a>
+        <a class="dame-btn" id="open-preview" href="../hub.html" hidden>Open the preview</a>
+      </div>
+
+      <div class="hub-block">
+        <h3>Upload a new version</h3>
+        <p class="dame-muted">Choose all the files of the tool together, or one zip. The site packs each page into one file, checks it and says what to fix. Nothing is sent until you press Upload. 20 MB a page, 200 MB a version.</p>
+        <label class="hub-field">The tool's files, or one zip
+          <input class="dame-input" id="up-files" type="file" multiple>
+        </label>
+        <ul class="hub-list hub-report" id="up-report"></ul>
+        <label class="hub-field">Note for this version (optional)
+          <input class="dame-input" id="up-note" type="text" maxlength="200" autocomplete="off">
+        </label>
+        <button class="dame-btn dame-btn-primary" type="button" id="up-send" disabled>Upload version</button>
+      </div>
+
+      <div class="hub-block">
+        <h3>Versions</h3>
+        <p class="dame-muted">A version never changes after upload. Make live gives it to everyone; an older version can be brought back at any time.</p>
+        <div class="hub-scroll">
+          <table class="dame-table">
+            <thead><tr><th>Version</th><th>Uploaded</th><th>By</th><th>Pages</th><th>State</th><th>Do</th></tr></thead>
+            <tbody id="versions"></tbody>
+          </table>
+        </div>
+        <p class="dame-empty" id="versions-empty" hidden>No version yet. Upload the first one above.</p>
+      </div>
+    </section>
+
     <section class="dame-card">
       <h2>Access</h2>
       <p class="dame-muted" id="open-text"></p>
@@ -56,11 +90,6 @@
     </section>
 
     <section class="dame-card">
-      <h2>Files and versions</h2>
-      <p class="dame-empty">Uploading the tool, preview, Make live and roll back arrive in phase 3.</p>
-    </section>
-
-    <section class="dame-card">
       <h2>Data</h2>
       <p class="dame-empty">Making tables arrives in phase 4.</p>
     </section>
@@ -78,5 +107,6 @@
     </section>
   </div>
 </main>
+<iframe id="packer" src="../pack.html" title="File reader" hidden></iframe>
 </body>
 </html>

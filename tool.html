@@ -4,12 +4,12 @@
   Serves: contract 4 (Tool kit) and 6 (Releases). Must not change: uploaded
   code is untrusted, always. It runs only inside the sealed frame hosted by
   frame.html, never in this page; this page holds the session, the tool never
-  sees it. The security policy stays the first element of the head.
-  Phase 0: placeholder. Built in phase 3.
+  sees it. The only frame this page may show is this site's own frame.html.
+  The security policy stays the first element of the head.
 -->
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -21,13 +21,25 @@
 <script src="kit/v1/config.js" defer></script>
 <script src="kit/v1/api.js" defer></script>
 <script src="kit/v1/shell.js" defer></script>
+<script src="pages/tool.js" defer></script>
 </head>
-<body data-page="tool" data-title="Tool">
-<main class="dame-page">
-  <h1>Tool</h1>
-  <p class="dame-muted">A tool will run here, under the platform bar, in a sealed frame.</p>
-  <p class="dame-empty">Not built yet. It arrives in phase 3.</p>
-  <p><a href="index.html">Back to start</a></p>
+<body class="hub-runner" data-page="tool" data-title="Tool">
+<div class="hub-strip" id="strip" hidden>
+  <a id="back" href="hub.html">Back to the space</a>
+  <span class="hub-pill" id="preview-pill" hidden></span>
+  <a id="admin" href="hub.html" hidden>Tool admin</a>
+</div>
+<div class="hub-ask" id="ask" role="alertdialog" aria-labelledby="ask-text" hidden>
+  <span id="ask-text"></span>
+  <span class="hub-ask-url" id="ask-url"></span>
+  <button class="dame-btn dame-btn-primary hub-small" type="button" id="ask-yes">Open in a new tab</button>
+  <button class="dame-btn hub-small" type="button" id="ask-no">Stay here</button>
+</div>
+<main class="dame-page" id="main" hidden>
+  <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
+  <p class="dame-muted" id="manage" hidden>If you manage this tool: <a id="manage-link" href="hub.html">open its admin page</a>.</p>
+  <p><a id="back2" href="hub.html">Back to the space</a></p>
 </main>
+<iframe class="hub-frame" id="frame" title="Tool" hidden></iframe>
 </body>
 </html>
