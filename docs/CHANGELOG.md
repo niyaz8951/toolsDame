@@ -2,6 +2,14 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - The site book, part for IT
+Added (owner: "extremely detailed, with the logic and the decisions")
+- Thirteen chapters "In detail, for IT" (`book/11..23-*.md`): the pieces and one request end to end; identity and sessions; the access model with every check and every function; the database; the sealed frame; uploads and versions; tables and rows; the builder and the AI; the audit; how it is tested; the decisions one by one; the questions IT will ask; open gaps and hand-over. Each says how it is done, why, what was considered and not done, and its limits, with the real names from the source.
+- The book is grouped in three parts (overview, detail for IT, log). Presentation: the overview, the detail for IT, or one chapter.
+- The text format learned `code` and bold with code inside.
+- Corrected in passing: a call to a server in a page is a note at the check, not a stop (the frame blocks it at run time).
+
+SQL to paste: none.
 ## 2026-11-26 - Finish: the site used as a careful phone user would
 Changed (owner asked for a review of the whole site and a streamlined result)
 - **The bar is one line at any width.** The name and "Sign out" moved into one round account button (the person's initials); a press opens name, email and Sign out. On a phone the name was cut and "Sign out" wrapped onto two lines.

@@ -435,3 +435,16 @@ html:has(.hub-sheet-back, .hub-focus-back, .hub-present) { overflow: hidden; }
   .hub-scroll .dame-table td[data-label]::before { display: inline-block; min-width: 5.5em; }
   .hub-scroll .dame-table tr:last-child { border-bottom: 0; }
 }
+.hub-book-part { padding: 14px 4px 4px; }
+.hub-book-part:first-child { padding-top: 0; }
+.hub-book-part strong { display: block; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--dame-accent); }
+.hub-book-part span { display: block; font-size: .82rem; color: var(--dame-muted); }
+.hub-book-page .hub-rich code, .hub-slide .hub-rich code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em; padding: 1px 5px; border-radius: 6px; background: var(--dame-surface-2); overflow-wrap: anywhere; }
+.hub-book-page .hub-rich em { color: var(--dame-muted); }
+.hub-book-table td:first-child { white-space: normal; }
+.hub-book-table td { vertical-align: top; }
+
+.hub-slide-dense { font-size: clamp(.95rem, 1.15vw, 1.25rem); line-height: 1.45; padding-top: 4vh; }
+.hub-slide-dense h2 { font-size: clamp(1.4rem, 2.4vw, 2.2rem); margin-bottom: .4em; }
+.hub-slide-dense .hub-rich { max-width: 1300px; }
+.hub-slide-dense .hub-rich li { margin-bottom: .3em; }

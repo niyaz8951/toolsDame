@@ -281,11 +281,12 @@ try {
   const reader = DEPTS[0].user.page;
   await reader.goto(SITE + 'hub.html');
   await reader.waitForSelector('#book-chapters a');
-  check((await reader.locator('#book-chapters a').count()) === 10, 'the hub offers the site book with its ten chapters');
+  check((await reader.locator('#book-chapters a').count()) === 9, 'the hub offers the site book with the nine chapters of its overview');
   await reader.click('a:has-text("Read the site book")');
   await reader.waitForSelector('#chapters button');
   check(/What DAME is/.test(await reader.textContent('#page')) && (await reader.locator('#page script, #page img, #page a').count()) === 0, 'the book opens on its first chapter, written to the page as text');
-  await reader.click('#chapters li:nth-child(6) button');
+  check((await reader.locator('#chapters .hub-book-link').count()) === 23 && (await reader.locator('#chapters .hub-book-part').count()) === 3, 'the book has 23 chapters in three parts: the overview, the detail for IT, the log');
+  await reader.click('#chapters .hub-book-link >> nth=5');
   check(/sealed frame/.test(await reader.textContent('#page')) && (await reader.locator('#page table').count()) === 1 && (await reader.locator('#page .hub-flow span').count()) === 4, 'a chapter shows its steps, lists and tables (Security)');
   await reader.click('#present-one');
   await reader.waitForSelector('.hub-present');
@@ -296,7 +297,15 @@ try {
   check((await reader.locator('.hub-present').count()) === 0, 'Esc closes the presentation');
   await reader.goto(SITE + 'book.html?present=1');
   await reader.waitForSelector('.hub-present');
-  check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 50, 'the whole book as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
+  check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 45, 'the overview as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
+  await reader.keyboard.press('Escape');
+  await reader.click('#chapters .hub-book-link >> nth=12');
+  const detailText = await reader.textContent('#page');
+  check(/What can be reached from outside/.test(detailText) && /Considered and not done/.test(detailText) && /Why this way/.test(detailText) && (await reader.locator('#page code').count()) > 5,
+    'a chapter for IT says how it is done, why, and what was considered and not done (The database)');
+  await reader.click('#present-detail');
+  await reader.waitForSelector('.hub-present');
+  check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 90, 'the detail for IT as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
   await reader.keyboard.press('Escape');
 
   // ------------------------------------------------------------------ one department against another: 7 x 6 pairs

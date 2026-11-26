@@ -12,7 +12,8 @@
   var ui = window.DameShell;
   if (!ui) { return; }
 
-  var chapters = [];       // { file, title, text, body } in reading order
+  var chapters = [];       // { file, title, text, body, part } in reading order
+  var parts = [];          // { title, text, present }
   var at = 0;
   var show = null;         // the presentation, while it runs: { slides, i, node }
 
@@ -28,8 +29,9 @@
     at = Math.max(0, Math.min(chapters.length - 1, i));
     var c = chapters[at];
     ui.clear($('page')).appendChild(ui.rich(c.body));
-    Array.prototype.forEach.call($('chapters').children, function (li, n) {
-      li.firstChild.setAttribute('aria-current', n === at ? 'true' : 'false');
+    Array.prototype.forEach.call($('chapters').querySelectorAll('.hub-book-link'), function (b, n) {
+      b.setAttribute('aria-current', n === at ? 'true' : 'false');
+      if (n === at && !quiet) { b.scrollIntoView({ block: 'nearest' }); }
     });
     $('prev').hidden = at === 0;
     $('next').hidden = at === chapters.length - 1;
@@ -44,10 +46,11 @@
   function slidesOf(c, n) {
     var parts = c.body.split(/\n(?=## )/);
     var head = parts.shift().replace(/^# .*\n?/, '').trim();
+    var dense = c.part === 1;   // the chapters for IT hold more per slide: smaller letters, and the slide scrolls
     var out = [{ kind: 'title', chapter: n + 1, title: c.title, body: head || c.text }];
     parts.forEach(function (p) {
       var title = (/^## (.*)/.exec(p) || [])[1] || '';
-      out.push({ kind: 'part', chapter: n + 1, of: c.title, title: title, body: p.replace(/^## .*\n?/, '') });
+      out.push({ kind: 'part', chapter: n + 1, of: c.title, title: title, body: p.replace(/^## .*\n?/, ''), dense: dense });
     });
     return out;
   }
@@ -55,7 +58,7 @@
   function draw() {
     var s = show.slides[show.i];
     var stage = ui.clear(show.stage);
-    stage.className = 'hub-slide' + (s.kind === 'title' ? ' hub-slide-title' : '');
+    stage.className = 'hub-slide' + (s.kind === 'title' ? ' hub-slide-title' : '') + (s.dense ? ' hub-slide-dense' : '');
     stage.appendChild(ui.el('p', 'hub-kicker', s.kind === 'title' ? 'Chapter ' + s.chapter : s.chapter + '. ' + s.of));
     stage.appendChild(ui.el(s.kind === 'title' ? 'h1' : 'h2', null, s.title));
     stage.appendChild(ui.rich(s.body));
@@ -113,9 +116,12 @@
     next.focus();
   }
 
-  function all() {
-    return chapters.reduce(function (out, c, n) { return out.concat(slidesOf(c, n)); }, []);
+  // The slides of the chapters a test lets through, numbered as in the book.
+  function slides(test) {
+    return chapters.reduce(function (out, c, n) { return test(c) ? out.concat(slidesOf(c, n)) : out; }, []);
   }
+  function overview() { return slides(function (c) { return !parts[c.part] || parts[c.part].present; }); }
+  function detail() { return slides(function (c) { return c.part === 1; }); }
 
   async function start() {
     var asked = text('book/index.json');
@@ -124,10 +130,17 @@
     $('main').hidden = false;
     var index = JSON.parse(await asked);
     var bodies = await Promise.all(index.chapters.map(function (c) { return text('book/' + c.file); }));
-    chapters = index.chapters.map(function (c, i) { return { file: String(c.file), title: String(c.title), text: String(c.text || ''), body: bodies[i] }; });
+    parts = (index.parts || []).map(function (p) { return { title: String(p.title), text: String(p.text || ''), present: !!p.present }; });
+    chapters = index.chapters.map(function (c, i) { return { file: String(c.file), title: String(c.title), text: String(c.text || ''), body: bodies[i], part: Number(c.part) || 0 }; });
 
     var list = ui.clear($('chapters'));
     chapters.forEach(function (c, i) {
+      if (parts[c.part] && (i === 0 || chapters[i - 1].part !== c.part)) {
+        var head = ui.el('li', 'hub-book-part');
+        head.appendChild(ui.el('strong', null, parts[c.part].title));
+        head.appendChild(ui.el('span', null, parts[c.part].text));
+        list.appendChild(head);
+      }
       var li = ui.el('li');
       var b = ui.el('button', 'hub-book-link');
       b.type = 'button';
@@ -148,7 +161,8 @@
     });
     $('prev').addEventListener('click', function () { open(at - 1); });
     $('next').addEventListener('click', function () { open(at + 1); });
-    $('present-all').addEventListener('click', function () { present(all()); });
+    $('present-all').addEventListener('click', function () { present(overview()); });
+    $('present-detail').addEventListener('click', function () { present(detail()); });
     $('present-one').addEventListener('click', function () { present(slidesOf(chapters[at], at)); });
     document.addEventListener('keydown', function (ev) {
       if (!show) { return; }
@@ -156,7 +170,7 @@
       else if (ev.key === 'ArrowRight' || ev.key === 'PageDown' || ev.key === ' ') { ev.preventDefault(); step(1); }
       else if (ev.key === 'ArrowLeft' || ev.key === 'PageUp') { ev.preventDefault(); step(-1); }
     });
-    if (new URLSearchParams(location.search).get('present') === '1') { present(all()); }
+    if (new URLSearchParams(location.search).get('present') === '1') { present(overview()); }
   }
 
   start().catch(function (err) {

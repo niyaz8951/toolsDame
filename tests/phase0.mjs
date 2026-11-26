@@ -23,7 +23,9 @@ const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1
   'help/index.md', 'help/hub.md', 'help/space.md', 'help/tool.md',
   'help/admin-it.md', 'help/admin-space.md', 'help/admin-tool.md', 'help/book.md', 'pages/book.js', 'kit/v1/theme.js',
   'book/index.json', 'book/01-what.md', 'book/02-structure.md', 'book/03-people.md', 'book/04-building.md', 'book/05-data.md',
-  'book/06-security.md', 'book/07-it.md', 'book/08-every-page.md', 'book/09-status.md', 'book/10-notes.md'];
+  'book/06-security.md', 'book/07-it.md', 'book/08-every-page.md', 'book/09-status.md', 'book/10-notes.md',
+  'book/11-architecture.md', 'book/12-identity.md', 'book/13-access.md', 'book/14-database.md', 'book/15-frame.md', 'book/16-releases.md',
+  'book/17-data.md', 'book/18-builder.md', 'book/19-audit.md', 'book/20-tests.md', 'book/21-decisions.md', 'book/22-questions.md', 'book/23-gaps.md'];
 
 let failed = 0;
 function check(ok, what) {

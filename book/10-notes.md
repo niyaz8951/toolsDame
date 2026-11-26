@@ -3,6 +3,7 @@
 The running log of the site. Newest first. Every change to the site adds a line here and updates the chapter it touches.
 
 ## 2026-11-26
+- **Site book, part for IT**: thirteen chapters with how each thing is done, why, what was considered and left out, and its limits; a register of decisions; the questions IT will ask; every open gap.
 - **Site book** added: this book, to read or to present.
 - **New user** as in the earlier hub: username and temporary password, own password at the first sign-in.
 - **Review window** for a page's database tables: see the columns read from the page, add more, then create. It opens after every check.

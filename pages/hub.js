@@ -42,7 +42,7 @@
     // The chapters of the site book, as shortcuts. The hub works without them.
     fetch(api.href('book/index.json'), { cache: 'no-cache', credentials: 'omit' }).then(function (res) { return res.ok ? res.json() : null; }).then(function (index) {
       var chips = ui.clear($('book-chapters'));
-      ((index && index.chapters) || []).forEach(function (c, i) {
+      ((index && index.chapters) || []).filter(function (c) { return !c.part; }).forEach(function (c, i) {
         var a = ui.el('a', 'hub-chip', (i + 1) + '. ' + c.title);
         a.href = api.href('book.html') + '#' + String(c.file).replace(/\.md$/, '');
         chips.appendChild(a);

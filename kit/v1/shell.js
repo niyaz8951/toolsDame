@@ -103,8 +103,10 @@
     var box = el('div', 'hub-rich');
     var list = null;
     function inline(node, line) {
-      line.split(/(\*\*[^*]+\*\*)/).forEach(function (part) {
-        if (/^\*\*[^*]+\*\*$/.test(part)) { node.appendChild(el('strong', null, part.slice(2, -2))); }
+      line.split(/(\*\*[^*]+\*\*|`[^`]+`|\*\([^*]+\)\*)/).forEach(function (part) {
+        if (/^\*\*[^*]+\*\*$/.test(part)) { node.appendChild(inline(el('strong'), part.slice(2, -2))); }
+        else if (/^`[^`]+`$/.test(part)) { node.appendChild(el('code', null, part.slice(1, -1))); }
+        else if (/^\*\([^*]+\)\*$/.test(part)) { node.appendChild(el('em', null, part.slice(1, -1))); }
         else if (part) { node.appendChild(document.createTextNode(part)); }
       });
       return node;
