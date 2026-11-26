@@ -1,0 +1,86 @@
+/*
+ * kit/v1/dame.css - the one theme, version 1 (contract 4).
+ * Used by every hub page and by every tool (as /_dame/v1/dame.css).
+ * Must not change: v1 only gets additions. No class or variable here is ever
+ * renamed or removed. A tool sets only --dame-accent.
+ * Nothing from outside: system fonts, no images, no imports.
+ */
+:root {
+  --dame-accent: #0b63ce;
+  --dame-bg: #f4f6f9;
+  --dame-surface: #ffffff;
+  --dame-text: #16202c;
+  --dame-muted: #5b6878;
+  --dame-line: #d9dfe7;
+  --dame-ok: #1a7f4b;
+  --dame-warn: #b3261e;
+  --dame-radius: 10px;
+  --dame-gap: 16px;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dame-accent: #6aa9ff;
+    --dame-bg: #10151c;
+    --dame-surface: #19212b;
+    --dame-text: #e8edf3;
+    --dame-muted: #9aa7b6;
+    --dame-line: #2c3745;
+    --dame-ok: #5ecb8f;
+    --dame-warn: #ff8a80;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--dame-bg);
+  color: var(--dame-text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.15rem; margin: 0 0 8px; }
+p { margin: 0 0 12px; }
+a { color: var(--dame-accent); }
+:focus-visible { outline: 3px solid var(--dame-accent); outline-offset: 2px; }
+
+.dame-page { max-width: 1040px; margin: 0 auto; padding: 24px var(--dame-gap) 48px; }
+.dame-muted { color: var(--dame-muted); }
+
+.dame-card {
+  background: var(--dame-surface);
+  border: 1px solid var(--dame-line);
+  border-radius: var(--dame-radius);
+  padding: var(--dame-gap);
+  margin: 0 0 var(--dame-gap);
+}
+
+.dame-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+.dame-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 40px; padding: 8px 16px;
+  border: 1px solid var(--dame-line); border-radius: 8px;
+  background: var(--dame-surface); color: var(--dame-text);
+  font: inherit; text-decoration: none; cursor: pointer;
+}
+.dame-btn:hover { border-color: var(--dame-accent); }
+.dame-btn:disabled { opacity: .55; cursor: not-allowed; }
+.dame-btn-primary { background: var(--dame-accent); border-color: var(--dame-accent); color: var(--dame-bg); font-weight: 600; }
+
+.dame-input {
+  width: 100%; min-height: 40px; padding: 8px 10px;
+  border: 1px solid var(--dame-line); border-radius: 8px;
+  background: var(--dame-surface); color: var(--dame-text); font: inherit;
+}
+
+.dame-table { width: 100%; border-collapse: collapse; }
+.dame-table th, .dame-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--dame-line); vertical-align: top; }
+.dame-table th { color: var(--dame-muted); font-weight: 600; font-size: .9rem; }
+
+.dame-empty {
+  text-align: center; color: var(--dame-muted);
+  border: 1px dashed var(--dame-line); border-radius: var(--dame-radius);
+  padding: 32px var(--dame-gap);
+}

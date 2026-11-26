@@ -1,0 +1,8 @@
+# Nothing private is ever kept in this folder; these lines are a second guard.
+.env
+.env.*
+*.key
+*.pem
+node_modules/
+.DS_Store
+Thumbs.db

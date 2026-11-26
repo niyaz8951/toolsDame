@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "kit/dame.schema.json - the shape of dame.json in an upload (contract 5). Must not change: version 1 only gets additions; names follow ^[a-z][a-z0-9_]{1,40}$; the type list and the three presets are those of docs/BEDROCK.md. The site checks an upload against this before the admin presses Create.",
+  "title": "dame.json",
+  "type": "object",
+  "required": ["dame", "tables"],
+  "additionalProperties": false,
+  "properties": {
+    "dame": { "const": 1 },
+    "tables": {
+      "type": "object",
+      "maxProperties": 50,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]{1,40}$" },
+      "additionalProperties": { "$ref": "#/$defs/table" }
+    }
+  },
+  "$defs": {
+    "table": {
+      "type": "object",
+      "required": ["sharing", "columns"],
+      "additionalProperties": false,
+      "properties": {
+        "sharing": { "enum": ["private", "team", "reference"] },
+        "columns": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 100,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]{1,40}$",
+            "not": { "enum": ["id", "owner", "created_at", "updated_at", "updated_by"] }
+          },
+          "additionalProperties": { "$ref": "#/$defs/column" }
+        }
+      }
+    },
+    "column": {
+      "oneOf": [
+        { "enum": ["text", "longtext", "number", "bool", "date", "person", "file", "json"] },
+        {
+          "type": "object",
+          "required": ["choice"],
+          "additionalProperties": false,
+          "properties": {
+            "choice": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 50,
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1, "maxLength": 60 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

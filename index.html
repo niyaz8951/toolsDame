@@ -1,0 +1,49 @@
+<!doctype html>
+<!--
+  index.html - the front door: sign in and request access (phase 1).
+  Serves: contract 1 (Identity). Must not change: the security policy stays the
+  first element of the head; no inline script; no data written into the page.
+  Phase 0: shows that the site opens and whether a database is connected.
+-->
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>DAME</title>
+<link rel="icon" href="kit/v1/icon.svg">
+<link rel="stylesheet" href="kit/v1/dame.css">
+<link rel="stylesheet" href="kit/v1/shell.css">
+<script src="kit/v1/config.js" defer></script>
+<script src="kit/v1/api.js" defer></script>
+<script src="kit/v1/shell.js" defer></script>
+</head>
+<body data-page="index" data-title="Start">
+<main class="dame-page">
+  <h1>DAME</h1>
+  <p class="dame-muted">One site for the company's tools. IT controls sign-in, users and spaces. Each department runs its own space and builds its own tools.</p>
+
+  <div class="dame-card hub-status" data-hub-status role="status">Checking the site.</div>
+
+  <div class="dame-card">
+    <h2>Sign in</h2>
+    <p class="dame-empty">Sign-in is not built yet. It arrives in phase 1.</p>
+  </div>
+
+  <div class="dame-card">
+    <h2>Pages of the site</h2>
+    <p class="dame-muted">The skeleton is in place. Each page opens and says when it will be built.</p>
+    <ul class="hub-list">
+      <li><a href="hub.html">Hub</a><span>Your spaces, as tiles. Phase 1.</span></li>
+      <li><a href="space.html">Space</a><span>One department's tools. Phase 2.</span></li>
+      <li><a href="tool.html">Tool</a><span>Runs one tool under the platform bar. Phase 3.</span></li>
+      <li><a href="admin/it.html">IT admin</a><span>Users, approvals, spaces, settings, audit, health. Phase 1.</span></li>
+      <li><a href="admin/space.html">Space admin</a><span>Tools, admins, access, ideas. Phase 2.</span></li>
+      <li><a href="admin/tool.html">Tool admin</a><span>Files, data, access, help text, versions. Phases 3 and 4.</span></li>
+    </ul>
+  </div>
+</main>
+</body>
+</html>

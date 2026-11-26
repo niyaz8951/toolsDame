@@ -1,0 +1,32 @@
+<!doctype html>
+<!--
+  admin/space.html - space admin: tools, admins, access and ideas of one space.
+  Serves: contract 2 (Structure) and 3 (Access: an admin acts alone inside his
+  space and nowhere else). Must not change: every action is refused by the
+  database outside the admin's own space. The security policy stays the first
+  element of the head. Phase 0: placeholder. Built in phase 2.
+-->
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Space admin - DAME</title>
+<link rel="icon" href="../kit/v1/icon.svg">
+<link rel="stylesheet" href="../kit/v1/dame.css">
+<link rel="stylesheet" href="../kit/v1/shell.css">
+<script src="../kit/v1/config.js" defer></script>
+<script src="../kit/v1/api.js" defer></script>
+<script src="../kit/v1/shell.js" defer></script>
+</head>
+<body data-page="admin-space" data-title="Space admin">
+<main class="dame-page">
+  <h1>Space admin</h1>
+  <p class="dame-muted">Create tools, name their managers, give and take access, answer ideas.</p>
+  <p class="dame-empty">Not built yet. It arrives in phase 2.</p>
+  <p><a href="../index.html">Back to start</a></p>
+</main>
+</body>
+</html>

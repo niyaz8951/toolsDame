@@ -1,0 +1,32 @@
+<!doctype html>
+<!--
+  hub.html - the dashboard: the spaces a signed-in user may open, as tiles.
+  Serves: contract 2 (Structure: Hub > Space > Tool). Must not change: the
+  security policy stays the first element of the head; no inline script; the
+  page only shows what the database returns, it decides nothing.
+  Phase 0: placeholder. Built in phase 1.
+-->
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Hub - DAME</title>
+<link rel="icon" href="kit/v1/icon.svg">
+<link rel="stylesheet" href="kit/v1/dame.css">
+<link rel="stylesheet" href="kit/v1/shell.css">
+<script src="kit/v1/config.js" defer></script>
+<script src="kit/v1/api.js" defer></script>
+<script src="kit/v1/shell.js" defer></script>
+</head>
+<body data-page="hub" data-title="Hub">
+<main class="dame-page">
+  <h1>Hub</h1>
+  <p class="dame-muted">Your spaces will show here as tiles, one per department.</p>
+  <p class="dame-empty">Not built yet. It arrives in phase 1, with sign-in.</p>
+  <p><a href="index.html">Back to start</a></p>
+</main>
+</body>
+</html>

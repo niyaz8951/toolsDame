@@ -1,0 +1,33 @@
+<!doctype html>
+<!--
+  admin/tool.html - tool admin: Files, Data, access, help text and versions.
+  Serves: contract 5 (Data) and 6 (Releases). Must not change: tables are made
+  from this page with no SQL typed by anyone; nothing is dropped or altered
+  without a typed confirmation; versions are never edited after upload. The
+  security policy stays the first element of the head.
+  Phase 0: placeholder. Files and versions in phase 3, Data in phase 4.
+-->
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Tool admin - DAME</title>
+<link rel="icon" href="../kit/v1/icon.svg">
+<link rel="stylesheet" href="../kit/v1/dame.css">
+<link rel="stylesheet" href="../kit/v1/shell.css">
+<script src="../kit/v1/config.js" defer></script>
+<script src="../kit/v1/api.js" defer></script>
+<script src="../kit/v1/shell.js" defer></script>
+</head>
+<body data-page="admin-tool" data-title="Tool admin">
+<main class="dame-page">
+  <h1>Tool admin</h1>
+  <p class="dame-muted">Upload the tool's files, make its tables, preview, make live, roll back.</p>
+  <p class="dame-empty">Not built yet. Files and versions arrive in phase 3, tables in phase 4.</p>
+  <p><a href="../index.html">Back to start</a></p>
+</main>
+</body>
+</html>

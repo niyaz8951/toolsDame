@@ -1,0 +1,33 @@
+<!doctype html>
+<!--
+  tool.html - the platform shell that runs one tool under the top bar.
+  Serves: contract 4 (Tool kit) and 6 (Releases). Must not change: uploaded
+  code is untrusted, always. It runs only inside the sealed frame hosted by
+  frame.html, never in this page; this page holds the session, the tool never
+  sees it. The security policy stays the first element of the head.
+  Phase 0: placeholder. Built in phase 3.
+-->
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Tool - DAME</title>
+<link rel="icon" href="kit/v1/icon.svg">
+<link rel="stylesheet" href="kit/v1/dame.css">
+<link rel="stylesheet" href="kit/v1/shell.css">
+<script src="kit/v1/config.js" defer></script>
+<script src="kit/v1/api.js" defer></script>
+<script src="kit/v1/shell.js" defer></script>
+</head>
+<body data-page="tool" data-title="Tool">
+<main class="dame-page">
+  <h1>Tool</h1>
+  <p class="dame-muted">A tool will run here, under the platform bar, in a sealed frame.</p>
+  <p class="dame-empty">Not built yet. It arrives in phase 3.</p>
+  <p><a href="index.html">Back to start</a></p>
+</main>
+</body>
+</html>
