@@ -8,6 +8,8 @@
 | `sql/003_versions_test.sql` | Phase 3: who may upload, what an upload may hold, the file rules for every role, preview for managers only, make live, roll back, a closed version never changes | Paste into the Supabase SQL editor. Leaves nothing behind. |
 | `sql/004_tables_test.sql` | Phase 4: who may make a table, what a table may be, injection tries, the three presets for every level, values that do not fit, filters and sorting, the preview's own rows, adding a column, deleting | Paste into the Supabase SQL editor. Leaves nothing behind. |
 | `sql/005_hardening_test.sql` | Who may ask for access by email domain, the setting's rules, sign-ins in the audit | Paste into the Supabase SQL editor. Leaves nothing behind. |
+| `sql/006_help_test.sql` | Who reads and who writes a tool's usage guide; it is stored as plain text | Paste into the Supabase SQL editor. Leaves nothing behind. |
+| `sql/007_add_people_test.sql` | Who may add a person; bad addresses; the added person is in at once, everyone else as before | Paste into the Supabase SQL editor. Leaves nothing behind. |
 | `sql/run-local.mjs` | The same SQL and tests on a throw-away database, twice | `node tests/sql/run-local.mjs` |
 | `browser/phase1.mjs` | Sign in, request access, approval, hub, IT admin in a real browser at desktop and 390 px, against `browser/mock-supabase.mjs` | `node tests/browser/phase1.mjs` |
 | `browser/phase2.mjs` | Spaces and tools in a real browser at desktop and 390 px: IT admin, space admin, manager, member, each refused outside his part | `node tests/browser/phase2.mjs` |

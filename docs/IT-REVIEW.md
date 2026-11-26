@@ -10,22 +10,23 @@ differs from the target is in `DEMO-STACK.md`.
 - 15 people: one IT admin; an admin and a user in each of Marketing, DX, Applied, Product team, Factory, Finance, Spare Parts.
 - 14 tools: each department builds one stand-alone tool and one that keeps rows, through the builder page exactly as a person would. All 14 passed the upload check with no note. Sources: `examples/departments/`.
 - 7 tables, all named `entries` on purpose, with every column type and all three sharing presets (team, private, reference).
-- 1,176 tries by one department against another (every user and every admin against the other six): all refused, nothing changed.
+- 1,260 tries by one department against another (every user and every admin against the other six): all refused, nothing changed.
 - Then: a user raising himself, an admin doing IT's work, IT reading a department's rows, a leaver, a stranger's email, a new joiner, a space switched off, a tool deleted.
 
-Result: 90 checks, all passed. Together with the other tests: five SQL test files and five more browser tests.
+Result: 103 checks, all passed. Together with the other tests: five SQL test files and five more browser tests.
 **All of this ran locally. The real Supabase project has confirmed phases 1 to 3 only; see "Not yet proven" below.**
 
 ## What IT asks, and the answer
 
 | Question | Answer in the demo | Proof |
 |---|---|---|
-| Can one department see or change another's tools, rows, files, people? | No. Every function checks the caller's role on that space or tool first; the file store has its own rule. | company test: 1,176 tries |
+| Can one department see or change another's tools, rows, files, people? | No. Every function checks the caller's role on that space or tool first; the file store has its own rule. | company test: 1,260 tries |
 | Do two tables with the same name mix? | No. Each tool has its own schema. | company test |
 | Can a user raise his own rights? An admin act as IT? | No. | company test: 13 and 10 tries |
 | Does being IT admin open every department's data? | No. IT manages people, spaces and settings. To see a department's rows IT must add itself as its admin, and that is written in the audit. | company test |
 | Private rows (Finance)? | Seen by their owner only, not even by the department's admin. | company test |
 | What happens to a leaver? | Switched off by IT: out at the next click, files too. Rows stay, marked as his. | company test |
+| Can IT add a person directly? | Yes, by email: the address is approved in advance and the person is in at once when he signs up with it. IT never sets or sees a password, and nothing is written into the sign-in service's own tables. | `007_add_people_test.sql`, company test |
 | Who can get an account? | Only addresses from the domains IT lists, and then only after IT approves. A refused address leaves no row. | `005_hardening_test.sql`, company test |
 | Can uploaded code steal a session, call the internet, read another tool? | No: sealed frame, no network, no token. 33 attack tries, with control runs that prove the test notices a leak. | hostile-tool test |
 | Can a tool drop a program onto a PC? | No. Files are saved by the site, only of 13 named kinds (Excel, CSV, PDF, pictures, text...), 100 MB, 20 a minute. | hostile-tool test |
@@ -46,6 +47,7 @@ Result: 90 checks, all passed. Together with the other tests: five SQL test file
 ## Open, accepted for the first demo (sample data only)
 | Gap | Why it can wait | Closed by |
 |---|---|---|
+| Adding a person and the domain rule trust the email address: they are only as strong as the confirmation email | Supabase confirms email by default; the owner keeps it on | IT's sign-in on the target |
 | Email + password, no company sign-in, no MFA | Stand-in by design | IT's sign-in on the target |
 | Password strength is whatever the Supabase project is set to | One dashboard setting (owner step) | Owner now; IT's sign-in later |
 | A manager can publish alone, no second person | Wanted later by the owner | Phase 5/6: review before live |
@@ -63,6 +65,6 @@ Result: 90 checks, all passed. Together with the other tests: five SQL test file
 
 ## Not yet proven on the real project
 - A real upload to Supabase Storage (the stand-in copies its rules; the real thing may answer differently).
-- `004_tables.sql` and `005_hardening.sql` have not been run there.
+- `004_tables.sql`, `005_hardening.sql`, `006_help.sql` and `007_add_people.sql` have not been run there.
 - The Supabase Security Advisor after 004 and 005.
 Until these three are done, "works" means "works locally".

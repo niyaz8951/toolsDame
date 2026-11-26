@@ -91,6 +91,122 @@
     return btn;
   }
 
+  // ---- the information button: how to use this page, in steps. Hub pages show help/<page>.md;
+  // a page may give its own text with DameShell.info(fn), fn returning { title, text, note }.
+  var infoSource = null;
+  var infoBtn = null;
+  var sheetBack = null;
+
+  // Writes a small text format as page elements: "# title", "## title", "- item", "1. item",
+  // empty line = new paragraph, **bold**. Everything is put in as text, never as HTML.
+  function rich(text) {
+    var box = el('div', 'hub-rich');
+    var list = null;
+    function inline(node, line) {
+      line.split(/(\*\*[^*]+\*\*)/).forEach(function (part) {
+        if (/^\*\*[^*]+\*\*$/.test(part)) { node.appendChild(el('strong', null, part.slice(2, -2))); }
+        else if (part) { node.appendChild(document.createTextNode(part)); }
+      });
+      return node;
+    }
+    String(text || '').split('\n').forEach(function (raw) {
+      var line = raw.trim();
+      var m;
+      if (!line) { list = null; return; }
+      if ((m = /^(#{1,3})\s+(.*)$/.exec(line))) { list = null; box.appendChild(inline(el(m[1].length === 1 ? 'h2' : 'h3'), m[2])); return; }
+      if ((m = /^(-|\d+[.)])\s+(.*)$/.exec(line))) {
+        var kind = m[1] === '-' ? 'UL' : 'OL';
+        if (!list || list.tagName !== kind) { list = el(kind.toLowerCase()); box.appendChild(list); }
+        list.appendChild(inline(el('li'), m[2]));
+        return;
+      }
+      list = null;
+      box.appendChild(inline(el('p'), line));
+    });
+    return box;
+  }
+
+  function closeInfo() {
+    if (sheetBack) { sheetBack.remove(); sheetBack = null; if (infoBtn) { infoBtn.focus(); } }
+  }
+
+  async function openInfo() {
+    if (sheetBack) { closeInfo(); return; }
+    if (infoBtn) { infoBtn.classList.remove('hub-info-new'); }
+    sheetBack = el('div', 'hub-sheet-back');
+    var sheet = el('section', 'hub-sheet');
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-modal', 'true');
+    sheet.setAttribute('aria-label', 'How to use this page');
+    var head = el('div', 'hub-sheet-head');
+    var title = el('h2', null, 'How to use this page');
+    var close = el('button', 'dame-btn hub-small', 'Close');
+    close.type = 'button';
+    close.addEventListener('click', closeInfo);
+    head.appendChild(title);
+    head.appendChild(close);
+    var body = el('div', 'hub-sheet-body');
+    body.appendChild(el('p', 'dame-muted', 'One moment.'));
+    sheet.appendChild(head);
+    sheet.appendChild(body);
+    sheetBack.appendChild(sheet);
+    sheetBack.addEventListener('click', function (ev) { if (ev.target === sheetBack) { closeInfo(); } });
+    document.body.appendChild(sheetBack);
+    close.focus();
+    var mine = sheetBack;
+    var got;
+    try {
+      got = infoSource ? await infoSource() : null;
+      if (!got) {
+        var res = await fetch(api.href('help/' + (document.body.dataset.page || 'hub') + '.md'), { cache: 'no-cache', credentials: 'omit' });
+        if (!res.ok) { throw new Error('help'); }
+        got = { text: await res.text() };
+      }
+    } catch (e) {
+      got = { text: 'The help text of this page could not be loaded. Reload the page and try again.' };
+    }
+    if (sheetBack !== mine) { return; }
+    clear(body);
+    if (got.title) { title.textContent = got.title; }
+    body.appendChild(rich(got.text));
+    if (got.note) { body.appendChild(el('p', 'dame-muted hub-sheet-note', got.note)); }
+  }
+
+  function infoButton() {
+    infoBtn = el('button', 'hub-info', 'i');
+    infoBtn.type = 'button';
+    infoBtn.setAttribute('aria-label', 'How to use this page');
+    infoBtn.title = 'How to use this page';
+    infoBtn.addEventListener('click', function () { openInfo(); });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { closeInfo(); } });
+    return infoBtn;
+  }
+
+  // A page gives its own help; "attention" makes the button ask to be pressed (a tool that is not built yet).
+  function info(source, attention) {
+    infoSource = source;
+    if (infoBtn) { infoBtn.classList.toggle('hub-info-new', !!attention); }
+  }
+
+  // The guide the site writes by itself for a tool whose manager wrote none: from its name, description, tables and the reader's level.
+  function toolGuide(h) {
+    var SHARE = { team: 'everyone who has this tool sees all rows', 'private': 'each person sees only his own rows', reference: 'everyone reads, only the tool\'s managers change' };
+    var LEVEL = { read: 'Read: you see what is there and cannot change it.', contribute: 'Contribute: you add rows and change your own.',
+      edit: 'Edit: you add rows and change anyone\'s.', approve: 'Approve: you add, change and delete rows.' };
+    var out = [];
+    if (h.description) { out.push(h.description, ''); }
+    out.push('## How to use it', '1. Fill in what the page asks, from top to bottom.', '2. Read the result on the page.');
+    if (h.tables && h.tables.length) {
+      out.push('3. Press the save button of the page to keep what you entered.', '', '## What is saved', 'This tool saves what you enter in the site\'s database:');
+      h.tables.forEach(function (t) { out.push('- **' + t.name + '**: ' + (SHARE[t.sharing] || t.sharing) + '.'); });
+    } else {
+      out.push('', '## What is saved', 'Nothing. This tool only calculates or works with files you choose. When you close the page, what you typed is gone.');
+    }
+    if (LEVEL[h.level]) { out.push('', '## What you may do', LEVEL[h.level]); }
+    out.push('', '## Something is wrong or missing', '- A button you expect is not there: your level does not allow it.', '- Anything else: tell the tool\'s manager.');
+    return out.join('\n');
+  }
+
   var header = el('header', 'hub-bar');
   var userBox = el('span', 'hub-user');
 
@@ -102,6 +218,7 @@
     brand.href = api.href(api.signedIn() ? 'hub.html' : 'index.html');
     header.appendChild(brand);
     header.appendChild(el('span', 'hub-title', document.body.dataset.title || ''));
+    header.appendChild(infoButton());
     header.appendChild(themeButton());
     header.appendChild(userBox);
     header.appendChild(el('span', 'hub-tag', 'Demo'));
@@ -322,7 +439,7 @@
     'tool.deleted': 'deleted the tool', 'tool.manager_added': 'named manager', 'tool.manager_removed': 'removed manager',
     'tool.access_set': 'gave access', 'tool.access_removed': 'took access away',
     'table.created': 'made a table', 'table.column_added': 'added a column', 'table.deleted': 'deleted a table',
-    'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back'
+    'tool.help_set': 'wrote the usage guide', 'user.added': 'added a person', 'user.add_removed': 'took an added person back', 'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back'
   };
 
   // Fills an audit table page by page. fetchPage(beforeId) returns the rows.
@@ -355,6 +472,6 @@
     el: el, clear: clear, say: say, sayError: sayError, guard: guard,
     showUser: showUser, confirmButton: confirmButton, when: when,
     param: param, runner: runner, addRow: addRow, picker: picker, people: people,
-    typedDelete: typedDelete, audit: audit
+    typedDelete: typedDelete, audit: audit, info: info, openInfo: openInfo, rich: rich, toolGuide: toolGuide
   });
 })();

@@ -221,6 +221,48 @@ try {
     ['dame_rows_list', { p_space: ctl.id, p_tool: ctl.data, p_table: 'entries', p_options: {}, p_preview: false }], ['file', ctl.id + '/' + ctl.tool + '/1/index.html'], ['file', ctl.id + '/' + ctl.data + '/1/index.html']]);
   check(control.every((c) => c === 'ALLOWED'), 'control: the same five tries by the department\'s own user all go through (' + control.join(', ') + ')');
 
+  // ------------------------------------------------------------------ the information button and the usage guide
+  const ap = DEPTS.find((d) => d.id === 'applied');
+  await ap.user.page.goto(SITE + 'tool.html?space=applied&tool=' + ap.data);
+  await sealed(ap.user.page, '#list-title');
+  await ap.user.page.click('.hub-info');
+  await ap.user.page.waitForSelector('.hub-rich');
+  let guideText = await ap.user.page.textContent('.hub-sheet');
+  check(/How to use selection-log/.test(guideText) && /saves what you enter in the site's database/.test(guideText) && /entries: everyone who has this tool sees all rows/.test(guideText) && /Contribute: you add rows/.test(guideText) && /written by the site/.test(guideText),
+    'Applied: the information button of a tool explains it, says it saves to the database, who sees the rows and what this person may do');
+  await ap.user.page.keyboard.press('Escape');
+  check((await ap.user.page.locator('.hub-sheet').count()) === 0, 'the panel closes with Esc');
+  check((await rpc(ap.user, 'dame_tool_help_set', { p_space: 'applied', p_tool: ap.data, p_text: 'x' })).code === 'not_allowed', 'a user cannot write the guide of a tool');
+  await ap.lead.page.goto(SITE + 'admin/tool.html?space=applied&tool=' + ap.data);
+  await ap.lead.page.waitForSelector('#body:not([hidden])');
+  check(!(await ap.lead.page.locator('.hub-info').evaluate((b) => b.classList.contains('hub-info-new'))), 'a live tool: the information button is quiet');
+  await ap.lead.page.fill('#help-text', '1. Log every selection the day you make it.\n- <img src=x onerror=alert(1)> **Unit model** as on the nameplate.');
+  await ap.lead.page.click('#help-save');
+  await said(ap.lead.page, 'The guide is saved');
+  await ap.user.page.click('.hub-info');
+  await ap.user.page.waitForSelector('.hub-rich li');
+  guideText = await ap.user.page.textContent('.hub-sheet');
+  check(/Log every selection the day you make it/.test(guideText) && /Written by Applied Lead/.test(guideText) && (await ap.user.page.locator('.hub-sheet img').count()) === 0 && (await ap.user.page.locator('.hub-sheet strong').count()) === 1,
+    'the manager\'s own guide replaces it; it is shown as text (a pasted tag stays text), with who wrote it');
+  await ap.user.page.keyboard.press('Escape');
+  await rpc(ap.lead, 'dame_tool_create', { p_space: 'applied', p_id: 'new-idea', p_name: 'New idea', p_description: '', p_icon: '', p_colour: '', p_open_to_space: false, p_open_level: 'read' });
+  await ap.lead.page.goto(SITE + 'admin/tool.html?space=applied&tool=new-idea');
+  await ap.lead.page.waitForSelector('#body:not([hidden])');
+  check(await ap.lead.page.locator('.hub-info').evaluate((b) => b.classList.contains('hub-info-new')), 'a new tool that is not live: the information button asks to be pressed');
+  await ap.lead.page.click('.hub-info');
+  await ap.lead.page.waitForSelector('.hub-rich h3');
+  guideText = await ap.lead.page.textContent('.hub-sheet');
+  check(/Before the tool is live/.test(guideText) && /What to upload/.test(guideText) && /What a tool may not do/.test(guideText) && /If the tool saves data/.test(guideText) && /goes into this site's database/.test(guideText),
+    'and explains everything: before live, how to build, what to upload, the rules, the database');
+  await ap.lead.page.keyboard.press('Escape');
+  check((await rpc(ap.lead, 'dame_tool_delete', { p_space: 'applied', p_tool: 'new-idea', p_confirm: 'new-idea' })).ok, '(the trial tool is removed again)');
+  await DEPTS[0].user.page.goto(SITE + 'hub.html');
+  await DEPTS[0].user.page.waitForSelector('#spaces a');
+  await DEPTS[0].user.page.click('.hub-info');
+  await DEPTS[0].user.page.waitForSelector('.hub-rich li');
+  check(/Each tile is a space/.test(await DEPTS[0].user.page.textContent('.hub-sheet')), 'every hub page has the information button with its own steps');
+  await DEPTS[0].user.page.keyboard.press('Escape');
+
   // ------------------------------------------------------------------ one department against another: 7 x 6 pairs
   let memberProbes = 0;
   let memberHoles = [];
@@ -238,6 +280,7 @@ try {
         ['dame_rows_add', { p_space: b.id, p_tool: b.data, p_table: 'entries', p_row: { [b.mark]: 'from ' + a.id }, p_preview: false }],
         ['dame_tool_people', { p_space: b.id, p_tool: b.data }],
         ['dame_space_admin_get', { p_space: b.id }],
+        ['dame_tool_help_get', { p_space: b.id, p_tool: b.data }],
         ['file', b.id + '/' + b.tool + '/1/index.html'],
         ['file', b.id + '/' + b.data + '/1/index.html']
       ];
@@ -263,7 +306,8 @@ try {
         ['dame_versions_list', { p_space: b.id, p_tool: b.data }],
         ['dame_audit_scope_list', { p_space: b.id, p_tool: null, p_limit: 10, p_before: null }],
         ['dame_rows_list', { p_space: b.id, p_tool: b.data, p_table: 'entries', p_options: {}, p_preview: false }],
-        ['dame_rows_list', { p_space: b.id, p_tool: b.data, p_table: 'entries', p_options: {}, p_preview: true }]
+        ['dame_rows_list', { p_space: b.id, p_tool: b.data, p_table: 'entries', p_options: {}, p_preview: true }],
+        ['dame_tool_help_set', { p_space: b.id, p_tool: b.data, p_text: 'taken over' }]
       ];
       const ad = await probes(a.lead, asAdmin);
       adminProbes += ad.length;
@@ -313,8 +357,8 @@ try {
   const all = (await rpc(it, 'dame_spaces_all')).value;
   const audit = (await rpc(it, 'dame_audit_list', { p_limit: 500, p_before: null })).value;
   const count = (action) => audit.filter((x) => x.action === action).length;
-  check(all.length === 7 && count('space.created') === 7 && count('tool.created') === 14 && count('table.created') === 7 && count('version.made_live') === 14 && count('tool.access_set') === 7 && count('user.signed_in') >= 15,
-    'IT reads the whole story in the audit: 7 spaces, 14 tools, 7 tables, 14 go-lives, 7 access grants, ' + count('user.signed_in') + ' sign-ins');
+  check(all.length === 7 && count('space.created') === 7 && count('tool.created') === 15 && count('tool.help_set') === 1 && count('table.created') === 7 && count('version.made_live') === 14 && count('tool.access_set') === 7 && count('user.signed_in') >= 15,
+    'IT reads the whole story in the audit: 7 spaces, 14 tools and one trial, a usage guide, 7 tables, 14 go-lives, 7 access grants, ' + count('user.signed_in') + ' sign-ins');
   figures.auditRows = audit.length;
 
   // ------------------------------------------------------------------ people come and go
@@ -366,6 +410,34 @@ try {
     return out;
   }, [['dame_me', {}], ['dame_spaces_list', {}], ['dame_space_get', { p_space: 'marketing' }], ['dame_rows_list', { p_space: 'marketing', p_tool: mk.data, p_table: 'entries', p_options: {}, p_preview: false }], ['dame_people_find', { p_query: 'lead' }], ['dame_users_list', { p_status: null }]]);
   check(waiting.every((c) => c === 'pending'), 'a new joiner with a work address waits for IT: until approved, everything is refused (' + waiting.length + ' tries)');
+
+  // ------------------------------------------------------------------ IT adds a person directly
+  await it.page.goto(SITE + 'admin/it.html');
+  await it.page.waitForSelector('#body:not([hidden])');
+  await it.page.fill('#add-name', 'Added Amal');
+  await it.page.fill('#add-email', 'Amal@Partner-Firm.test');
+  await it.page.click('#form-add button[type=submit]');
+  await said(it.page, 'amal@partner-firm.test is added');
+  check(/Added Amal/.test(await it.page.textContent('#added')), 'IT adds a person by name and email; he is listed as not signed up yet');
+  check((await rpc(mk.lead, 'dame_user_add', { p_email: 'friend@anywhere.test', p_name: 'Friend' })).code === 'not_allowed' && (await rpc(mk.lead, 'dame_users_added')).code === 'not_allowed', 'a department admin cannot add people or see who was added');
+  const addedCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const ad2 = await addedCtx.newPage();
+  await ad2.goto(SITE);
+  await ad2.click('#to-request');
+  await ad2.fill('#rq-name', 'whatever');
+  await ad2.fill('#rq-email', 'amal@partner-firm.test');
+  await ad2.fill('#rq-password', PW);
+  await ad2.fill('#rq-password2', PW);
+  await ad2.click('#form-request button[type=submit]');
+  await ad2.waitForSelector('#notice:not([hidden])');
+  mock.confirm('amal@partner-firm.test');
+  await ad2.fill('#si-email', 'amal@partner-firm.test');
+  await ad2.fill('#si-password', PW);
+  await ad2.click('#form-signin button[type=submit]');
+  await ad2.waitForURL(SITE + 'hub.html');
+  await ad2.waitForSelector('#main:not([hidden])');
+  check(/Hello, Added Amal/.test(await ad2.textContent('#hello')) && (await ad2.locator('#it-card').isHidden()), 'the added person signs up with his own password and is in at once, under the name IT wrote, although outside the work domain, and not as IT');
+  check((await ad2.evaluate(() => window.DameApi.rpc('dame_space_get', { p_space: 'finance' }).then(() => 'ALLOWED', (e) => e.code))) === 'not_allowed', 'being added gives an account, not access to any department');
 
   // ------------------------------------------------------------------ switching off and deleting
   const fa = DEPTS.find((d) => d.id === 'factory');

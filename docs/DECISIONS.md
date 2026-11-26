@@ -100,6 +100,11 @@
 - Text on buttons uses a slightly darker blue than the hub (#0078B8) so that white text stays readable; the mark, the hero and the icons keep the hub's bright blue.
 - The theme choice is one word in the browser's storage of the site. A tool cannot read it; it is told "day" or "night" by the shell.
 
+## Owner, 2026-11-26 (information button, adding people)
+- Every page has an information button. A tool that is not live explains to its manager, in detail, how to build it; a live tool shows its usage guide.
+- The IT admin adds people from the IT admin page. Built differently from the earlier hub on purpose: the hub wrote the account and a temporary password straight into the sign-in service's tables. Here the email is approved in advance and the person signs up himself. Reasons: no one ever knows another person's password; nothing depends on the inner tables of Supabase Auth; the same step works with company sign-in on the target.
+- A usage guide is plain text, 4000 characters, shown as text.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

@@ -99,8 +99,11 @@
         <section id="step-3" hidden>
           <div id="bring-file" hidden>
             <h3>Choose your page</h3>
-            <label class="hub-field">Your HTML file (any name). If the tool has several files, choose all of them together, or one zip
-              <input class="dame-input" id="up-files" type="file" multiple>
+            <label class="hub-pick" id="pick">
+              <strong>Choose your HTML file, or drop it here</strong>
+              <span>Any name. If the tool has several files, choose all of them together, or one zip.</span>
+              <span class="hub-picked" id="picked" hidden></span>
+              <input id="up-files" type="file" multiple>
             </label>
             <p class="dame-muted">The site reads the file in your browser and checks it. Nothing is uploaded yet.</p>
             <p class="hub-sub">Or paste the code instead</p>
@@ -183,6 +186,20 @@
         </div>
         <p class="dame-empty" id="versions-empty" hidden>No version yet.</p>
       </div>
+    </section>
+
+    <section class="dame-card">
+      <h2>Usage guide</h2>
+      <p class="dame-muted">The text people get when they press the information button (i) in this tool. Say in a few steps how to use it. If you leave it empty, the site writes a short guide by itself from the tool's name, description and tables.</p>
+      <label class="hub-field">Guide for the people who use this tool
+        <textarea class="dame-input" id="help-text" rows="8" maxlength="4000" placeholder="1. Type the four efficiency values.&#10;2. Read the weighted value in the Result card.&#10;- Ask the Applied team if a value looks wrong."></textarea>
+      </label>
+      <div class="dame-row">
+        <button class="dame-btn dame-btn-primary" type="button" id="help-save">Save the guide</button>
+        <button class="dame-btn" type="button" id="help-fill">Start from the site's own text</button>
+        <button class="dame-btn" type="button" id="help-see">See it as users will</button>
+      </div>
+      <p class="dame-muted" id="help-by"></p>
     </section>
 
     <section class="dame-card">

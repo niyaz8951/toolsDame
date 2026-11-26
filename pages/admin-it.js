@@ -104,7 +104,9 @@
 
   async function load() {
     // All four questions go out together; the page waits for the slowest, not for the sum.
-    var asked = [api.rpc('dame_users_list', { p_status: null }), api.rpc('dame_spaces_all'), api.rpc('dame_settings_get')];
+    // "Add a person" needs db/core/007: until it is run, that card says so and the rest of the page works.
+    var asked = [api.rpc('dame_users_list', { p_status: null }), api.rpc('dame_spaces_all'), api.rpc('dame_settings_get'),
+      api.rpc('dame_users_added').catch(function () { return null; })];
     var audit = loadAudit();
     audit.catch(function () {});
     var got = await Promise.all(asked);
@@ -132,6 +134,24 @@
     if (document.activeElement !== $('domains')) { $('domains').value = String(settings.signup_domains || '').split(',').join(', '); }
     $('domains-warn').hidden = !!settings.signup_domains;
 
+    var added = ui.clear($('added'));
+    $('form-add').hidden = got[3] === null;
+    $('added-title').hidden = !(got[3] && got[3].length);
+    if (got[3] === null) {
+      added.appendChild(ui.el('li', null, 'This part is not switched on yet: the owner pastes db/core/007_add_people.sql into the database first.'));
+    }
+    (got[3] || []).forEach(function (p) {
+      var li = ui.el('li', 'hub-person');
+      var text = ui.el('div', 'hub-grow');
+      text.appendChild(ui.el('strong', null, p.name));
+      text.appendChild(ui.el('span', null, p.email + ', added ' + ui.when(p.at) + ' by ' + p.by));
+      li.appendChild(text);
+      li.appendChild(ui.confirmButton('Take back', '', function () {
+        act('dame_user_add_remove', { p_email: p.email }, p.email + ' is taken back. If he signs up now, he waits for approval like anyone.');
+      }));
+      added.appendChild(li);
+    });
+
     await audit;
   }
 
@@ -157,6 +177,13 @@
     $('domains-save').addEventListener('click', function () {
       act('dame_setting_set', { p_key: 'signup_domains', p_value: $('domains').value }, 'Saved. ' +
         ($('domains').value.trim() ? 'Only these email domains may ask for access now.' : 'Any email address may ask for access.'));
+    });
+    $('form-add').addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      var email = $('add-email').value.trim();
+      var before = $('added').children.length;
+      await act('dame_user_add', { p_email: email, p_name: $('add-name').value }, email + ' is added. Tell this person to open the site, press "No account? Request access" and sign up with exactly this email.');
+      if ($('added').children.length > before) { ev.target.reset(); }
     });
     $('ai-save').addEventListener('click', function () {
       act('dame_setting_set', { p_key: 'ai_mode', p_value: $('ai-mode').value }, 'Setting saved.');

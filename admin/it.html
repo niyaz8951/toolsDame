@@ -43,6 +43,24 @@
       <p class="dame-empty" id="waiting-empty" hidden>Nobody is waiting.</p>
     </section>
 
+    <section class="dame-card" id="add-card">
+      <h2>Add a person</h2>
+      <p class="dame-muted">Write the person's name and work email. Then tell him to open this site, press "No account? Request access" and sign up with exactly this email. He chooses his own password and is in at once, without waiting here. You never see his password. You can name him admin of a space after he has signed up.</p>
+      <form id="form-add" method="post" novalidate>
+        <div class="hub-two">
+          <label class="hub-field">Name
+            <input class="dame-input" id="add-name" type="text" maxlength="80" autocomplete="off">
+          </label>
+          <label class="hub-field">Work email
+            <input class="dame-input" id="add-email" type="email" maxlength="254" autocomplete="off" placeholder="name@company.com">
+          </label>
+        </div>
+        <button class="dame-btn dame-btn-primary" type="submit">Add this person</button>
+      </form>
+      <p class="hub-sub" id="added-title" hidden>Added, not signed up yet</p>
+      <ul class="hub-list" id="added"></ul>
+    </section>
+
     <section class="dame-card">
       <h2>People</h2>
       <p class="dame-muted">Switch off a leaver: he loses everything at his next click. You cannot change your own account; another IT admin must.</p>

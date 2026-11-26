@@ -295,6 +295,21 @@
       return;
     }
 
+    // The information button: the guide of this tool. A tool that is not built yet explains to its manager how to build it.
+    var building = false;
+    ui.info(async function () {
+      if (building) {
+        var res = await fetch(api.href('help/admin-tool.md'), { cache: 'no-cache', credentials: 'omit' });
+        return res.ok ? { title: 'How to build this tool', text: await res.text() } : null;
+      }
+      var h = null;
+      try { h = await api.rpc('dame_tool_help_get', { p_space: space, p_tool: tool }); } catch (e) { /* the guide is not switched on yet: the site's general text is shown */ }
+      if (!h) { return null; }
+      return { title: 'How to use ' + h.name, text: h.text || ui.toolGuide(h),
+        note: h.text ? 'Written by ' + (h.by || 'the tool\'s manager') + (h.at ? ', ' + ui.when(h.at) : '') + '.'
+          : 'This guide was written by the site. The tool\'s manager can write a better one on the tool admin page.' };
+    });
+
     try {
       info = await opening;
     } catch (err) {
@@ -309,6 +324,8 @@
           : 'It will open here as soon as its manager makes it live.';
         $('notbuilt-go').href = adminUrl;
         $('notbuilt-go').hidden = !mine;
+        building = !!mine;
+        if (mine) { document.querySelector('.hub-info').classList.add('hub-info-new'); }
         $('notbuilt').hidden = false;
         return;
       }

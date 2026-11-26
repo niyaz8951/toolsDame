@@ -81,7 +81,8 @@
     document.title = t.name + ' admin - DAME';
     $('title').textContent = (t.icon ? t.icon + ' ' : '') + t.name + ': admin';
     toolName = t.name;
-    $('text').textContent = (t.description ? t.description + ' ' : '') + 'In ' + t.space_name + '. ' +
+    toolText = t.description || '';
+    $('text').textContent = (t.description ? t.description.replace(/[.!?]?\s*$/, '. ') : '') + 'In ' + t.space_name + '. ' +
       (t.active ? '' : 'This tool is switched off: only its managers and the space admins can open it. ') +
       (t.space_active ? '' : 'The space is switched off by IT.');
     $('open-text').textContent = t.open_to_space
@@ -97,6 +98,9 @@
     $('open-live').hidden = state.live === null;
     $('open-preview').href = toolUrl(true);
     $('open-preview').hidden = state.preview === null;
+    // Until the tool is live, the information button asks to be pressed: it explains everything about building a tool.
+    ui.info(null, state.live === null);
+    isLive = state.live !== null;
     var body = ui.clear($('versions'));
     state.versions.forEach(function (v) { versionRow(body, v, state); });
     $('versions-empty').hidden = state.versions.length > 0;
@@ -116,6 +120,8 @@
   var template = '';       // kit/ai-prompt.md
   var starter = '';        // kit/starter/index.html, without its repo note
   var toolName = '';
+  var isLive = false;
+  var toolText = '';
   var aiMode = 'prompt';
   var lastProblems = [];
   var tables = [];         // this tool's tables, as the database lists them
@@ -712,6 +718,55 @@
     });
     $('fix-copy').addEventListener('click', function () { copy(fixRequest(), $('fix-copy'), 'Copied. Paste it into the AI.'); });
     $('up-send').addEventListener('click', send);
+
+    // Choosing a file: the name is shown, and a file can be dropped on the area.
+    var pick = $('pick');
+    $('up-files').addEventListener('change', function () {
+      var files = $('up-files').files;
+      $('picked').textContent = files.length === 1 ? 'Chosen: ' + files[0].name : files.length + ' files chosen';
+      $('picked').hidden = files.length === 0;
+    });
+    ['dragenter', 'dragover'].forEach(function (n) { pick.addEventListener(n, function (ev) { ev.preventDefault(); pick.classList.add('is-over'); }); });
+    ['dragleave', 'drop'].forEach(function (n) { pick.addEventListener(n, function (ev) { ev.preventDefault(); pick.classList.remove('is-over'); }); });
+    pick.addEventListener('drop', function (ev) {
+      var files = ev.dataTransfer && ev.dataTransfer.files;
+      if (!files || !files.length) { return; }
+      $('picked').textContent = files.length === 1 ? 'Chosen: ' + files[0].name : files.length + ' files chosen';
+      $('picked').hidden = false;
+      check(function (packer) { return packer.collect(files); });
+    });
+
+    // The usage guide behind the information button of the tool.
+    async function guide() {
+      try { return await api.rpc('dame_tool_help_get', { p_space: space, p_tool: tool }); }
+      catch (e) { return null; }
+    }
+    var first = await guide();
+    if (first === null) {
+      $('help-by').textContent = 'The usage guide is not switched on yet: the owner pastes db/core/006_help.sql into the database first.';
+      $('help-save').disabled = true;
+    } else {
+      $('help-text').value = first.text;
+      $('help-by').textContent = first.text ? 'Last written by ' + (first.by || 'a manager') + ', ' + ui.when(first.at) + '.' : 'No guide written yet: people get the site\'s own short text.';
+    }
+    $('help-fill').addEventListener('click', async function () {
+      var h = await guide() || { name: toolName, description: toolText, tables: tables, level: '' };
+      h.level = '';
+      $('help-text').value = ui.toolGuide(h).replace(/\*\*/g, '');
+      $('help-text').focus();
+    });
+    $('help-save').addEventListener('click', function () {
+      act('dame_tool_help_set', { p_space: space, p_tool: tool, p_text: $('help-text').value },
+        $('help-text').value.trim() ? 'The guide is saved. People see it behind the information button of the tool.' : 'The guide is empty: people get the site\'s own short text.');
+    });
+    $('help-see').addEventListener('click', function () {
+      ui.info(function () {
+        var text = $('help-text').value.trim();
+        ui.info(null, !isLive);
+        return Promise.resolve({ title: 'How to use ' + toolName, text: text || ui.toolGuide({ description: toolText, tables: tables, level: 'contribute' }), note: 'This is how people will see it.' });
+      }, !isLive);
+      ui.openInfo();
+    });
     show();
   }
 

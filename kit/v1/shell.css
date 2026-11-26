@@ -230,3 +230,48 @@ html.hub-theme-fade, html.hub-theme-fade * { transition: background-color .35s v
   .hub-hero::before { width: 200px; height: 200px; right: -50px; top: -40px; }
   .hub-brand-text { display: none; }
 }
+
+/* The information button and its panel. */
+.hub-info { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--dame-line); background: var(--dame-surface); color: var(--dame-accent); cursor: pointer; padding: 0; flex: none; position: relative;
+  font: italic 700 1.15rem Georgia, "Times New Roman", serif; transition: border-color .2s var(--dame-ease), transform .2s var(--dame-ease), box-shadow .2s var(--dame-ease); }
+.hub-info:hover { border-color: var(--dame-accent); box-shadow: 0 0 0 4px var(--dame-soft); }
+.hub-info:active { transform: scale(.92); }
+.hub-info-new { border-color: var(--dame-accent); animation: hub-ring 1.8s var(--dame-ease) infinite; }
+.hub-info-new::after { content: ""; position: absolute; top: 1px; right: 1px; width: 10px; height: 10px; border-radius: 50%; background: var(--dame-warn); border: 2px solid var(--dame-surface); }
+@keyframes hub-ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dame-accent-2) 55%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
+.hub-sheet-back { position: fixed; inset: 0; z-index: 40; display: flex; justify-content: flex-end; background: rgba(11,42,74,.32); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: hub-fade .2s var(--dame-ease); }
+.hub-sheet { width: min(520px, 100%); height: 100%; overflow: auto; background: var(--dame-surface); box-shadow: var(--dame-shadow-lg); padding: 0 24px 32px; animation: hub-slide .3s var(--dame-ease); }
+.hub-sheet-head { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 0 12px; margin: 0 0 8px; background: var(--dame-surface); border-bottom: 1px solid var(--dame-line); }
+.hub-sheet-head h2 { margin: 0; font-size: 1.2rem; }
+.hub-sheet-note { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--dame-line); font-size: .9rem; }
+.hub-rich h2 { font-size: 1.1rem; margin: 18px 0 8px; }
+.hub-rich h3 { font-size: 1rem; margin: 18px 0 6px; color: var(--dame-accent); }
+.hub-rich ol, .hub-rich ul { margin: 0 0 12px; padding-left: 22px; }
+.hub-rich li { margin: 0 0 6px; }
+.hub-rich > :first-child { margin-top: 8px; }
+@keyframes hub-slide { from { transform: translateX(40px); opacity: 0; } }
+@keyframes hub-fade { from { opacity: 0; } }
+@media (max-width: 640px) {
+  .hub-sheet-back { align-items: flex-end; }
+  .hub-sheet { height: auto; max-height: 88vh; border-radius: 22px 22px 0 0; }
+  @keyframes hub-slide { from { transform: translateY(40px); opacity: 0; } }
+}
+
+/* Buttons in the same hand as the rest: quiet ones are tinted, not white boxes. */
+.dame-btn:not(.dame-btn-primary):not(.dame-btn-quiet):not(.hub-armed) { background: var(--dame-soft); border-color: transparent; color: var(--dame-accent); font-weight: 600; }
+.dame-btn:not(.dame-btn-primary):not(.dame-btn-quiet):not(.hub-armed):hover { background: color-mix(in srgb, var(--dame-accent-2) 22%, var(--dame-soft)); border-color: transparent; }
+.hub-armed { background: color-mix(in srgb, var(--dame-warn) 12%, var(--dame-surface)); }
+.hub-small { border-radius: 999px; padding: 4px 14px; }
+.hub-back { padding-left: 12px; }
+.hub-back::before { content: ""; width: 16px; height: 16px; margin-right: 6px; background: currentColor; transform: rotate(180deg); -webkit-mask: url("icons/arrow.svg") center / contain no-repeat; mask: url("icons/arrow.svg") center / contain no-repeat; transition: transform .25s var(--dame-ease); }
+.hub-back:hover::before { transform: rotate(180deg) translateX(3px); }
+.hub-trail a { border: 0; background: var(--dame-soft); border-radius: 999px; }
+.hub-wz-nav { border-top: 0; }
+.hub-user .dame-btn { background: transparent; border-color: var(--dame-line); color: var(--dame-text); font-weight: 500; }
+/* Choosing a file: a place to drop it, not the browser's grey button. */
+.hub-pick { display: block; text-align: center; cursor: pointer; padding: 26px 16px; margin: 6px 0 0; border: 2px dashed var(--dame-line); border-radius: 18px; background: var(--dame-surface); font-weight: 400; transition: border-color .2s var(--dame-ease), background .2s var(--dame-ease); }
+.hub-pick:hover, .hub-pick.is-over, .hub-pick:focus-within { border-color: var(--dame-accent); background: var(--dame-soft); }
+.hub-pick strong { display: block; color: var(--dame-accent); font-size: 1.02rem; }
+.hub-pick span { display: block; color: var(--dame-muted); font-size: .9rem; }
+.hub-pick input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.hub-pick .hub-picked { color: var(--dame-text); font-weight: 600; margin-top: 6px; }

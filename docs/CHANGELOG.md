@@ -2,6 +2,21 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - Information button, usage guide, adding people, buttons in one hand
+Added
+- The information button (i) in the bar of every page. Hub pages show `help/<page>.md`; a tool shows its usage guide; a tool that is not live yet shows, with a red dot until pressed, the detailed guide to building a tool (`help/admin-tool.md`: before live, how to build, what to upload, the rules, the database).
+- `db/core/006_help.sql`: `dame_tool_help_get`, `dame_tool_help_set`. Tool admin page: "Usage guide" (write, start from the site's text, see it as users will). With no guide written, the site writes one from the tool's name, description, tables and the reader's level.
+- `db/core/007_add_people.sql`: `dame_user_add`, `dame_user_add_remove`, `dame_users_added`; `dame_request_access` lets an added address in at once. IT admin page: "Add a person".
+- Choosing a file is a drop area instead of the browser's grey button.
+Changed
+- Quiet buttons are tinted pills, back buttons carry an arrow, the trail is pills: one hand with the theme.
+- Until 006 and 007 are run on the real project, those two parts say so on the page and everything else works.
+
+Decided: IT adds a person by email, never with a password (see DECISIONS).
+
+SQL to paste, in order: `006_help.sql`, its test, `007_add_people.sql`, its test (after 004 and 005).
+Owner: Ctrl+F5.
+
 ## 2026-11-26 - The look of the DAME hub: palette, mark, movement, day and night
 Changed (owner's decision, see DECISIONS)
 - `kit/v1/dame.css`: the hub's blue palette for day and night, soft shadows, rounder corners, gradient primary button, focus rings, a small rise when cards arrive. No class or variable renamed or removed; new variables added (`--dame-accent-2`, `--dame-on-accent`, `--dame-soft`, `--dame-surface-2`, shadows, easing).
