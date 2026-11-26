@@ -120,9 +120,10 @@ async function build(who, space, tool, bring) {
   const stops = lines.filter((l) => /^Fix this/.test(l));
   const notes = lines.filter((l) => /^Note/.test(l));
   if (stops.length) { return { stops, notes }; }
-  if (await who.page.locator('#tables-need').isVisible()) {
+  if (await who.page.locator('.hub-focus').count()) {
+    const creates = await who.page.locator('#tables-need').isVisible();
     await who.page.click('#tables-go');
-    await said(who.page, 'The tables are made');
+    if (creates) { await said(who.page, 'The tables are made'); }
   }
   await who.page.click('#wz-next');
   await who.page.click('#up-send');

@@ -2,6 +2,13 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - The review window opens every time; empty form fields
+Fixed (found by the owner with a pasted tracker page)
+- The window with a page's tables and columns opened only when something had to be made. Now it opens after every check of a page that lists tables, also when they already exist, so the columns can be seen and more can be added.
+- A form field left empty (sent as "") for a date, number, choice or person column was refused. The shell now passes it as "no value". The starter kit tells the AI the same.
+
+SQL to paste: none new.
+
 ## 2026-11-26 - Review window for a page's database tables; colour of a space
 Added
 - After the check of a page that saves data, a window opens with the tables and columns the site read from the page (its `dame-tables` block). More columns can be added there (name, kind, choices) before anything is made; "Create in the database and go on" makes the tables, live and preview copy.

@@ -144,7 +144,7 @@ async function run(width, height, label) {
   const openTool = async (page, tool, extra = '') => { await page.goto(SITE + 'tool.html?space=lab&tool=' + tool + extra); };
   // The builder is a guide with one step on screen: these do what a person does to get to a step.
   const way = async (page, which) => { if (await page.locator('#wz-restart').isVisible()) { await page.click('#wz-restart'); } await page.click('#go-' + which); };
-  const toUpload = async (page) => { if (await page.locator('#wz-next').isVisible()) { await page.click('#wz-next'); } };
+  const toUpload = async (page) => { if (await page.locator('.hub-focus').count()) { await page.click('#tables-later'); } if (await page.locator('#wz-next').isVisible()) { await page.click('#wz-next'); } };
   async function upload(page, files, note) {
     if (await page.locator('#wz-start').isVisible()) { await page.click('#go-own'); }
     await page.setInputFiles('#up-files', files);

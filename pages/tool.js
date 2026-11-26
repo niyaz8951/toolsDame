@@ -213,19 +213,25 @@
     var table = String(args.table || '');
     var isId = function (v) { return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v); };
     var isObject = function (v) { return !!v && typeof v === 'object' && !Array.isArray(v); };
+    // A field left empty on a form arrives as "": for the database that means "no value", for a date or a number too.
+    var blank = function (row) {
+      var out = {};
+      Object.keys(row).forEach(function (k) { out[k] = (typeof row[k] === 'string' && row[k].trim() === '') ? null : row[k]; });
+      return out;
+    };
     if (!/^[a-z][a-z0-9_]{1,40}$/.test(table)) { refuse(id, 'This table name is not valid.', 'bad_request'); return; }
     var p = { p_space: space, p_tool: tool, p_table: table, p_preview: info.preview };
     if (what === 'list') {
       p.p_options = isObject(args.options) ? args.options : {};
     } else if (what === 'add') {
       if (!isObject(args.row)) { refuse(id, 'A row is given as { column: value }.', 'bad_request'); return; }
-      p.p_row = args.row;
+      p.p_row = blank(args.row);
     } else {
       if (!isId(args.id)) { refuse(id, 'This row was not found.', 'bad_request'); return; }
       p.p_id = args.id;
       if (what === 'update') {
         if (!isObject(args.patch)) { refuse(id, 'A change is given as { column: value }.', 'bad_request'); return; }
-        p.p_patch = args.patch;
+        p.p_patch = blank(args.patch);
       }
     }
     ask2(id, 'dame_rows_' + what, p);

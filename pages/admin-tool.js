@@ -203,6 +203,7 @@
       '- Column types: `text` (up to 1000 characters), `longtext`, `number`, `bool`, `date` (written `2026-12-31`), `{ "choice": ["a", "b"] }`, `person` (the id of a person from `Dame.people()`), `json`.\n' +
       '- Sharing: `team` = everyone with the tool sees all rows; `private` = each person sees only his own rows; `reference` = everyone reads, only the tool\'s managers change.\n' +
       '- Every row also has `id`, `owner`, `created_at`, `updated_at`, `updated_by`. The site sets them; never send them.\n' +
+      '- A field the person left empty: leave the column out or send `null`, for every type.\n' +
       '- Use: `const t = Dame.table(\'bids\');` then `await t.list({ where: { status: \'open\' }, sort: \'-due\', limit: 100 })` (an array, at most 1000 rows; `where` matches exact values only), `await t.get(id)`, `await t.add({ project: \'A\' })`, `await t.update(id, { status: \'won\' })`, `await t.remove(id)`.\n' +
       '- `await Dame.people()` gives `[{ id, name }]`, the people who have this tool: use it to show who added a row (`row.owner`) and to fill a person picker.\n' +
       '- Levels (`me.level`): `read` sees rows; `contribute` adds rows and changes his own; `edit` changes anyone\'s; `approve` also deletes. Hide what the level does not allow. The site refuses anyway: every call can fail, so catch it and show `error.message` on the page.\n' +
@@ -558,7 +559,7 @@
     box.appendChild(warn);
     var pending = plan.create.length + plan.add.length;
     var foot = ui.el('div', 'dame-row hub-focus-foot');
-    var go = ui.el('button', 'dame-btn dame-btn-primary', pending ? 'Create in the database and go on' : 'Nothing to create. Go on');
+    var go = ui.el('button', 'dame-btn dame-btn-primary', pending ? 'Create in the database and go on' : 'Nothing new to create. Go on');
     go.type = 'button';
     go.id = 'tables-go';
     go.addEventListener('click', function () {
@@ -673,7 +674,8 @@
     if (!way) { way = 'own'; }
     go('step-4');
     // A page that saves data: show its tables and columns before anything is made.
-    if (packed && plan && plan.clash.length === 0 && plan.create.length + plan.add.length > 0) { openFocus(); }
+    // It opens every time, also when the tables already exist, so the columns can be seen and more can be added.
+    if (packed && plan && plan.clash.length === 0 && wanted.length) { openFocus(); }
   }
 
   async function send() {

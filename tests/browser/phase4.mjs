@@ -81,7 +81,7 @@ async function run(width, height, label) {
   const builder = async (page, tool) => { await page.goto(SITE + 'admin/tool.html?space=test-space&tool=' + tool); await page.waitForSelector('#body:not([hidden])'); };
   // The builder is a guide with one step on screen: these do what a person does to get to a step.
   const way = async (page, which) => { if (await page.locator('#wz-restart').isVisible()) { await page.click('#wz-restart'); } await page.click('#go-' + which); };
-  const toUpload = async (page) => { if (await page.locator('#wz-next').isVisible()) { await page.click('#wz-next'); } };
+  const toUpload = async (page) => { if (await page.locator('.hub-focus').count()) { await page.click('#tables-later'); } if (await page.locator('#wz-next').isVisible()) { await page.click('#wz-next'); } };
   const openTool = async (page, tool, extra = '') => { await page.goto(SITE + 'tool.html?space=test-space&tool=' + tool + extra); };
   const twice = async (page, box, labelText) => {
     await page.click(box + ' button:text-is("' + labelText + '")');
@@ -184,6 +184,17 @@ async function run(width, height, label) {
     await f.click('#form-save');
     await f.waitForSelector('#body tr:has-text("Trial in preview")');
     check(/Ita Admin/.test(await f.textContent('#body')), T + 'in the preview a manager adds a row and sees who added it');
+    const emptyRow = await kit(f, `Dame.table('bids').add({ project: 'Fields left empty', due: '', capacity_kw: '  ', status: '' })`);
+    check(emptyRow.project === 'Fields left empty' && emptyRow.due === null && emptyRow.capacity_kw === null && emptyRow.status === null, T + 'a date, number or choice left empty on a form is saved as "no value", not refused');
+    await kit(f, `Dame.table('bids').remove('${emptyRow.id}')`);
+    await builder(ita.page, 'tracker');
+    await way(ita.page, 'ready');
+    await ita.page.click('#example-load');
+    await ita.page.waitForSelector('.hub-focus');
+    const again = await ita.page.textContent('.hub-focus');
+    check(/Already in the database/.test(again) && /In the database/.test(again) && /Nothing new to create/.test(await ita.page.textContent('#tables-go')), T + 'a page whose tables already exist still opens the window, to see the columns and add more');
+    await ita.page.click('#tables-go');
+    check((await ita.page.locator('.hub-focus').count()) === 0 && await ita.page.locator('#wz-next').isVisible(), T + 'with nothing new to create, the window closes and the upload is next');
     await builder(ita.page, 'tracker');
     check(/0 rows/.test(await ita.page.textContent('[data-table="bids"]')) && /1 in the preview/.test(await ita.page.textContent('[data-table="bids"]')), T + 'the preview row is counted apart from the real rows');
     await twice(ita.page, '#versions', 'Make live');
