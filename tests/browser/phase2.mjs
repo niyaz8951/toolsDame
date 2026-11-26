@@ -146,7 +146,7 @@ async function run(width, height, label) {
     await pick(ben, '[data-tool="price-list"] .hub-picker', 'di man', 'Name as manager');
     await said(ben, 'Di Manager now manages');
     check((await ben.textContent('[data-tool="price-list"]')).includes('Di Manager'), T + 'the manager is listed on his tool');
-    await ben.click('[data-tool="bid-tracker"] button:text-is("Change")');
+    await ben.click('[data-tool="bid-tracker"] button:text-is("Change name, icon or colour")');
     await ben.fill('[data-tool="bid-tracker"] form.hub-edit input[type=text] >> nth=0', 'Bid Tracker 2');
     await ben.click('[data-tool="bid-tracker"] form button[type=submit]');
     await said(ben, 'bid-tracker is changed');

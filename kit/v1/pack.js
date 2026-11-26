@@ -222,6 +222,7 @@
     }
 
     function scan(js, where) {
+      js.replace(/\bDame\s*\.\s*table\s*\(\s*(['"])([a-z][a-z0-9_]{1,40})\1/g, function (all, q, name) { uses[name] = true; return all; });
       var m = js.match(/https?:\/\/[^\s'"`)<>]{4,80}/);
       if (m) { note(where + ' mentions the outside address ' + m[0] + '. Outside calls are blocked on this site; the tool must work without it.'); }
       if (/\b(localStorage|sessionStorage|indexedDB)\b/.test(js)) { problem(where + ' uses the browser\'s own storage (localStorage, sessionStorage or indexedDB). Inside a tool that stops the script at once. Remove it; to keep data use a table and Dame.table.'); }
@@ -231,6 +232,7 @@
     }
 
     var inlineTables = '';
+    var uses = {};          // table names the code asks for: Dame.table('name')
     var pageNames = paths.filter(function (p) { return /\.html?$/i.test(p) && p.indexOf('/') < 0; });
     paths.filter(function (p) { return /\.html?$/i.test(p) && p.indexOf('/') >= 0; }).forEach(function (p) {
       problem('The page ' + p + ' is inside a folder. Put every page next to index.html.');
@@ -398,7 +400,7 @@
       }
     }
 
-    return { pages: pages, problems: problems, notes: notes, manifest: manifest, total: total };
+    return { pages: pages, problems: problems, notes: notes, manifest: manifest, total: total, uses: Object.keys(uses) };
   }
 
   window.DamePack = Object.freeze({ collect: collect, fromCode: fromCode, pack: pack });

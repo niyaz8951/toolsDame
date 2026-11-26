@@ -19,7 +19,8 @@
 - The builder is a guide: three choices, then one step at a time; a database question in plain words; every link a button; pages load about twice as fast.
 - The look of the DAME hub: palette, mark, movement, a day and night button that tools follow.
 - The information button on every page, a usage guide per tool (`006_help.sql`), IT adds a person by email (`007_add_people.sql`).
-- Tests, all passing locally: seven SQL test files, six browser tests, the hostile-tool test (33 attempts).
+- A review window for the database tables of an uploaded page (add columns before they are made); colour and icon of a space (`008_space_look.sql`).
+- Tests, all passing locally: eight SQL test files, six browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
@@ -27,7 +28,7 @@
 1. **SQL editor:** paste all of `db/core/004_tables.sql`, Run. The result must be an empty table.
 2. **SQL editor:** paste all of `tests/sql/004_tables_test.sql`, Run. First row: "... passed, 0 failed".
 3. **SQL editor:** the same with `db/core/005_hardening.sql`, then `tests/sql/005_hardening_test.sql`.
-   Then the same with `006_help.sql` + `006_help_test.sql`, and `007_add_people.sql` + `007_add_people_test.sql`.
+   Then the same with `006_help.sql`, `007_add_people.sql` and `008_space_look.sql`, each followed by its test file of the same number.
 4. **On the site** (Ctrl+F5 first): IT admin > Site settings > **Who may ask for access**: type the work email domain(s), Save. Empty means anyone may ask.
 5. IT admin > Spaces > **Make the test space**, then **Open the test space's admin page**.
 6. On **Converter**: "Build and access", **Use a ready-made page**, **Use it**, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.

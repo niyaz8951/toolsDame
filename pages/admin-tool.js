@@ -126,6 +126,12 @@
   var lastProblems = [];
   var tables = [];         // this tool's tables, as the database lists them
   var plan = null;         // what the checked page still needs: { create: [], add: [], clash: [] }
+  var wanted = [];         // the tables of the checked page, with the columns the person added
+  var undeclared = [];     // tables the page's code names but neither the page lists nor the tool has
+  var extras = {};         // columns added in the review window: { table: [ { name, type, choices } ] }
+  var sourceText = '';     // the page as text, when the check was of one page: added columns are written into it
+  var focus = null;        // the review window, while it is open
+  var newColumns = [];     // columns added in the review window that the page has no field for yet
   var SAMPLE = { dame: 1, tables: { bids: { sharing: 'team', columns: { project: 'text', capacity_kw: 'number', due: 'date',
     status: { choice: ['open', 'won', 'lost'] }, lead: 'person', notes: 'longtext' } } } };
 
@@ -404,15 +410,29 @@
   // Compares the tables the checked page needs with the tables the tool has.
   async function planTables() {
     plan = { create: [], add: [], clash: [] };
-    if (packed && packed.manifest) {
+    wanted = [];
+    if (packed && (packed.manifest || (packed.uses && packed.uses.length))) {
       tables = await api.rpc('dame_tables_list', { p_space: space, p_tool: tool }) || [];
-      fromManifest(packed.manifest).forEach(function (want) {
+    }
+    // The code saves rows in a table the page does not describe and the tool does not have: said as a note after the check.
+    undeclared = (packed && packed.uses || []).filter(function (name) {
+      return !(packed.manifest && packed.manifest.tables[name]) && !tables.some(function (t) { return t.name === name; });
+    });
+    if (packed && packed.manifest) {
+      wanted = fromManifest(packed.manifest);
+      wanted.forEach(function (want) {
+        // Columns the person added in the review window count like columns of the page.
+        (extras[want.name] || []).forEach(function (c) {
+          if (!want.columns.some(function (x) { return x.name === c.name; })) { want.columns.push({ name: c.name, type: c.type, choices: c.choices, mine: true }); }
+        });
+      });
+      wanted.forEach(function (want) {
         var have = tables.filter(function (t) { return t.name === want.name; })[0];
-        if (!have) { plan.create.push(want); return; }
+        if (!have) { plan.create.push({ name: want.name, sharing: want.sharing, columns: want.columns.map(function (c) { return { name: c.name, type: c.type, choices: c.choices }; }) }); return; }
         if (have.sharing !== want.sharing) { plan.clash.push('The table ' + want.name + ' exists as "' + have.sharing + '", the page asks for "' + want.sharing + '".'); }
         want.columns.forEach(function (c) {
           var old = have.columns.filter(function (x) { return x.name === c.name; })[0];
-          if (!old) { plan.add.push({ table: want.name, column: c }); }
+          if (!old) { plan.add.push({ table: want.name, column: { name: c.name, type: c.type, choices: c.choices } }); }
           else if (old.type !== c.type) { plan.clash.push('The column ' + want.name + '.' + c.name + ' exists as ' + old.type + ', the page asks for ' + c.type + '.'); }
         });
       });
@@ -424,16 +444,155 @@
     var pending = plan.create.length + plan.add.length;
     $('tables-need').hidden = pending + plan.clash.length === 0;
     $('tables-create').hidden = pending === 0 || plan.clash.length > 0;
+    $('tables-review').hidden = !wanted.length || plan.clash.length > 0;
     $('tables-text').textContent = plan.clash.length ? 'The page and the tool\'s tables do not agree:'
       : 'This tool saves data in the database. It needs the following tables. The site makes them for you (one for real use, one empty copy for the preview). Read the list, then press the button:';
     $('up-send').disabled = !packed || pending > 0 || plan.clash.length > 0;
     show();
   }
 
+  // The page's own list of tables with the added columns in it, so that a page that draws
+  // its form from that list (the ready-made tracker does) shows the new columns by itself.
+  function withExtras(text) {
+    var manifest = toManifest(wanted);
+    var json = JSON.stringify(manifest, null, 1).replace(/</g, '\\u003c');
+    var block = /(<script\b[^>]*\bid=["']dame-tables["'][^>]*>)[\s\S]*?(<\/script>)/i;
+    return block.test(text) ? text.replace(block, function (all, a, b) { return a + '\n' + json + '\n' + b; }) : null;
+  }
+
+  // ------------------------------------------------------------------ the review window ("focus mode")
+  // After the check of a page that saves data: its tables and columns, as read from the page,
+  // and a place to add more columns before anything is made in the database.
+  var TYPE_WORDS = { text: 'Text (short)', longtext: 'Text (long)', number: 'Number', date: 'Date', bool: 'Yes or no', choice: 'One of a list', person: 'A person', json: 'Structured data' };
+  var SHARE_WORDS = { team: 'Team: everyone with the tool sees all rows', 'private': 'Private: each person sees only his own rows', reference: 'Reference: everyone reads, only managers change' };
+
+  function closeFocus() {
+    if (focus) { focus.remove(); focus = null; }
+  }
+
+  function openFocus() {
+    closeFocus();
+    if (!wanted.length) { return; }
+    focus = ui.el('div', 'hub-focus-back');
+    var box = ui.el('section', 'hub-focus');
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', 'The database tables of this tool');
+    box.appendChild(ui.el('h2', null, 'The database tables of this tool'));
+    box.appendChild(ui.el('p', 'dame-muted', 'Your page saves data in this site\'s database. These are the tables and columns the site read from your page. Add more columns if you need them. Nothing is made in the database until you press the button at the bottom.'));
+    var warn = ui.el('p', 'hub-msg hub-warn');
+    warn.hidden = true;
+    warn.setAttribute('role', 'alert');
+
+    wanted.forEach(function (want) {
+      var have = tables.filter(function (t) { return t.name === want.name; })[0];
+      var card = ui.el('div', 'hub-focus-table');
+      card.setAttribute('data-want', want.name);
+      var title = ui.el('h3', null, want.name + ' ');
+      title.appendChild(ui.el('span', 'hub-pill' + (have ? ' hub-pill-ok' : ''), have ? 'Already in the database' : 'New table'));
+      card.appendChild(title);
+      card.appendChild(ui.el('p', 'dame-muted', (SHARE_WORDS[want.sharing] || want.sharing) + '.'));
+      var list = ui.el('ul', 'hub-list hub-cols');
+      want.columns.forEach(function (c) {
+        var old = have && have.columns.some(function (x) { return x.name === c.name; });
+        var li = ui.el('li', 'hub-person');
+        var text = ui.el('div', 'hub-grow');
+        text.appendChild(ui.el('strong', null, c.name));
+        text.appendChild(ui.el('span', null, (TYPE_WORDS[c.type] || c.type) + (c.choices ? ': ' + c.choices.join(', ') : '')));
+        li.appendChild(text);
+        li.appendChild(ui.el('span', 'hub-pill' + (old ? ' hub-pill-ok' : ''), c.mine ? 'Added by you' : (old ? 'In the database' : 'From your page')));
+        if (c.mine) {
+          var drop = ui.el('button', 'dame-btn hub-small', 'Remove');
+          drop.type = 'button';
+          drop.addEventListener('click', function () {
+            extras[want.name] = (extras[want.name] || []).filter(function (x) { return x.name !== c.name; });
+            planTables().then(openFocus);
+          });
+          li.appendChild(drop);
+        }
+        list.appendChild(li);
+      });
+      card.appendChild(list);
+
+      // One more column: a name, what it holds, and the choices when it is "one of a list".
+      var row = ui.el('div', 'hub-colline hub-focus-add');
+      var name = ui.el('input', 'dame-input');
+      name.type = 'text';
+      name.maxLength = 41;
+      name.placeholder = 'new column, for example remarks';
+      name.setAttribute('aria-label', 'Name of a new column in ' + want.name);
+      var type = ui.el('select', 'dame-input');
+      type.setAttribute('aria-label', 'What the new column holds');
+      Object.keys(TYPE_WORDS).forEach(function (t) { var o = ui.el('option', null, TYPE_WORDS[t]); o.value = t; type.appendChild(o); });
+      var choices = ui.el('input', 'dame-input');
+      choices.type = 'text';
+      choices.placeholder = 'the choices, with commas: low, medium, high';
+      choices.setAttribute('aria-label', 'The choices');
+      choices.hidden = true;
+      type.addEventListener('change', function () { choices.hidden = type.value !== 'choice'; });
+      var add = ui.el('button', 'dame-btn', 'Add column');
+      add.type = 'button';
+      add.addEventListener('click', function () {
+        // "Unit Price" becomes unit_price: small letters, digits, underscore.
+        var id = name.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+        var list2 = type.value === 'choice' ? choices.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean) : null;
+        var problem = !/^[a-z][a-z0-9_]{1,40}$/.test(id) ? 'A column name starts with a letter and has 2 to 41 small letters, digits or underscores, for example unit_price.'
+          : ['id', 'owner', 'created_at', 'updated_at', 'updated_by'].indexOf(id) >= 0 ? 'Every table already has ' + id + ' by itself. Choose another name.'
+          : want.columns.some(function (x) { return x.name === id; }) ? 'This table already has a column named ' + id + '.'
+          : (type.value === 'choice' && (!list2 || list2.length < 2)) ? 'Write at least two choices, with commas between them.' : '';
+        warn.hidden = !problem;
+        warn.textContent = problem;
+        if (problem) { name.focus(); return; }
+        (extras[want.name] = extras[want.name] || []).push(list2 ? { name: id, type: 'choice', choices: list2 } : { name: id, type: type.value });
+        planTables().then(openFocus);
+      });
+      row.appendChild(name);
+      row.appendChild(type);
+      row.appendChild(choices);
+      row.appendChild(add);
+      card.appendChild(row);
+      box.appendChild(card);
+    });
+
+    box.appendChild(ui.el('p', 'dame-muted', 'Every table also keeps by itself who added a row and when. A column you add here is made in the database; a page made from the site\'s ready-made tracker shows it by itself, a page written by the AI must be told (the site writes that message for you).'));
+    box.appendChild(warn);
+    var pending = plan.create.length + plan.add.length;
+    var foot = ui.el('div', 'dame-row hub-focus-foot');
+    var go = ui.el('button', 'dame-btn dame-btn-primary', pending ? 'Create in the database and go on' : 'Nothing to create. Go on');
+    go.type = 'button';
+    go.id = 'tables-go';
+    go.addEventListener('click', function () {
+      if (plan.create.length + plan.add.length === 0) { closeFocus(); return; }
+      go.disabled = true;
+      createTables();
+    });
+    var later = ui.el('button', 'dame-btn', 'Not now');
+    later.type = 'button';
+    later.id = 'tables-later';
+    later.addEventListener('click', closeFocus);
+    foot.appendChild(go);
+    foot.appendChild(later);
+    box.appendChild(foot);
+    focus.appendChild(box);
+    document.body.appendChild(focus);
+    go.focus();
+  }
+
   async function createTables() {
     $('tables-create').disabled = true;
     ui.say($('msg'), '');
+    var added = Object.keys(extras).reduce(function (n, t) { return n + extras[t].length; }, 0);
+    var names = Object.keys(extras).reduce(function (all, t) { return all.concat(extras[t].map(function (c) { return t + '.' + c.name + ' (' + c.type + ')'; })); }, []);
     try {
+      if (added && sourceText) {
+        var changed = withExtras(sourceText);
+        if (changed) {
+          // Check the page again with the longer list; the plan stays the same.
+          var packer = $('packer').contentWindow.DamePack;
+          var again = await packer.pack(packer.fromCode(changed), { libs: shelf.map(function (l) { return l.id; }) });
+          if (!again.problems.length) { packed = again; sourceText = changed; if ($('code').value.trim()) { $('code').value = changed; } }
+        }
+      }
       for (var i = 0; i < plan.create.length; i += 1) {
         var t = plan.create[i];
         await api.rpc('dame_table_create', { p_space: space, p_tool: tool, p_name: t.name, p_sharing: t.sharing, p_columns: t.columns });
@@ -441,9 +600,16 @@
       for (var k = 0; k < plan.add.length; k += 1) {
         await api.rpc('dame_table_add_column', { p_space: space, p_tool: tool, p_table: plan.add[k].table, p_column: plan.add[k].column });
       }
+      extras = {};
       await planTables();
       await showTables();
-      ui.say($('msg'), 'The tables are made in the database. Press "Next: upload".', 'ok');
+      closeFocus();
+      // A page that does not draw itself from the list has no field for an added column yet.
+      var selfDrawn = (sourceText.match(/dame-tables/g) || []).length >= 2;
+      newColumns = added && !selfDrawn ? names : [];
+      $('cols-copy').hidden = !newColumns.length;
+      $('cols-text').hidden = !newColumns.length;
+      ui.say($('msg'), 'The tables are made in the database. Press "Next: upload".' + (added ? (selfDrawn ? ' Your page draws its form from the list, so it shows the added columns by itself.' : ' The columns you added exist in the database now; your page has no field for them yet (see below).') : ''), 'ok');
     } catch (err) {
       await planTables().catch(function () {});
       ui.sayError($('msg'), err);
@@ -456,6 +622,12 @@
   async function check(getMap) {
     packed = null;
     plan = null;
+    extras = {};
+    sourceText = '';
+    newColumns = [];
+    $('cols-copy').hidden = true;
+    $('cols-text').hidden = true;
+    closeFocus();
     lastProblems = [];
     $('after-upload').hidden = true;
     $('tables-need').hidden = true;
@@ -469,7 +641,10 @@
       // The code is read in the hidden helper page pack.html, not in this page.
       var packer = $('packer').contentWindow.DamePack;
       if (!packer) { throw new Error('The file reader is still loading. Try again in a moment.'); }
-      var result = await packer.pack(await getMap(packer), { libs: shelf.map(function (l) { return l.id; }) });
+      var map = await getMap(packer);
+      var htmls = Object.keys(map).filter(function (n) { return /\.html?$/i.test(n); });
+      if (htmls.length === 1 && !map['dame.json']) { sourceText = new TextDecoder().decode(map[htmls[0]]); }
+      var result = await packer.pack(map, { libs: shelf.map(function (l) { return l.id; }) });
       var lines = [];
       result.problems.forEach(function (p) { lines.push(['Fix this: ' + p, 'hub-warn']); });
       result.notes.forEach(function (n) { lines.push(['Note: ' + n, '']); });
@@ -479,6 +654,9 @@
         $('to-ai').hidden = way !== 'own' || aiMode === 'off';
         await planTables();
         var waits = plan.create.length + plan.add.length + plan.clash.length > 0;
+        undeclared.forEach(function (name) {
+          lines.push(['Note: the page saves rows in a table named "' + name + '", but does not list that table and its columns, and this tool has no such table. Saving there will not work. If it should, ask the AI to add the list of tables (the block with id="dame-tables") and give the complete index.html again.', '']);
+        });
         lines.unshift(['The check passed: ' + result.pages.map(function (p) { return p.name; }).join(', ') + ' (' + size(result.total) + '). ' + (waits ? 'One thing left before the upload: the database tables below.' : 'Press "Next: upload".'), 'hub-ok']);
       } else {
         lastProblems = result.problems;
@@ -494,6 +672,8 @@
     }
     if (!way) { way = 'own'; }
     go('step-4');
+    // A page that saves data: show its tables and columns before anything is made.
+    if (packed && plan && plan.clash.length === 0 && plan.create.length + plan.add.length > 0) { openFocus(); }
   }
 
   async function send() {
@@ -691,7 +871,13 @@
         ui.sayError($('msg'), err);
       }
     });
-    $('tables-create').addEventListener('click', createTables);
+    $('tables-create').addEventListener('click', openFocus);
+    $('tables-review').addEventListener('click', openFocus);
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { closeFocus(); } });
+    $('cols-copy').addEventListener('click', function () {
+      copy('I added these columns to the tool\'s tables on the DAME site: ' + newColumns.join(', ') + '. Add them to the list of tables in the page (the block with id="dame-tables"), give each a field in the form and a column in the list, and give me the complete index.html again, in one code block, still following every rule of the starter kit.',
+        $('cols-copy'), 'Copied. Paste it into the AI.');
+    });
     dataForm();
     $('kit-show').addEventListener('click', function () {
       if (!described()) { return; }

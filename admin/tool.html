@@ -142,8 +142,13 @@
           <div id="tables-need" hidden>
             <p id="tables-text"></p>
             <ul class="hub-list hub-report" id="tables-list"></ul>
-            <button class="dame-btn dame-btn-primary" type="button" id="tables-create">Create the tables</button>
+            <button class="dame-btn dame-btn-primary" type="button" id="tables-create">See the columns and create the tables</button>
           </div>
+          <div class="dame-row">
+            <button class="dame-btn" type="button" id="tables-review" hidden>See the tables and columns of this page</button>
+            <button class="dame-btn dame-btn-primary" type="button" id="cols-copy" hidden>Copy a request for the AI to use the new columns</button>
+          </div>
+          <p class="dame-muted" id="cols-text" hidden>The columns you added are in the database, but this page has no field for them yet. You can upload it as it is and add the fields later, or give this request to the AI first and paste its new answer.</p>
           <div class="dame-row">
             <button class="dame-btn dame-btn-primary" type="button" id="fix-copy" hidden>Copy a fix request for the AI</button>
             <button class="dame-btn" type="button" id="to-ai" hidden>Ask the AI to rebuild this page for the site</button>

@@ -275,3 +275,15 @@ html.hub-theme-fade, html.hub-theme-fade * { transition: background-color .35s v
 .hub-pick span { display: block; color: var(--dame-muted); font-size: .9rem; }
 .hub-pick input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .hub-pick .hub-picked { color: var(--dame-text); font-weight: 600; margin-top: 6px; }
+
+/* The review window of a page's database tables: everything else steps back. */
+.hub-focus-back { position: fixed; inset: 0; z-index: 45; display: flex; align-items: flex-start; justify-content: center; padding: 5vh 16px; overflow: auto; background: rgba(11,42,74,.45); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); animation: hub-fade .2s var(--dame-ease); }
+.hub-focus { width: min(760px, 100%); background: var(--dame-surface); border-radius: 22px; padding: 28px; box-shadow: var(--dame-shadow-lg); animation: hub-rise .35s var(--dame-ease) both; }
+.hub-focus h2 { font-size: 1.3rem; }
+.hub-focus-table { border: 1px solid var(--dame-line); border-radius: 16px; padding: 16px; margin: 0 0 14px; background: var(--dame-bg); }
+.hub-focus-table h3 { margin: 0 0 4px; font-size: 1.05rem; }
+.hub-cols li { padding: 8px 0; }
+.hub-focus-add { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 8px; margin-top: 10px; align-items: center; }
+.hub-focus-add input[type="text"]:nth-of-type(2) { grid-column: 1 / -1; grid-row: 2; }
+.hub-focus-foot { position: sticky; bottom: -28px; margin: 16px -28px -28px; padding: 16px 28px; background: var(--dame-surface); border-top: 1px solid var(--dame-line); border-radius: 0 0 22px 22px; }
+@media (max-width: 640px) { .hub-focus { padding: 18px; } .hub-focus-add { grid-template-columns: 1fr; } .hub-focus-foot { margin: 16px -18px -18px; padding: 14px 18px; bottom: -18px; } }

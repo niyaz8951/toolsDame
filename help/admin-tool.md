@@ -26,7 +26,8 @@ Nobody but you (its managers and the space admins) can open it. People who have 
 
 ## If the tool saves data
 - The data goes into this site's database. Nobody writes SQL.
-- The page lists the tables it needs. The site shows you that list and makes the tables when you press **Create the tables**.
+- The page lists the tables and columns it needs. After the check a window shows you that list. You can add more columns there. Nothing is made until you press **Create in the database and go on**.
+- A column you add is shown by itself in a page made from the ready-made tracker. A page written by the AI must be told; the site writes that message for you.
 - Every table has a sharing rule: **team** (everyone with the tool sees all rows), **private** (each person sees only his own), **reference** (everyone reads, only managers change).
 - The preview has its own empty copy of each table, so trying things never touches real rows.
 - Under **Data** you see the tables, add a column, or delete a table after typing its name.

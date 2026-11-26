@@ -14,6 +14,7 @@
 
   var space = '';
   var act = null;
+  var hadLook = false;
   var loadAudit = null;
   var idTouched = false;
   var LEVELS = [['read', 'Read: see the rows'], ['contribute', 'Contribute: add rows, change own'],
@@ -62,7 +63,7 @@
     var access = ui.el('a', 'dame-btn dame-btn-primary hub-small', 'Build and access');
     access.href = api.href('admin/tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(t.id);
     row.appendChild(access);
-    var edit = ui.el('button', 'dame-btn hub-small', 'Change');
+    var edit = ui.el('button', 'dame-btn hub-small', 'Change name, icon or colour');
     edit.type = 'button';
     row.appendChild(edit);
     row.appendChild(t.active
@@ -129,6 +130,14 @@
     $('title').textContent = s.name + ': admin';
     if (document.activeElement !== $('sp-name')) { $('sp-name').value = s.name; }
     if (document.activeElement !== $('sp-desc')) { $('sp-desc').value = s.description; }
+    // The tile's icon and colour (db/core/008): until that file is run, the two fields are not offered.
+    var look = await api.rpc('dame_space_look_get', { p_space: space }).catch(function () { return null; });
+    $('sp-look').hidden = look === null;
+    if (look) {
+      if (document.activeElement !== $('sp-icon')) { $('sp-icon').value = look.icon || ''; }
+      $('sp-colour').value = /^#[0-9a-f]{6}$/.test(look.colour) ? look.colour : '#0078b8';
+      hadLook = true;
+    }
 
     var box = ui.clear($('tools'));
     s.tools.forEach(function (t) { box.appendChild(toolBlock(t)); });
@@ -173,7 +182,13 @@
     $('form-space').addEventListener('submit', function (ev) {
       ev.preventDefault();
       document.activeElement.blur();
-      act('dame_space_update', { p_space: space, p_name: $('sp-name').value, p_description: $('sp-desc').value }, 'Saved.');
+      var name = $('sp-name').value;
+      var desc = $('sp-desc').value;
+      if (!hadLook) { act('dame_space_update', { p_space: space, p_name: name, p_description: desc }, 'Saved.'); return; }
+      // Name and text first, then the tile's icon and colour; the page reloads once, after both.
+      api.rpc('dame_space_update', { p_space: space, p_name: name, p_description: desc }).then(function () {
+        return act('dame_space_look_set', { p_space: space, p_icon: $('sp-icon').value, p_colour: $('sp-colour').value }, 'Saved. The tile on the hub has the new look.');
+      }, function (err) { ui.sayError($('msg'), err); });
     });
 
     $('tl-id').addEventListener('input', function () { idTouched = true; });

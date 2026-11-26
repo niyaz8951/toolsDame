@@ -85,7 +85,7 @@
     </section>
 
     <section class="dame-card">
-      <h2>Name and description</h2>
+      <h2>Name, description and look of the space</h2>
       <form id="form-space" method="post" novalidate>
         <label class="hub-field">Name
           <input class="dame-input" id="sp-name" type="text" maxlength="80" autocomplete="off" required>
@@ -93,7 +93,15 @@
         <label class="hub-field">Description
           <input class="dame-input" id="sp-desc" type="text" maxlength="400" autocomplete="off">
         </label>
-        <button class="dame-btn" type="submit">Save</button>
+        <div class="hub-two" id="sp-look" hidden>
+          <label class="hub-field">Icon on the tile (one or two letters, or an emoji)
+            <input class="dame-input" id="sp-icon" type="text" maxlength="8" autocomplete="off">
+          </label>
+          <label class="hub-field">Colour of the tile
+            <input class="dame-input" id="sp-colour" type="color" value="#0078b8">
+          </label>
+        </div>
+        <button class="dame-btn dame-btn-primary" type="submit">Save</button>
       </form>
     </section>
 

@@ -13,5 +13,6 @@ After every file: the result shown is an empty table (`core.security_check()` fo
 | `005_hardening.sql` | Who may ask for access (email domains), reading the settings, sign-ins in the audit | `tests/sql/005_hardening_test.sql` |
 | `006_help.sql` | The usage guide of a tool: who reads it, who writes it | `tests/sql/006_help_test.sql` |
 | `007_add_people.sql` | An IT admin adds a person by email; that person is in at once when he signs up | `tests/sql/007_add_people_test.sql` |
+| `008_space_look.sql` | Icon and colour of a space, changed by its admins and by IT | `tests/sql/008_space_look_test.sql` |
 
 Owner only, in the SQL editor: `select core.make_first_admin('email');` (once) and `select * from core.security_check();` (any time).

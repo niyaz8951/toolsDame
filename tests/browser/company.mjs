@@ -121,7 +121,7 @@ async function build(who, space, tool, bring) {
   const notes = lines.filter((l) => /^Note/.test(l));
   if (stops.length) { return { stops, notes }; }
   if (await who.page.locator('#tables-need').isVisible()) {
-    await who.page.click('#tables-create');
+    await who.page.click('#tables-go');
     await said(who.page, 'The tables are made');
   }
   await who.page.click('#wz-next');
@@ -256,6 +256,19 @@ try {
     'and explains everything: before live, how to build, what to upload, the rules, the database');
   await ap.lead.page.keyboard.press('Escape');
   check((await rpc(ap.lead, 'dame_tool_delete', { p_space: 'applied', p_tool: 'new-idea', p_confirm: 'new-idea' })).ok, '(the trial tool is removed again)');
+  // The colour and icon of a space's tile can be changed after it was made.
+  await ap.lead.page.goto(SITE + 'admin/space.html?space=applied');
+  await ap.lead.page.waitForSelector('#body:not([hidden])');
+  await ap.lead.page.fill('#sp-icon', 'Ap');
+  await ap.lead.page.fill('#sp-colour', '#0e8f8a');
+  await ap.lead.page.click('#form-space button[type=submit]');
+  await said(ap.lead.page, 'Saved');
+  await ap.user.page.goto(SITE + 'hub.html');
+  await ap.user.page.waitForSelector('#spaces a');
+  check((await ap.user.page.locator('#spaces a').evaluate((t) => t.style.getPropertyValue('--dame-accent') + '|' + t.querySelector('.hub-tile-icon').textContent)) === '#0e8f8a|Ap', 'Applied: its admin changes the colour and icon of the space; its user sees the new tile on the hub');
+  check((await rpc(ap.user, 'dame_space_look_set', { p_space: 'applied', p_icon: 'X', p_colour: '#000000' })).code === 'not_allowed' && (await rpc(DEPTS[0].lead, 'dame_space_look_set', { p_space: 'applied', p_icon: 'X', p_colour: '#000000' })).code === 'not_allowed', 'a user, and the admin of another department, cannot change it');
+  check(await ap.lead.page.locator('#tools button:has-text("Change name, icon or colour")').first().isVisible(), 'each tool has a "Change name, icon or colour" button');
+
   await DEPTS[0].user.page.goto(SITE + 'hub.html');
   await DEPTS[0].user.page.waitForSelector('#spaces a');
   await DEPTS[0].user.page.click('.hub-info');

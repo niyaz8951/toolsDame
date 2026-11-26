@@ -152,8 +152,24 @@ async function run(width, height, label) {
     check(/One thing left/.test(await ita.page.textContent('#up-report')) && /New table bids \(team\): project text, capacity_kw number, due date, status choice \(open, won, lost\), lead person, notes longtext/.test(need), T + 'the site reads which table the page needs and lists it in plain words');
     check(await ita.page.locator('#up-send').isDisabled(), T + 'the page cannot be uploaded before its table exists');
     await shot(ita.page, '2-tables-needed');
-    await ita.page.click('#tables-create');
+    // The review window: the columns read from the page, and one more added before anything is made.
+    await ita.page.waitForSelector('.hub-focus');
+    const win = await ita.page.textContent('.hub-focus');
+    check(/bids/.test(win) && /New table/.test(win) && /capacity_kw/.test(win) && /From your page/.test(win) && /Team: everyone with the tool sees all rows/.test(win), T + 'after the check a window shows the table and the columns read from the page');
+    await ita.page.fill('.hub-focus-add input >> nth=0', 'id');
+    await ita.page.click('.hub-focus-add button');
+    check(/already has id by itself/.test(await ita.page.textContent('.hub-focus .hub-warn')), T + 'a column name the site keeps for itself is refused in words');
+    await ita.page.fill('.hub-focus-add input >> nth=0', 'Unit Price!');
+    await ita.page.selectOption('.hub-focus-add select', 'number');
+    await ita.page.click('.hub-focus-add button');
+    await ita.page.waitForSelector('.hub-focus li:has-text("unit_price")');
+    check(/unit_price\s*Number\s*Added by you/.test((await ita.page.textContent('.hub-focus li:has-text("unit_price")')).replace(/\s+/g, ' ')), T + 'a column is added in the window: "Unit Price!" becomes unit_price, a number');
+    check((await mock.sql("select to_regclass('t_test_space__tracker.bids') is null as none")).rows[0].none, T + 'nothing is made in the database before the button is pressed');
+    await shot(ita.page, '2b-review-window');
+    await ita.page.click('#tables-go');
     await said(ita.page, 'The tables are made');
+    check(/shows the added columns by itself/.test(await ita.page.textContent('#msg')) && !(await ita.page.locator('.hub-focus').count()) && !(await ita.page.locator('#cols-copy').isVisible()), T + 'the ready-made tracker draws its form from the list, so no request for the AI is needed');
+    check((await mock.sql("select count(*)::int as n from information_schema.columns where table_name = 'bids' and column_name = 'unit_price' and table_schema in ('t_test_space__tracker', 'p_test_space__tracker')")).rows[0].n === 2, T + 'the added column exists in the live table and in the preview copy');
     check(!(await ita.page.locator('#tables-need').isVisible()) && !(await ita.page.locator('#up-send').isDisabled()), T + 'one press makes the table; nobody typed SQL');
     check(/bids/.test(await ita.page.textContent('#data-tables')) && /0 rows/.test(await ita.page.textContent('[data-table="bids"]')), T + 'the Data section lists the new table with its columns');
     const made = await mock.sql("select (to_regclass('t_test_space__tracker.bids') is not null and to_regclass('p_test_space__tracker.bids') is not null) as both, (select relforcerowsecurity from pg_class where oid = to_regclass('t_test_space__tracker.bids')) as locked");
@@ -221,7 +237,7 @@ async function run(width, height, label) {
     check((await f.locator('#body tr').count()) === 1 && /rows found of 2/.test(await f.textContent('#stats')), T + 'the list can be searched');
     const [csv] = await Promise.all([ray.page.waitForEvent('download', { timeout: 15000 }), f.click('#csv')]);
     const csvText = await readFile(await csv.path(), 'utf8');
-    check(csv.suggestedFilename() === 'bids.csv' && /Alpha,120\.5,2026-12-31,won,Edi Editor,first row,Cat Contributor/.test(csvText), T + 'the list is saved as a file the person can open in Excel');
+    check(csv.suggestedFilename() === 'bids.csv' && /Alpha,120\.5,2026-12-31,won,Edi Editor,first row,,Cat Contributor/.test(csvText) && /unit_price/i.test(csvText.split('\n')[0].replace(/ /g, '_')), T + 'the list is saved as a file the person can open in Excel, with the column that was added in the window');
 
     // --- approve: delete
     await openTool(app.page, 'tracker');

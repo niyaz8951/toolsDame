@@ -2,6 +2,15 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - Review window for a page's database tables; colour of a space
+Added
+- After the check of a page that saves data, a window opens with the tables and columns the site read from the page (its `dame-tables` block). More columns can be added there (name, kind, choices) before anything is made; "Create in the database and go on" makes the tables, live and preview copy.
+- Added columns are written into the page's own list when the page is one file, so a page that draws its form from that list (the ready-made tracker) shows them by itself. For a page written by the AI the site offers "Copy a request for the AI to use the new columns".
+- A note when a page's code saves to a table that neither the page lists nor the tool has.
+- `db/core/008_space_look.sql`: `dame_space_look_get`, `dame_space_look_set`. Space admin page: icon and colour of the space; the hub tile uses them. The tool's edit button now reads "Change name, icon or colour".
+
+SQL to paste: `008_space_look.sql`, its test (after 007). Until then the two fields are not shown.
+
 ## 2026-11-26 - Information button, usage guide, adding people, buttons in one hand
 Added
 - The information button (i) in the bar of every page. Hub pages show `help/<page>.md`; a tool shows its usage guide; a tool that is not live yet shows, with a red dot until pressed, the detailed guide to building a tool (`help/admin-tool.md`: before live, how to build, what to upload, the rules, the database).
