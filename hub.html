@@ -4,11 +4,10 @@
   Serves: contract 2 (Structure: Hub > Space > Tool). Must not change: the
   security policy stays the first element of the head; no inline script; the
   page only shows what the database returns, it decides nothing.
-  Phase 0: placeholder. Built in phase 1.
 -->
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; base-uri 'none'; form-action 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -20,13 +19,20 @@
 <script src="kit/v1/config.js" defer></script>
 <script src="kit/v1/api.js" defer></script>
 <script src="kit/v1/shell.js" defer></script>
+<script src="pages/hub.js" defer></script>
 </head>
 <body data-page="hub" data-title="Hub">
-<main class="dame-page">
-  <h1>Hub</h1>
-  <p class="dame-muted">Your spaces will show here as tiles, one per department.</p>
-  <p class="dame-empty">Not built yet. It arrives in phase 1, with sign-in.</p>
-  <p><a href="index.html">Back to start</a></p>
+<main class="dame-page" id="main" hidden>
+  <h1 id="hello">Hub</h1>
+  <p class="dame-muted">Your spaces. Each tile is one department.</p>
+  <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
+  <div class="hub-tiles" id="spaces"></div>
+  <p class="dame-empty" id="empty" hidden>You have no spaces yet. An IT admin creates a space; its admin then adds you.</p>
+  <div class="dame-card" id="it-card" hidden>
+    <h2>IT admin</h2>
+    <p class="dame-muted">Approve new accounts, switch accounts off, set the site rules, read the audit.</p>
+    <a class="dame-btn dame-btn-primary" href="admin/it.html">Open IT admin</a>
+  </div>
 </main>
 </body>
 </html>

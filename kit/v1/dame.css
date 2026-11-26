@@ -44,6 +44,7 @@ h2 { font-size: 1.15rem; margin: 0 0 8px; }
 p { margin: 0 0 12px; }
 a { color: var(--dame-accent); }
 :focus-visible { outline: 3px solid var(--dame-accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
 
 .dame-page { max-width: 1040px; margin: 0 auto; padding: 24px var(--dame-gap) 48px; }
 .dame-muted { color: var(--dame-muted); }

@@ -7,8 +7,8 @@ What is in this folder, and who uses it. Contract 4: v1 only gets additions.
 | `dame.css` | hub pages and every tool (`/_dame/v1/dame.css`) | theme and the eight classes named in `kit/ai-prompt.md` |
 | `dame.js` | every tool (`/_dame/v1/dame.js`) | empty until phase 3 |
 | `config.js` | hub pages | Supabase URL and publishable key only |
-| `api.js` | hub pages | base path and config check; `dame_*` calls from phase 1 |
-| `shell.js`, `shell.css` | hub pages | the platform bar; `hub-*` classes are not for tools |
+| `api.js` | hub pages | base path, config check, sign-in, session, `DameApi.rpc('dame_...')` |
+| `shell.js`, `shell.css` | hub pages | the platform bar, the page guard, small helpers; `hub-*` classes are not for tools |
 | `icon.svg` | hub pages | tab icon |
 
 ## What a tool may rely on (never renamed or removed)

@@ -1,13 +1,15 @@
 <!doctype html>
 <!--
-  index.html - the front door: sign in and request access (phase 1).
-  Serves: contract 1 (Identity). Must not change: the security policy stays the
-  first element of the head; no inline script; no data written into the page.
-  Phase 0: shows that the site opens and whether a database is connected.
+  index.html - the front door: sign in and request access.
+  Serves: contract 1 (Identity: one person, one account, approved by IT).
+  Must not change: the security policy stays the first element of the head and
+  names only this site and the one database address; no inline script; the
+  forms never send anything by themselves (form-action 'none'): pages/index.js
+  sends the sign-in over an encrypted call.
 -->
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; base-uri 'none'; form-action 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -19,31 +21,67 @@
 <script src="kit/v1/config.js" defer></script>
 <script src="kit/v1/api.js" defer></script>
 <script src="kit/v1/shell.js" defer></script>
+<script src="pages/index.js" defer></script>
 </head>
 <body data-page="index" data-title="Start">
-<main class="dame-page">
+<main class="dame-page hub-narrow">
   <h1>DAME</h1>
-  <p class="dame-muted">One site for the company's tools. IT controls sign-in, users and spaces. Each department runs its own space and builds its own tools.</p>
+  <p class="dame-muted">One site for the company's tools. Sign in with your work email.</p>
 
-  <div class="dame-card hub-status" data-hub-status role="status">Checking the site.</div>
+  <p class="dame-card hub-msg" id="notice" role="status" hidden></p>
 
-  <div class="dame-card">
+  <section class="dame-card" id="panel-signin" hidden>
     <h2>Sign in</h2>
-    <p class="dame-empty">Sign-in is not built yet. It arrives in phase 1.</p>
-  </div>
+    <form id="form-signin" method="post" novalidate>
+      <label class="hub-field">Work email
+        <input class="dame-input" id="si-email" type="email" autocomplete="username" required maxlength="254">
+      </label>
+      <label class="hub-field">Password
+        <input class="dame-input" id="si-password" type="password" autocomplete="current-password" required maxlength="200">
+      </label>
+      <p class="hub-msg" id="si-msg" role="alert" hidden></p>
+      <div class="dame-row">
+        <button class="dame-btn dame-btn-primary" type="submit">Sign in</button>
+        <button class="dame-btn" type="button" id="to-request">No account? Request access</button>
+      </div>
+    </form>
+  </section>
 
-  <div class="dame-card">
-    <h2>Pages of the site</h2>
-    <p class="dame-muted">The skeleton is in place. Each page opens and says when it will be built.</p>
-    <ul class="hub-list">
-      <li><a href="hub.html">Hub</a><span>Your spaces, as tiles. Phase 1.</span></li>
-      <li><a href="space.html">Space</a><span>One department's tools. Phase 2.</span></li>
-      <li><a href="tool.html">Tool</a><span>Runs one tool under the platform bar. Phase 3.</span></li>
-      <li><a href="admin/it.html">IT admin</a><span>Users, approvals, spaces, settings, audit, health. Phase 1.</span></li>
-      <li><a href="admin/space.html">Space admin</a><span>Tools, admins, access, ideas. Phase 2.</span></li>
-      <li><a href="admin/tool.html">Tool admin</a><span>Files, data, access, help text, versions. Phases 3 and 4.</span></li>
-    </ul>
-  </div>
+  <section class="dame-card" id="panel-request" hidden>
+    <h2>Request access</h2>
+    <p class="dame-muted">An IT admin approves each new account. Until then you cannot open anything.</p>
+    <form id="form-request" method="post" novalidate>
+      <label class="hub-field">Your name
+        <input class="dame-input" id="rq-name" type="text" autocomplete="name" required maxlength="80">
+      </label>
+      <label class="hub-field">Work email
+        <input class="dame-input" id="rq-email" type="email" autocomplete="username" required maxlength="254">
+      </label>
+      <label class="hub-field">Choose a password (12 characters or more)
+        <input class="dame-input" id="rq-password" type="password" autocomplete="new-password" required minlength="12" maxlength="200">
+      </label>
+      <label class="hub-field">The same password again
+        <input class="dame-input" id="rq-password2" type="password" autocomplete="new-password" required maxlength="200">
+      </label>
+      <p class="hub-msg" id="rq-msg" role="alert" hidden></p>
+      <div class="dame-row">
+        <button class="dame-btn dame-btn-primary" type="submit">Request access</button>
+        <button class="dame-btn" type="button" id="to-signin">I have an account</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="dame-card" id="panel-wait" hidden>
+    <h2 id="wait-title">Waiting for approval</h2>
+    <p id="wait-text"></p>
+    <p class="hub-msg" id="wait-msg" role="alert" hidden></p>
+    <div class="dame-row">
+      <button class="dame-btn dame-btn-primary" type="button" id="wait-check">Check again</button>
+      <button class="dame-btn" type="button" id="wait-out">Sign out</button>
+    </div>
+  </section>
+
+  <p class="dame-empty" id="panel-busy">Opening.</p>
 </main>
 </body>
 </html>

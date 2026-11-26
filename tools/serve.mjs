@@ -32,7 +32,8 @@ function send(res, code, type, body) {
   res.end(body);
 }
 
-export function start(port = 8080) {
+// transform is for tests only: (path, text) => text, applied to text files.
+export function start(port = 8080, transform = null) {
   const server = createServer(async (req, res) => {
     try {
       if (req.method !== 'GET' && req.method !== 'HEAD') { return send(res, 405, TYPES['.txt'], 'Only GET.'); }
@@ -52,7 +53,9 @@ export function start(port = 8080) {
       const info = await stat(file).catch(() => null);
       if (!info || !info.isFile()) { return send(res, 404, TYPES['.txt'], 'Not found.'); }
       const type = TYPES[extname(file).toLowerCase()] || 'application/octet-stream';
-      send(res, 200, type, req.method === 'HEAD' ? undefined : await readFile(file));
+      let body = await readFile(file);
+      if (transform && /^(text|application\/json)/.test(type)) { body = transform(rel, body.toString('utf8')); }
+      send(res, 200, type, req.method === 'HEAD' ? undefined : body);
     } catch (err) {
       send(res, 400, TYPES['.txt'], 'Bad request.');
     }

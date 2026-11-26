@@ -24,3 +24,47 @@
 .hub-list li:last-child { border-bottom: 0; }
 .hub-list span { display: block; color: var(--dame-muted); font-size: .92rem; }
 .hub-phase { font-size: .85rem; color: var(--dame-muted); }
+
+/* Phase 1: sign-in, hub tiles, IT admin. */
+.hub-narrow { max-width: 520px; }
+.hub-field { display: block; margin: 0 0 14px; font-weight: 600; font-size: .95rem; }
+.hub-field .dame-input { margin-top: 6px; font-weight: 400; }
+.hub-msg { border-left: 4px solid var(--dame-line); padding-left: 12px; }
+p.hub-msg:not(.dame-card) { margin: 0 0 14px; }
+.hub-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hub-user-name { color: var(--dame-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 28vw; }
+.hub-small { min-height: 34px; padding: 4px 12px; font-size: .92rem; }
+.hub-armed { border-color: var(--dame-warn); color: var(--dame-warn); font-weight: 600; }
+.hub-scroll { overflow-x: auto; margin: 0 0 12px; }
+.hub-scroll .dame-table { min-width: 560px; }
+.hub-actions { white-space: nowrap; }
+.hub-actions .dame-btn { margin: 0 6px 4px 0; }
+.hub-pill {
+  display: inline-block; font-size: .8rem; padding: 2px 10px; margin: 0 6px 4px 0;
+  border-radius: 999px; border: 1px solid var(--dame-line); color: var(--dame-muted);
+}
+.hub-pill-ok { border-color: var(--dame-ok); color: var(--dame-ok); }
+.hub-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--dame-gap); margin: 0 0 var(--dame-gap); }
+.hub-tile {
+  display: flex; flex-direction: column; gap: 6px; min-height: 120px;
+  padding: var(--dame-gap); border-radius: var(--dame-radius);
+  background: var(--dame-surface); border: 1px solid var(--dame-line);
+  border-top: 4px solid var(--dame-accent);
+  color: var(--dame-text); text-decoration: none;
+}
+.hub-tile:hover { border-color: var(--dame-accent); }
+.hub-tile-name { font-weight: 700; font-size: 1.1rem; }
+.hub-tile-text { color: var(--dame-muted); font-size: .92rem; flex: 1; }
+.hub-msg.hub-ok { border-left-color: var(--dame-ok); }
+.hub-msg.hub-warn { border-left-color: var(--dame-warn); }
+
+/* Narrow screens: each table row becomes a small card, so its buttons stay in view. */
+@media (max-width: 640px) {
+  .hub-scroll .dame-table { min-width: 0; }
+  .hub-scroll .dame-table thead { display: none; }
+  .hub-scroll .dame-table tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--dame-line); }
+  .hub-scroll .dame-table td { display: block; border: 0; padding: 3px 0; white-space: normal; overflow-wrap: anywhere; }
+  .hub-scroll .dame-table td[data-label]::before { content: attr(data-label) ": "; color: var(--dame-muted); font-size: .85rem; }
+  .hub-title { display: none; }
+  .hub-user { flex: 1; justify-content: flex-end; }
+}

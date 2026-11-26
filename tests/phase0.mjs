@@ -17,7 +17,7 @@ const SITE = 'http://127.0.0.1:' + PORT + '/toolsDame/';
 const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.html',
   'admin/it.html', 'admin/space.html', 'admin/tool.html'];
 const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1/shell.js',
-  'kit/v1/api.js', 'kit/v1/config.js', 'kit/v1/icon.svg', 'kit/ai-prompt.md', 'kit/dame.schema.json',
+  'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'kit/v1/icon.svg', 'kit/ai-prompt.md', 'kit/dame.schema.json',
   'help/index.md', 'help/hub.md', 'help/space.md', 'help/tool.md',
   'help/admin-it.md', 'help/admin-space.md', 'help/admin-tool.md'];
 
@@ -36,6 +36,7 @@ async function files(dir, out = []) {
   return out;
 }
 
+const CONFIG_URL = ((await readFile(join(ROOT, 'kit/v1/config.js'), 'utf8')).match(/supabaseUrl:\s*'([^']*)'/) || [])[1];
 const server = await start(PORT);
 try {
   // 1. Every page opens and carries the page rules.
@@ -52,6 +53,8 @@ try {
     check(!/\son[a-z]+\s*=|\sstyle\s*=|javascript:/i.test(html.replace(/<!--[\s\S]*?-->/g, '')), name + ' has no inline handler or style');
     check(!/(src|href)\s*=\s*["'](https?:)?\/\//i.test(html), name + ' loads nothing from outside');
     check(!/(src|href)\s*=\s*["']\//i.test(html), name + ' uses no fixed base path');
+    const hosts = [...head.split('>')[0].matchAll(/https?:\/\/[^\s;'"]+/g)].map((m) => m[0]);
+    check(hosts.every((h) => h === CONFIG_URL), name + ' may call only this site and the database in config.js');
   }
 
   // 2. Every file the pages need is served; hidden files and other paths are not.

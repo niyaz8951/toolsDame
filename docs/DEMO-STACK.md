@@ -5,6 +5,8 @@ The demo proves the idea and the contracts. It is not the production design: rea
 | Part of the target (`IT-GUIDE.md`) | In the demo | Weaker because |
 |---|---|---|
 | Company sign-in (Entra ID, MFA) | Supabase Auth, email + password, approval by an IT admin | No SSO, no company MFA, leavers disabled by hand |
+| One session, 12 hours, ended at sign-out or switch-off | `core.sessions`: only a person's newest sign-in is honoured, for 12 hours | The sign-in service itself still thinks older sessions are alive; only the `dame_*` functions refuse them |
+| Proof of email, password rules | Supabase defaults: confirmation link by email; the page asks for 12 characters | Built-in sender: a few emails an hour; the 12-character rule is only in the page unless set in Supabase |
 | Hub app and API | Static pages on GitHub Pages + `dame_*` functions in Supabase | Page code is public (it holds no data) |
 | Security headers sent by the server | GitHub Pages sends none of ours: the policy is a tag at the top of each page; hub pages refuse by script to run inside a frame | A tag cannot forbid framing or report violations; the script check is weaker than the header |
 | Core database server | Schema `core` in the one Supabase database | Same server as the spaces |

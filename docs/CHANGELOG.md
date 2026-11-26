@@ -2,6 +2,24 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - Phase 1: sign-in, approval, hub, IT admin
+Added
+- `db/core/001_init.sql`: schema `core`, require-checks, security check, ten `dame_*` functions.
+- `index.html` + `pages/index.js`: sign in, request access, waiting and switched-off screens.
+- `hub.html` + `pages/hub.js`: the caller's spaces as tiles (none until phase 2), IT admin card.
+- `admin/it.html` + `pages/admin-it.js`: approve, refuse, switch off and on, IT admin role, AI setting, audit.
+- `kit/v1/api.js`: sign-in, session (kept in the browser, renewed, 12 hours), `DameApi.rpc`. `kit/v1/shell.js`: user and Sign out in the bar, page guard.
+- Tests: `tests/sql/001_core_test.sql`, `tests/sql/run-local.mjs`, `tests/browser/phase1.mjs` with `mock-supabase.mjs`.
+
+Changed
+- Every page's security policy now names the one database address. `tests/phase0.mjs` checks it equals `config.js`.
+- `kit/v1/dame.css`: one addition, `[hidden]` always hides (contract 4: additions only).
+- `tools/serve.mjs`: optional rewrite hook, used by tests only.
+- DECISIONS: O2-O4 decided, O1 restated, phase 1 choices listed. DEMO-STACK: two rows (session, email proof).
+
+SQL to paste, in order: `db/core/001_init.sql`, then `tests/sql/001_core_test.sql`.
+Owner: the ten steps in `STATUS.md`.
+
 ## 2026-11-26 - Phase 0: skeleton
 Added
 - Pages (placeholders): `index.html`, `hub.html`, `space.html`, `tool.html`, `frame.html`, `admin/it.html`, `admin/space.html`, `admin/tool.html`.

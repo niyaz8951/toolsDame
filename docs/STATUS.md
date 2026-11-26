@@ -1,25 +1,34 @@
 # Status
 
 ## Built
-**Phase 0 (2026-11-26): done, tested locally.**
-- Repo skeleton: the eight pages open as placeholders, each with its security policy, hidden from search engines, no inline script.
-- `kit/v1/`: theme (`dame.css`), platform bar (`shell.js`, `shell.css`), base path and config check (`api.js`), `config.js` with the demo project's URL and publishable key. `dame.js` is empty until phase 3.
-- `kit/dame.schema.json`, `help/*.md` (texts only; shown from phase 5).
-- `tools/serve.mjs` local server; `tests/phase0.mjs` (all checks pass).
-- Docs: RUNBOOK, CHANGELOG; one row added to DEMO-STACK (no response headers on Pages).
+**Phase 0 (2026-11-26): done.** Skeleton, kit, local server, docs.
 
-Not yet proven: the site opening on GitHub Pages. Pages must be switched on by the owner (below).
+**Phase 1 (2026-11-26): built and tested locally. Not yet run on the real Supabase project.**
+- `db/core/001_init.sql`: schema `core`, the `core.require_*` checks, `core.security_check()`, and the functions `dame_site_info`, `dame_request_access`, `dame_me`, `dame_sign_out`, `dame_spaces_list`, `dame_users_list`, `dame_user_set_status`, `dame_user_set_it`, `dame_setting_set`, `dame_audit_list`.
+- Pages: `index.html` (sign in, request access, waiting), `hub.html` (spaces as tiles; empty until phase 2), `admin/it.html` (approvals, people, AI setting, audit).
+- Tests, all passing locally: `tests/sql/001_core_test.sql` (133 cases), `tests/browser/phase1.mjs` (desktop and 390 px), `tests/phase0.mjs`.
+
+What local tests cannot prove: that the real project answers like the stand-in. The owner's first sign-in is that proof (steps below). If a step fails, send the exact message on screen.
+
+## The owner does now, in this order
+1. **GitHub Pages on:** repo Settings > Pages > Deploy from a branch > `main`, `/ (root)`.
+2. **Supabase > Authentication > URL Configuration > Site URL:** the address Pages shows for this site (it ends in `/toolsDame/`). Without it the confirmation email links to the wrong place.
+3. **Supabase > Project Settings > Data API > Exposed schemas:** only `public`. Remove `graphql_public` if listed.
+4. **SQL editor:** paste all of `db/core/001_init.sql`, Run. The result must be an empty table.
+5. **SQL editor:** paste all of `tests/sql/001_core_test.sql`, Run. First row must read "133 passed, 0 failed".
+6. **On the site:** Request access with your work email, open the link in the email, sign in. You see "Waiting for approval".
+7. **SQL editor:** `select core.make_first_admin('your email');`
+8. **On the site:** press Check again. You land on the hub; open IT admin.
+9. **Supabase > Advisors > Security:** no errors. Send any warning text.
+10. MFA on GitHub and Supabase; secret scanning and push protection on for the repo.
+
+## Still needed from the owner
+- O1 in `DECISIONS.md` (the other Pages sites of the account).
+- `docs/IT-GUIDE.md`.
+- A "go" for phase 2 after steps 1-9 pass.
 
 ## Next
-Phase 1, on the owner's go: `db/core/001_init.sql`, sign in, request access, hub dashboard, IT admin. Before it starts, the owner answers O1-O4 in `DECISIONS.md`.
-
-## The owner provides
-1. ~~A new Supabase project; its URL and publishable key.~~ Received 2026-11-26, in `kit/v1/config.js`.
-2. GitHub Pages switched on for `toolsDame`: Settings > Pages > Deploy from a branch > `main`, `/ (root)`. Then open the site and check the start page says "Database address is set".
-3. `docs/IT-GUIDE.md`: the design document, downloaded as Markdown. Still missing; `README.md` points to it.
-4. Answers to O1-O4 in `DECISIONS.md`.
-5. On GitHub: MFA on the account; Settings > Code security > secret scanning and push protection on. On Supabase: MFA on the account.
-6. A "go" for phase 1.
+Phase 2: spaces and tools: create, admins, managers, access, on/off, delete with cleanup (`db/core/002_*.sql`, `space.html`, `admin/space.html`, the Spaces part of `admin/it.html`).
 
 ## Changes tools must know
 None.

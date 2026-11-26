@@ -1,14 +1,14 @@
 <!doctype html>
 <!--
-  admin/it.html - IT admin: users, approvals, spaces, site settings, audit, health.
+  admin/it.html - IT admin: approvals, people, site settings, audit.
   Serves: contract 1 (Identity), 3 (Access) and 7 (Audit). Must not change:
   hiding this page protects nothing; every action is refused by the database
   unless the user is an IT admin. The security policy stays the first element
-  of the head. Phase 0: placeholder. Built in phase 1.
+  of the head. Spaces arrive in phase 2, health in phase 6.
 -->
 <html lang="en">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self' https://ggpwitbuhxqgcfexsnbf.supabase.co; base-uri 'none'; form-action 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -20,13 +20,69 @@
 <script src="../kit/v1/config.js" defer></script>
 <script src="../kit/v1/api.js" defer></script>
 <script src="../kit/v1/shell.js" defer></script>
+<script src="../pages/admin-it.js" defer></script>
 </head>
 <body data-page="admin-it" data-title="IT admin">
-<main class="dame-page">
+<main class="dame-page" id="main" hidden>
   <h1>IT admin</h1>
-  <p class="dame-muted">Approve and disable users, create spaces, set the site rules, read the audit.</p>
-  <p class="dame-empty">Not built yet. It arrives in phase 1.</p>
-  <p><a href="../index.html">Back to start</a></p>
+  <p class="dame-muted"><a href="../hub.html">Back to the hub</a></p>
+  <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
+
+  <div id="body" hidden>
+    <section class="dame-card">
+      <h2>Waiting for approval</h2>
+      <p class="dame-muted">Approve only people you know. Check the email address.</p>
+      <div class="hub-scroll">
+        <table class="dame-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Asked on</th><th>Decide</th></tr></thead>
+          <tbody id="waiting"></tbody>
+        </table>
+      </div>
+      <p class="dame-empty" id="waiting-empty" hidden>Nobody is waiting.</p>
+    </section>
+
+    <section class="dame-card">
+      <h2>People</h2>
+      <p class="dame-muted">Switch off a leaver: he loses everything at his next click. You cannot change your own account; another IT admin must.</p>
+      <div class="hub-scroll">
+        <table class="dame-table">
+          <thead><tr><th>Name</th><th>Email</th><th>State</th><th>Change</th></tr></thead>
+          <tbody id="people"></tbody>
+        </table>
+      </div>
+      <p class="dame-empty" id="people-empty" hidden>No accounts yet.</p>
+    </section>
+
+    <section class="dame-card">
+      <h2>Site settings</h2>
+      <label class="hub-field">AI prompt button
+        <select class="dame-input" id="ai-mode">
+          <option value="off">Off for everyone</option>
+          <option value="prompt">Shown to admins and tool managers</option>
+          <option value="prompt_all">Shown to all members</option>
+        </select>
+      </label>
+      <p class="dame-muted">The site calls no AI. The button only copies a text that a person gives to the approved AI.</p>
+      <button class="dame-btn dame-btn-primary" type="button" id="ai-save">Save</button>
+    </section>
+
+    <section class="dame-card">
+      <h2>Spaces</h2>
+      <p class="dame-empty">Creating spaces arrives in phase 2.</p>
+    </section>
+
+    <section class="dame-card">
+      <h2>Audit</h2>
+      <p class="dame-muted">Who did what, when. Nothing here can be changed or deleted.</p>
+      <div class="hub-scroll">
+        <table class="dame-table">
+          <thead><tr><th>When</th><th>Who</th><th>What</th><th>About</th></tr></thead>
+          <tbody id="audit"></tbody>
+        </table>
+      </div>
+      <button class="dame-btn" type="button" id="audit-more" hidden>Show older</button>
+    </section>
+  </div>
 </main>
 </body>
 </html>
