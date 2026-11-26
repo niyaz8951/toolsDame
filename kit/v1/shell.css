@@ -353,7 +353,6 @@ html.hub-theme-fade, html.hub-theme-fade * { transition: background-color .35s v
  * ------------------------------------------------------------------------- */
 :root { --hub-bar-h: 60px; }
 html { -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--hub-bar-h) + env(safe-area-inset-top) + 16px); }
-html:has(body[data-sections]) { scroll-padding-top: calc(var(--hub-bar-h) + env(safe-area-inset-top) + 76px); }
 body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
 h1, h2, h3 { letter-spacing: -.012em; text-wrap: balance; }
 p, li { text-wrap: pretty; }
@@ -382,12 +381,24 @@ p, li { text-wrap: pretty; }
 .hub-menu .hub-signout { width: 100%; margin-top: 12px; min-height: 40px; }
 @keyframes hub-menu { from { opacity: 0; transform: scale(.94) translateY(-4px); } }
 
-/* The sections strip of a long page. */
+/* The parts of a long page: a row of tabs, one card on screen at a time. */
+.hub-part-off { display: none !important; }
 .hub-sections { position: sticky; top: calc(var(--hub-bar-h) + env(safe-area-inset-top) + 8px); z-index: 15; display: flex; gap: 4px; width: fit-content; max-width: 100%; margin: 0 0 var(--dame-gap); padding: 4px; overflow-x: auto; scrollbar-width: none; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--dame-line) 70%, transparent); background: var(--dame-glass); -webkit-backdrop-filter: saturate(1.8) blur(18px); backdrop-filter: saturate(1.8) blur(18px); box-shadow: var(--dame-shadow), 0 -10px 0 0 var(--dame-bg); }
 .hub-sections::-webkit-scrollbar { display: none; }
 .hub-section { flex: none; min-height: 34px; padding: 4px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--dame-muted); font: inherit; font-size: .92rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background .2s var(--dame-ease), color .2s var(--dame-ease); }
 .hub-section:hover { color: var(--dame-text); }
 .hub-section[aria-current="true"] { background: var(--dame-accent); color: var(--dame-on-accent); }
+.hub-section { display: inline-flex; align-items: center; gap: 6px; }
+.hub-badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; display: inline-grid; place-items: center; background: var(--dame-danger); color: #fff; font-size: .74rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* "More": the rarely used things of a block, folded away until asked for. */
+.hub-more { margin-top: 10px; }
+.hub-more > summary { list-style: none; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.hub-more > summary::-webkit-details-marker { display: none; }
+.hub-more > summary::after { content: ""; width: 14px; height: 14px; background: url("icons/chevron.svg") center / 14px no-repeat; transition: transform .2s var(--dame-ease); }
+.hub-more[open] > summary::after { transform: rotate(180deg); }
+.hub-more-body { margin-top: 12px; padding: 14px; border-radius: 14px; border: 1px solid var(--dame-line); background: color-mix(in srgb, var(--dame-soft) 40%, transparent); animation: hub-menu .2s var(--dame-ease); }
+.hub-more-body > :first-child { margin-top: 0; }
 .hub-tile .hub-pill { align-self: flex-start; }
 
 /* Fields: a quiet arrow on every list, a colour as a swatch, a soft ring when in use. */

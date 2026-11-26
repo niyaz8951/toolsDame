@@ -547,48 +547,73 @@
     return function () { return load(false); };
   }
 
-  // ---- the sections strip: on a long page (body data-sections), one button per card, under the bar.
-  // A press scrolls to the card; the strip shows which card is on screen. A card may give a short
-  // name with data-nav; a hidden card has no button.
+  // ---- the parts of a long page (body data-sections): one tab per card, under the bar, and one
+  // card on screen at a time. A card may give a short name with data-nav and a count with
+  // data-badge; a card the page hides has no tab. The open part is kept in the address (#name),
+  // so a reload or a shared link opens the same part. Only how the page is shown: a hidden part
+  // is still in the page, and the database decides what a person may do, as everywhere.
   function sections() {
     var host = document.getElementById('body');
     if (!host || document.body.dataset.sections === undefined) { return; }
     var cards = Array.prototype.filter.call(host.children, function (c) { return c.matches('section.dame-card') && c.querySelector('h2'); });
     if (cards.length < 3) { return; }
     var nav = el('nav', 'hub-sections');
+    var at = -1;
+    var wanted = decodeURIComponent(location.hash.slice(1));
+    nav.setAttribute('role', 'tablist');
     nav.setAttribute('aria-label', 'Parts of this page');
-    var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var pinned = -1;
-    var chips = cards.map(function (card) {
-      var chip = el('button', 'hub-section', card.dataset.nav || card.querySelector('h2').textContent);
+    var chips = cards.map(function (card, i) {
+      var label = card.dataset.nav || card.querySelector('h2').textContent;
+      var key = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      var chip = el('button', 'hub-section');
       chip.type = 'button';
-      chip.addEventListener('click', function () {
-        // The pressed name stays lit until the person scrolls himself: a short last part can never reach the top.
-        pinned = cards.indexOf(card);
-        mark(pinned);
-        card.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
-      });
+      chip.id = 'part-' + key;
+      chip.dataset.part = key;
+      chip.setAttribute('role', 'tab');
+      chip.appendChild(el('span', 'hub-section-name', label));
+      card.dataset.part = key;
+      card.setAttribute('role', 'tabpanel');
+      card.setAttribute('aria-labelledby', chip.id);
+      chip.addEventListener('click', function () { open(i, true); });
       nav.appendChild(chip);
       return chip;
     });
-    function mark(i) {
+    function open(i, byHand) {
+      if (i < 0 || !cards[i]) { return; }
+      at = i;
+      cards.forEach(function (card, n) { card.classList.toggle('hub-part-off', n !== i); });
       chips.forEach(function (chip, n) {
+        chip.setAttribute('aria-selected', String(n === i));
+        chip.tabIndex = n === i ? 0 : -1;
         if (n === i) { chip.setAttribute('aria-current', 'true'); } else { chip.removeAttribute('aria-current'); }
       });
-      // Keep the lit button in view inside the strip, without moving the page.
+      // Keep the lit tab in view inside the strip, without moving the page.
       var c = chips[i];
-      if (c && nav.scrollWidth > nav.clientWidth) { nav.scrollLeft = c.offsetLeft - (nav.clientWidth - c.offsetWidth) / 2; }
+      if (nav.scrollWidth > nav.clientWidth) { nav.scrollLeft = c.offsetLeft - (nav.clientWidth - c.offsetWidth) / 2; }
+      if (byHand) {
+        wanted = '';
+        history.replaceState(null, '', location.pathname + location.search + '#' + c.dataset.part);
+        // A new part starts at its top.
+        var top = host.getBoundingClientRect().top + window.scrollY - 150;
+        if (window.scrollY > top) { window.scrollTo(0, Math.max(0, top)); }
+      }
     }
+    function find(key) { return chips.findIndex(function (chip, n) { return chip.dataset.part === key && !cards[n].hidden; }); }
     function sync() {
-      var line = nav.getBoundingClientRect().bottom + 40;
-      var at = -1;
       cards.forEach(function (card, i) {
-        chips[i].hidden = card.hidden;
-        if (!card.hidden && card.getBoundingClientRect().top <= line) { at = i; }
+        var chip = chips[i];
+        var n = card.dataset.badge;
+        var badge = chip.querySelector('.hub-badge');
+        chip.hidden = card.hidden;
+        if (n && n !== '0') {
+          if (!badge) { badge = el('span', 'hub-badge'); chip.appendChild(badge); }
+          if (badge.textContent !== n) { badge.textContent = n; }
+        } else if (badge) { badge.remove(); }
       });
-      if (at === -1) { at = cards.findIndex(function (c) { return !c.hidden; }); }
-      if (pinned !== -1 && !cards[pinned].hidden) { at = pinned; }
-      mark(at);
+      // The part named in the address, as soon as the page shows it; otherwise the first part on show.
+      var i = wanted ? find(wanted) : -1;
+      if (i !== -1) { wanted = ''; open(i, false); return; }
+      if (at === -1 || cards[at].hidden) { open(cards.findIndex(function (card) { return !card.hidden; }), false); }
     }
     var waiting = false;
     function soon() {
@@ -596,13 +621,24 @@
       waiting = true;
       requestAnimationFrame(function () { waiting = false; sync(); });
     }
+    // Left and right arrows move along the tabs, as in any tab row.
+    nav.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') { return; }
+      var step = ev.key === 'ArrowRight' ? 1 : -1;
+      var n = at;
+      do { n = (n + step + chips.length) % chips.length; } while (cards[n].hidden && n !== at);
+      ev.preventDefault();
+      open(n, true);
+      chips[n].focus();
+    });
+    window.addEventListener('hashchange', function () {
+      var i = find(decodeURIComponent(location.hash.slice(1)));
+      if (i !== -1 && i !== at) { open(i, false); }
+    });
     host.parentNode.insertBefore(nav, host);
     nav.hidden = host.hidden;
-    ['wheel', 'touchmove', 'keydown'].forEach(function (name) { window.addEventListener(name, function () { pinned = -1; }, { passive: true }); });
-    window.addEventListener('scroll', soon, { passive: true });
-    window.addEventListener('resize', soon, { passive: true });
     new MutationObserver(function () { nav.hidden = host.hidden; soon(); })
-      .observe(host, { attributes: true, attributeFilter: ['hidden'], subtree: true });
+      .observe(host, { attributes: true, attributeFilter: ['hidden', 'data-badge'], subtree: true });
     sync();
   }
 

@@ -2,6 +2,18 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-26 - Admin pages: one part at a time, and folded tool details
+Changed (owner's go on the two ideas noted at the finish)
+- **The admin pages are tabs.** IT admin, space admin and tool admin show one part on screen at a time; the strip under the bar is the row of tabs. On a phone each page is now about one screen instead of 3,500 to 5,000 px.
+- The open part is kept in the address (`#spaces`, `#audit`): a reload, the back button or a shared link opens the same part. Left and right arrows move along the tabs.
+- **The Approvals tab shows a red count** when people are waiting.
+- **Space admin, Tools:** a tool's managers and its delete field are folded under one button, "Managers (n) and delete". A tool is three lines until you ask for more; an opened fold stays open while you work in it.
+- Only how the page is shown changed: no function, no right, no SQL. A part that is not on screen is still in the page; the database decides what a person may do, as everywhere.
+- Tests: `tests/browser/parts.mjs` makes every test press the tab and open the fold before it uses what is inside, as a person does. New checks: one part at a time, the address keeps it, a reload opens it, the fold is closed on a fresh page. All SQL, browser and hostile-tool tests pass.
+
+Files: `kit/v1/shell.js`, `kit/v1/shell.css`, `pages/admin-space.js`, `pages/admin-it.js`, the browser tests.
+SQL to paste: none.
+
 ## 2026-11-26 - The site book, part for IT
 Added (owner: "extremely detailed, with the logic and the decisions")
 - Thirteen chapters "In detail, for IT" (`book/11..23-*.md`): the pieces and one request end to end; identity and sessions; the access model with every check and every function; the database; the sealed frame; uploads and versions; tables and rows; the builder and the AI; the audit; how it is tested; the decisions one by one; the questions IT will ask; open gaps and hand-over. Each says how it is done, why, what was considered and not done, and its limits, with the real names from the source.

@@ -13,6 +13,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { follow } from './parts.mjs';
 import { start } from '../../tools/serve.mjs';
 import { startMock, KEY } from './mock-supabase.mjs';
 
@@ -38,6 +39,7 @@ async function run(width, height, label) {
   const mock = await startMock(MOCK_PORT);
   const site = await start(SITE_PORT, (rel, text) => text.split(REAL).join(MOCK).split(REAL_KEY).join(KEY));
   const browser = await chromium.launch({ executablePath: process.env.CHROME || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  follow(browser);
   const problems = [];
   const T = label + ': ';
 
@@ -91,6 +93,7 @@ async function run(width, height, label) {
 
     // --- IT admin makes two spaces
     await open(ita, 'admin/it.html');
+    await ita.part('#spaces-empty');
     check(await ita.locator('#spaces-empty').isVisible(), T + 'IT admin sees "no spaces yet"');
     await ita.fill('#sp-name', 'Sales Team');
     check((await ita.inputValue('#sp-id')) === 'sales-team', T + 'the id is suggested from the name');
@@ -125,10 +128,14 @@ async function run(width, height, label) {
     check(await ben.locator('#empty').isVisible(), T + 'a new space says it has no tools yet');
     await ben.click('#admin-link');
     await ben.waitForSelector('#body:not([hidden])');
-    await ben.click('.hub-section:text-is("Audit")');
-    await ben.waitForSelector('.hub-section[aria-current="true"]:text-is("Audit")');
-    check((await ben.locator('.hub-section').count()) >= 3, T + 'a long admin page has a strip of its parts; a press goes to the part and lights its name');
-    await ben.evaluate(() => window.scrollTo(0, 0));
+    await ben.click('#part-audit');
+    const oneMk = await ben.evaluate(() => { const on = [...document.querySelectorAll('#body > section.dame-card')].filter((c) => c.offsetParent !== null); return on.length === 1 && on[0].dataset.part === 'audit' && location.hash === '#audit'; });
+    check(oneMk, T + 'an admin page shows one part at a time; a press on a tab opens that part and the address keeps it');
+    await ben.reload();
+    await ben.waitForSelector('#body:not([hidden])');
+    await ben.waitForSelector('#part-audit[aria-selected="true"]');
+    check(true, T + 'a reload opens the same part');
+    await ben.click('#part-tools');
     await ben.fill('#tl-name', 'Bid Tracker');
     check((await ben.inputValue('#tl-id')) === 'bid-tracker', T + 'the tool id is suggested from the name');
     await ben.fill('#tl-icon', 'B');
@@ -225,6 +232,10 @@ async function run(width, height, label) {
     await said(ben, 'is switched off');
     await open(cy, 'space.html?space=sales-team', '#tools a');
     check((await cy.locator('#tools a').count()) === 1, T + 'a tool switched off disappears for members');
+    await ben.reload();
+    await ben.waitForSelector('#tools [data-tool]');
+    const foldMk = await ben.evaluate(() => { const d = document.querySelector('#tools details.hub-more'); return !!d && !d.open && !!d.querySelector('.hub-delete') && /Managers \(\d+\) and delete/.test(d.querySelector('summary').textContent); });
+    check(foldMk, T + 'managers and delete of a tool are folded until asked for');
     check(await ben.locator('[data-tool="price-list"] .hub-delete button').isDisabled(), T + 'Delete is locked until the id is typed');
     await ben.fill('[data-tool="price-list"] .hub-delete input', 'price');
     check(await ben.locator('[data-tool="price-list"] .hub-delete button').isDisabled(), T + 'a partly typed id keeps Delete locked');

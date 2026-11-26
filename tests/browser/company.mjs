@@ -16,6 +16,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { follow } from './parts.mjs';
 import { start } from '../../tools/serve.mjs';
 import { startMock, KEY } from './mock-supabase.mjs';
 
@@ -60,6 +61,7 @@ function check(ok, what) {
 const mock = await startMock(MOCK_PORT);
 const site = await start(SITE_PORT, (rel, text) => text.split(REAL).join(MOCK).split(REAL_KEY).join(KEY));
 const browser = await chromium.launch({ executablePath: process.env.CHROME || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  follow(browser);
 const problems = [];
 const figures = {};
 
@@ -268,6 +270,7 @@ try {
   await ap.user.page.waitForSelector('#spaces a');
   check((await ap.user.page.locator('#spaces a').evaluate((t) => t.style.getPropertyValue('--dame-accent') + '|' + t.querySelector('.hub-tile-icon').textContent)) === '#0e8f8a|Ap', 'Applied: its admin changes the colour and icon of the space; its user sees the new tile on the hub');
   check((await rpc(ap.user, 'dame_space_look_set', { p_space: 'applied', p_icon: 'X', p_colour: '#000000' })).code === 'not_allowed' && (await rpc(DEPTS[0].lead, 'dame_space_look_set', { p_space: 'applied', p_icon: 'X', p_colour: '#000000' })).code === 'not_allowed', 'a user, and the admin of another department, cannot change it');
+  await ap.lead.page.part('#tools');
   check(await ap.lead.page.locator('#tools button:has-text("Change name, icon or colour")').first().isVisible(), 'each tool has a "Change name, icon or colour" button');
 
   await DEPTS[0].user.page.goto(SITE + 'hub.html');

@@ -17,6 +17,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { chromium } from 'playwright-core';
+import { follow } from './parts.mjs';
 import { start } from '../../tools/serve.mjs';
 import { startMock, KEY } from './mock-supabase.mjs';
 
@@ -92,6 +93,7 @@ async function run(width, height, label) {
   const mock = await startMock(MOCK_PORT);
   const site = await start(SITE_PORT, (rel, text) => text.split(REAL).join(MOCK).split(REAL_KEY).join(KEY), (u) => asked.push('site ' + u));
   const browser = await chromium.launch({ executablePath: process.env.CHROME || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  follow(browser);
   const problems = [];
   const popups = [];
   const downloads = [];                               // every file any page saved

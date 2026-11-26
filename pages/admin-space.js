@@ -48,6 +48,8 @@
     return s;
   }
 
+  var opened = {};
+
   function toolBlock(t) {
     var box = ui.el('div', 'hub-block');
     box.setAttribute('data-tool', t.id);
@@ -107,18 +109,29 @@
     edit.addEventListener('click', function () { form.hidden = !form.hidden; });
     box.appendChild(form);
 
-    box.appendChild(ui.el('p', 'hub-sub', 'Managers'));
+    // Managers and delete are needed rarely: folded under one button, so a tool is three lines, not a screen.
+    // The page is drawn again after every action; an opened fold stays open.
+    var fold = document.createElement('details');
+    var more = ui.el('div', 'hub-more-body');
+    var sum = ui.el('summary', 'dame-btn hub-small', t.managers.length === 1 ? 'Managers (1) and delete' : 'Managers (' + t.managers.length + ') and delete');
+    fold.className = 'hub-more';
+    fold.open = opened[t.id] === true;
+    fold.addEventListener('toggle', function () { opened[t.id] = fold.open; });
+    fold.appendChild(sum);
+    more.appendChild(ui.el('p', 'hub-sub', 'Managers'));
     var list = ui.el('ul', 'hub-list');
     ui.people(list, t.managers, 'No manager yet. You look after it yourself.', 'Remove', function (person) {
       act('dame_tool_manager_remove', { p_space: space, p_tool: t.id, p_user: person.id }, person.name + ' no longer manages ' + t.name + '.');
     });
-    box.appendChild(list);
-    box.appendChild(ui.picker('Find a person to manage ' + t.name, 'Name as manager', function (person) {
+    more.appendChild(list);
+    more.appendChild(ui.picker('Find a person to manage ' + t.name, 'Name as manager', function (person) {
       act('dame_tool_manager_add', { p_space: space, p_tool: t.id, p_user: person.id }, person.name + ' now manages ' + t.name + '.');
     }));
-    box.appendChild(ui.typedDelete(t.id, 'Delete tool', function (typed) {
+    more.appendChild(ui.typedDelete(t.id, 'Delete tool', function (typed) {
       act('dame_tool_delete', { p_space: space, p_tool: t.id, p_confirm: typed }, t.name + ' is deleted. Its id ' + t.id + ' will never be used again.');
     }));
+    fold.appendChild(more);
+    box.appendChild(fold);
     return box;
   }
 

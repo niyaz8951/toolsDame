@@ -118,7 +118,7 @@
 
 ## Owner, 2026-11-26 (the finish)
 - The look and feel is judged as a careful phone user would: one-line bar, finger-sized targets, notch-safe, calm movement. These live in `kit/v1/shell.css` only; contract 4 (`dame.css`, `dame.js`) is not touched by look-and-feel work on hub pages.
-- Long admin pages keep everything on one page, with a strip of parts. Tabs (one part at a time) are noted as an idea, not decided.
+- Admin pages show one part at a time (tabs), the open part kept in the address; a tool's managers and delete field are folded in the space admin (owner's go, same day). Showing only: contract 3 stands, the database enforces.
 
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |

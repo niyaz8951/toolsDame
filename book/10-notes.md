@@ -27,9 +27,9 @@ The running log of the site. Newest first. Every change to the site adds a line 
 
 - The finish (2026-11-26): the whole site was walked through on a phone and a desktop, day and night. One-line bar with an account button, a strip of parts on long admin pages, finger-sized targets, notch-safe, plain dates. No SQL, no change for tools.
 
+- Admin pages as tabs (2026-11-26): one part on screen at a time on IT admin, space admin and tool admin; a tool's managers and delete field folded under one button. Only the showing changed, no right and no SQL.
+
 ## Ideas noted, not decided
-- Admin pages as tabs (one part on screen at a time) instead of one long page with a strip.
-- In the space admin, a tool's managers and delete field folded away until asked for.
 - Tell the people of a space when a new tool goes live.
 - Show the table list in the review window in even plainer words.
 - A button in each tool to report a problem to its manager.

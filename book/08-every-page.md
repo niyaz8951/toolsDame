@@ -5,7 +5,8 @@ Things the site gives every page and every tool, with no work by the builder.
 ## The bar
 - The mark and name, the page title, the information button, day and night, and one round account button: the person's initials, a press shows the name and Sign out.
 - One line at any width, on a phone too.
-- On a long admin page: a strip of the page's parts under the bar. A press goes to the part.
+- On an admin page: a row of tabs under the bar, one per part of the page. One part is on screen at a time; the address keeps the open part, so a reload or a link opens the same one.
+- The Approvals tab of IT admin shows a red count when people are waiting.
 - In a tool: a trail back to the hub and the space, and "Tool admin" for its managers.
 
 ## The information button

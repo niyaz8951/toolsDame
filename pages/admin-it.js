@@ -208,6 +208,8 @@
       if (u.status === 'pending') { waitingRow(waiting, u); nWaiting += 1; } else { personRow(people, u); nPeople += 1; }
     });
     $('waiting-empty').hidden = nWaiting > 0;
+    // The count on the Approvals tab.
+    $('waiting').closest('section').dataset.badge = String(nWaiting);
     $('people-empty').hidden = nPeople > 0;
 
     var spaces = got[1] || [];

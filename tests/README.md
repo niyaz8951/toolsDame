@@ -13,6 +13,7 @@
 | `sql/008_space_look_test.sql` | Who may change a space's icon and colour; what a colour may be | Paste into the Supabase SQL editor. Leaves nothing behind. |
 | `sql/009_new_user_test.sql` | Who may make an account; usernames and temporary passwords that are refused; everything is refused until the person chose his own password | Paste into the Supabase SQL editor. Leaves nothing behind. |
 | `sql/run-local.mjs` | The same SQL and tests on a throw-away database, twice | `node tests/sql/run-local.mjs` |
+| `browser/parts.mjs` | Helper used by every browser test: before an action it presses the tab and opens the fold the element sits in, as a person does | (not run alone) |
 | `browser/phase1.mjs` | Sign in, request access, approval, hub, IT admin in a real browser at desktop and 390 px, against `browser/mock-supabase.mjs` | `node tests/browser/phase1.mjs` |
 | `browser/phase2.mjs` | Spaces and tools in a real browser at desktop and 390 px: IT admin, space admin, manager, member, each refused outside his part | `node tests/browser/phase2.mjs` |
 | `browser/phase3.mjs` | Upload checks, upload from files, a zip and pasted code, the starter kit and fix request, preview, make live, roll back, a changed stored page is refused, the reference tool reading and writing real Excel files inside the frame, the building blocks page, and **the hostile-tool test** (`browser/fixtures/hostile/`) | `node tests/browser/phase3.mjs` |
