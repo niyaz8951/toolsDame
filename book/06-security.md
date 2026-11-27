@@ -31,14 +31,14 @@ The data | One schema per tool. No table is reachable from outside
 :::stats
 33 | attacks from inside a tool, all blocked
 1,260 | cross-department attempts, all refused
-1,024 | database cases over ten files
+1,193 | database cases over eleven files
 :::
 
 | Test | What it shows |
 |---|---|
 | The hostile tool | 33 attack attempts from inside a tool: session, storage, network, other frames, file drops, flooding. All blocked. Control runs prove the test notices a leak. |
 | The company rehearsal | 7 departments, 14 tools, 1,260 attempts by one department against another. All refused; nothing changed. |
-| SQL tests | Ten files, 1,024 cases: for every function the allowed case and the refused ones. |
+| SQL tests | Eleven files, 1,193 cases: for every function the allowed case and the refused ones. |
 
 > All of this was run locally against the real database code. On the live demo, the parts not yet confirmed are listed in "Where we are".
 

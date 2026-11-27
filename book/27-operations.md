@@ -14,7 +14,7 @@ There is no staging site: a change is tested locally (below), then it is live. O
 ## Before a change goes out
 1. `node tests/phase0.mjs`: page rules, no key in the repository, the shelf's fingerprints.
 2. `node tests/sql/run-local.mjs`: all SQL files in a throw-away PostgreSQL, each refused a second time, every test twice.
-3. The seven browser tests, with the hostile tool and the company rehearsal.
+3. The eight browser tests, with the hostile tool and the company rehearsal.
 4. After a SQL file on the real project: its result must be an empty table (`core.security_check()`), then its test file, then the provider's Security Advisor with no errors.
 
 ## The keys and secrets that exist
@@ -51,7 +51,7 @@ No vault is needed because the demo has no secret in use. The SQL console of the
 
 ## Capacity
 - The demo runs on free plans: a small database, a small file store, a project that is paused when unused, a built-in mail sender that sends only a few messages an hour.
-- The site sets no quota per space or tool yet, so one runaway tool could fill the plan for everyone.
+- Each space has a quota set by IT: rows in the whole space (10,000 by default), tables a tool (10), columns a table (60). A full space still reads, changes and deletes. The quota counts rows, not bytes or stored files.
 - A page makes one or two calls to load. Nothing was measured under load; "How it is tested" says so.
 
 ## What the provider does, and what we rely on

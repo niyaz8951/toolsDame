@@ -60,7 +60,7 @@ Make live | Two presses. Roll back any time
 :::walls
 The sealed frame | The tool runs here. No network at all, no session, no storage, no way to another tool
 The site's shell | Takes a short list of requests from the tool and adds the person's session itself
-The database functions | 64 named functions. Each one first checks who asks and what he may do
+The database functions | 71 named functions. Each one first checks who asks and what he may do
 The data | One schema per tool. No table is reachable from outside
 :::
 
@@ -71,7 +71,7 @@ Every upload is treated as hostile. It does not matter who wrote it, a person or
 :::stats
 33 | attacks from inside a tool. All blocked
 1,260 | attempts by one department against another. All refused
-1,024 | database cases: allowed and refused, for every function
+1,193 | database cases: allowed and refused, for every function
 7 | departments rehearsed, with 14 tools built through the site
 0 | secret keys in the repository
 :::
@@ -83,7 +83,7 @@ All of it is in the repository and can be run again by IT.
 :::cards
 Who gets in | Email domains, approval, switch-off at once | ok
 Which spaces exist | And who their admins are | ok
-The rules | The AI setting, the shelf of allowed libraries | ok
+The rules and the quotas | The AI setting, the shelf of libraries, how much each space may store | ok
 The audit | Append-only. Nobody can change or delete it | ok
 The code | Pages and database change only through IT | ok
 The data | IT's own servers, inside the company's domains | ok
@@ -107,7 +107,7 @@ Tools | Run sealed | The same tools, unchanged
 :::cards
 No second factor yet | Comes with company sign-in | warn
 A manager publishes alone | Review by a second person is planned | warn
-No quotas, export or backup of our own | The last phase, and IT's backups | warn
+No export or backup of our own | Quotas are built; export is the last phase; backups are IT's | warn
 A delete is final | No bin. "Switch off" is the safe action | warn
 :::
 

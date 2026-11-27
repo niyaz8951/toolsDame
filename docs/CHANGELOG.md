@@ -25,6 +25,21 @@ Changed (owner: "update the site book as per the current repo and ensure it is o
 
 Files: `book/` (15 chapters changed, 4 new, `index.json`), `book.html`, `pages/book.js`, `hub.html`, `pages/hub.js`, `help/book.md`, `help/hub.md`, `tests/phase0.mjs`, `tests/browser/company.mjs`, docs.
 SQL to paste: none.
+## 2026-11-27 - Quotas: rows in a space, tables in a tool, columns in a table
+New (owner: "IT admin page controlling the quota and space admins can request IT team to increase the quota, this is very important"; "rows 10,000, 60 columns, 10 tables per tool by default"; "same tile kind as we use in spaces")
+- **Three limits per space**, enforced by the database: rows in the whole space (all tools, live and preview) 10,000; tables in one tool 10; columns in one table 60. Before: no limit on rows; 30 tables and 60 columns fixed.
+- **IT admin > Quotas**, in the look of Spaces: "Change the default" on top, one tile per space (rows used, "Request waiting", "Full", "Own limits"), and a window per space where its limits are set, put back on the default, and its admin's request granted or declined. Spaces that wait come first; the tab shows how many wait.
+- **Space admin > Quota:** rows used of allowed with a bar, a warning from 80%, where the rows are (per tool), "Ask IT for more" (three numbers and a reason), the waiting request with "Take the request back", IT's last answers.
+- **A full space** still reads, changes and deletes. A new row is refused with a sentence that says whom to tell (code `quota_full`).
+- **Nobody raises his own limit:** only IT sets, only a space's admin asks. Every step is in the audit.
+- Rows are counted in one number per space, kept in the statement that checks the limit and counted again whenever the admin or IT looks, and when a table or tool is deleted.
+- Not in this delivery: a quota in bytes, stored files, tools per space, a notice to IT beyond the number on the tab.
+- Tests: `tests/sql/011_quotas_test.sql` (144 cases) and `tests/browser/quotas.mjs` (desktop and 390 px) are new. All eleven SQL test files, the eight browser tests and `tests/phase0.mjs` pass locally. Not yet run on the real Supabase project.
+
+Files: `db/core/011_quotas.sql` (new), `tests/sql/011_quotas_test.sql` (new), `tests/browser/quotas.mjs` (new), `admin/it.html`, `admin/space.html`, `pages/admin-it.js`, `pages/admin-space.js`, `help/admin-it.md`, `help/admin-space.md`, `docs/`, `db/core/README.md`, `tests/README.md`, the site book (`17-data`, `22-questions`, `23-gaps`, `07`, `09`, `10-notes`).
+SQL to paste: `db/core/011_quotas.sql`, then `tests/sql/011_quotas_test.sql`. The files before it (004 to 010) must be run first.
+Owner: paste the SQL, reload the site (Ctrl+F5), open IT admin > Quotas.
+
 ## 2026-11-27 - Day and night: the switch to day runs the same movement backwards
 Changed (owner: "for dark mode dark flows downward and in switching to light mode it flows upwards", "it must not change the existing animation")
 - To night: nothing changed. The dark page opens as a circle from the button, same speed, same curve.

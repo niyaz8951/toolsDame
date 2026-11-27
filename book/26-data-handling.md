@@ -91,14 +91,15 @@ None of this was chosen as a retention policy. It is the absence of one, and is 
 ## Limits that protect the database
 | Limit | Value |
 |---|---|
-| Tables per tool; columns per table | 30; 60 |
+| Tables per tool; columns per table | 10; 60 by default, set per space by IT (the quota) |
 | One text value; one long text; one structured value | 1,000; 20,000; 100,000 characters |
 | One row | 300,000 characters |
 | Rows returned by one list | 100 by default, 1,000 at most |
 | Pages in a version; one page; a version | 50; 20 MB; 200 MB |
 | Requests from one open tool | 300 in 10 seconds (in the shell) |
 | Files saved by a tool | 100 MB each, 20 a minute |
-| **Rows per table, tables per space, total size** | **No limit yet** |
+| Rows in a whole space | 10,000 by default, set per space by IT (the quota) |
+| **Size in bytes, stored files, tools per space** | **No limit yet** |
 
 ## Why this way
 - **A schema per tool** makes "whose data is this" a question of where it lies, not of a column someone could forget to filter.

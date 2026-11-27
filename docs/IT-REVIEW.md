@@ -53,7 +53,7 @@ Result: 103 checks, all passed. Together with the other tests: five SQL test fil
 | Password strength is whatever the Supabase project is set to | One dashboard setting (owner step) | Owner now; IT's sign-in later |
 | A manager can publish alone, no second person | Wanted later by the owner | Phase 5/6: review before live |
 | A tool can draw a fake form (e.g. ask for a password) | No frame can stop drawing; the site's bar always shows the real tool name | Review before live; user guidance |
-| No quota on rows, tables or files per space | No real load in a demo | Phase 6 |
+| The quota counts rows, tables and columns (file 011), not bytes or stored files | Row and text sizes are capped; no real load in a demo | Phase 6 |
 | Two people saving the same row: the last one wins | Rare at demo size | Phase 6 (version check on update) |
 | No export or backup from the site | Supabase keeps its own backups | Phase 6 |
 | Row edits are not in the audit | Rows carry `updated_by` and `updated_at` | Target, if IT wants it |

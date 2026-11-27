@@ -26,7 +26,7 @@ Account owner | Above the rules: sign-in with second factor, then IT's pipeline
 | He tries | What stops him | Left over |
 |---|---|---|
 | To open another department's tool by typing its address | `dame_tool_open` checks his level on exactly that tool. The answer is `not_allowed`, the same whether the tool exists or not | Nothing |
-| To call the functions directly with his own session, without the pages | He gets the same 64 functions and the same answers. The pages add nothing he could go around | The limit of 300 requests in 10 seconds sits in the tool's shell, not in the database. Called directly, only the provider's own limits slow him |
+| To call the functions directly with his own session, without the pages | He gets the same 71 functions and the same answers. The pages add nothing he could go around | The limit of 300 requests in 10 seconds sits in the tool's shell, not in the database. Called directly, only the provider's own limits slow him |
 | To raise his own level | Nobody changes his own account or role; levels are rows he has no function to write | Nothing |
 | To read rows of a private table that are not his | The row service answers "not found", as for a row that does not exist | See the tool builder below |
 | To fetch a stored tool file of another department by its path | The file store asks `dame_file_allowed` for every file | Nothing |
@@ -40,7 +40,7 @@ Account owner | Above the rules: sign-in with second factor, then IT's pipeline
 | To act in another space | Every admin function names a space and checks that he is admin of that one | Nothing |
 | To make himself IT admin, or approve an account | Those functions start with `core.require_it()` | Nothing |
 | To delete the audit lines about himself | The audit refuses update, delete and truncate for every role | Nothing |
-| To break the database with a strange table | Tables come from eight column kinds and three sharing rules. No SQL, default, trigger or constraint of his own. 30 tables a tool, 60 columns a table | No quota on rows yet |
+| To break the database with a strange table | Tables come from eight column kinds and three sharing rules. No SQL, default, trigger or constraint of his own. The space's quota, set by IT, limits rows in the space, tables a tool and columns a table | The quota counts rows, not bytes |
 | To give his tool to the whole company | He can give it to any approved person, by name, at any level. That is his right, and each grant is in the audit | A department's data can be shared outside the department by its own manager. If IT wants a rule ("only members of the space"), it is one check in `dame_tool_access_set` |
 | To publish a tool that misleads people | Nothing stops a tool from drawing. The bar above it always shows the real tool and space | A manager publishes alone. Review by a second person is planned |
 

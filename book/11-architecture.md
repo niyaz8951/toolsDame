@@ -34,7 +34,7 @@ The shell | Passes the new row back over the line to the tool
 ## Why it is cut this way
 - **The browser is never trusted.** Pages show and hide; the database decides. A person who edits the page in his browser gains nothing.
 - **A tool is never trusted.** It has no network and no token, so the worst it can do is ask the shell for things its user may do anyway.
-- **One small surface.** 64 functions are the whole API. No table, view or sequence is exposed. Reviewing the API is reading those functions.
+- **One small surface.** 71 functions are the whole API. No table, view or sequence is exposed. Reviewing the API is reading those functions.
 - **Everything derives from ids.** A tool's schema name, file path and address come from the space id and tool id. Nothing of that is stored twice, so nothing can drift apart.
 
 ## What was considered and not done

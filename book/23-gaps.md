@@ -39,7 +39,7 @@ Everything that is weaker than a production system, in one place, with what clos
 ## Open: data
 | Gap | Risk | Closed by |
 |---|---|---|
-| No quota on rows, tables per space, or stored files | A runaway tool fills the free plan | Quotas (last phase) |
+| The quota counts rows, not bytes; stored files of versions are not counted | A space within its row limit can still hold large rows or many versions | A size quota and file clean-up (last phase) |
 | Last save wins on the same row | A change is overwritten without warning | A version check on update |
 | No export, no site-level backup | Loss depends on the Supabase plan | Export (last phase); IT's backups |
 | Row changes are not in the audit | No history of a row | A history table, if IT wants it |
@@ -63,7 +63,7 @@ Everything that is weaker than a production system, in one place, with what clos
 | The shelf library is not checked against a vulnerability list | A flaw in it; it runs sealed, with no network and no session | A check at each release |
 
 ## What is not built at all yet
-Pinned notes and ideas with votes; the per-space SQL console; quotas; a health page (per space and for IT); export; groups; end dates on access; charts as a building block; file columns; a space admin tightening site settings for his space.
+Pinned notes and ideas with votes; the per-space SQL console; a quota by size; a health page (per space and for IT); export; groups; end dates on access; charts as a building block; file columns; a space admin tightening site settings for his space.
 
 ## Hand-over: what moves to IT's platform unchanged
 - **Every tool, as uploaded.** Tools are written against two kit lines and the `Dame` functions. They know no address, no key and no SQL.
@@ -87,4 +87,4 @@ Pinned notes and ideas with votes; the per-space SQL console; quotas; a health p
 ## The order that makes sense
 1. IT reads this book and `docs/IT-REVIEW.md`, and runs the tests.
 2. IT decides: adopt the design, change it, or stop.
-3. If adopted: sign-in and hosting first (they close the largest gaps), then review-before-live, quotas, export.
+3. If adopted: sign-in and hosting first (they close the largest gaps), then review-before-live and export.

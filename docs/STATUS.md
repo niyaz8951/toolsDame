@@ -25,9 +25,10 @@
 - IT admin, Spaces: "Add a space" on top, one tile per space, and a window per space where it is changed or deleted. No SQL.
 - Space admin, Tools: the same way ("Add a tool", a tile per tool, a window per tool). Icons picked from 90 pictures. Back buttons lead to the page the person came from. No SQL.
 - **Accounts (2026-11-27): built and tested locally. Needs `010_accounts.sql` on the real project.** My account (details, password, access, sign-ins); IT's person window (correct, reset password, switch off, role); a temporary password counts 7 days and must be shown again to finish.
+- **Quotas (2026-11-27): built and tested locally. Needs `011_quotas.sql` on the real project.** Per space: 10,000 rows, 10 tables a tool, 60 columns a table by default. IT admin, Quotas: "Change the default", a tile per space, limits and requests in the space's window. Space admin, Quota: what is used, a warning from 80%, "Ask IT for more". Until 011 is run both parts say so and the rest works as before.
 - The fix request for a refused page is one complete text (points, rules, database rules, the page); a design of its own and data outside the tables stop the upload. No SQL.
 - **The site book (2026-11-27):** shown to IT admins only (hub card and book page); stays in `book/`. In pictures: a 5-minute chapter of eleven slides, seven kinds of picture drawn from text (`:::kind` blocks), topic nodes, laser, spotlight and pen while presenting. Reread against the repo: 28 chapters in four parts, with a new part "What a reviewer asks" (threats, sharing of rights, data handling, running it). No SQL.
-- Tests, all passing locally: ten SQL test files (1,024 cases), seven browser tests, the hostile-tool test (33 attempts).
+- Tests, all passing locally: eleven SQL test files (1,193 cases), eight browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
@@ -38,6 +39,7 @@
    Then the same with `006_help.sql`, `007_add_people.sql`, `008_space_look.sql` and `009_new_user.sql`, each followed by its test file of the same number.
    After 009: IT admin > Add a person > **New user**, make a trial account, sign in with it in a private window and choose a password. If the sign-in fails, send the exact message: this file is the one most tied to Supabase itself.
    Then `010_accounts.sql` and `tests/sql/010_accounts_test.sql`. After 010, three things to try (Ctrl+F5 first): (a) the round button top right > **My account**: save a job title, then change your password; (b) IT admin > People > **Open** on the trial account > **Generate** > **Reset password** twice; (c) in a private window sign in as the trial account with that temporary password and choose a new one. If (b) or (c) fails, send the exact message: like 009, a reset writes into Supabase's own sign-in tables.
+   Then `011_quotas.sql` and `tests/sql/011_quotas_test.sql` (first row: "144 passed, 0 failed"). After 011 (Ctrl+F5 first): IT admin > **Quotas**: every space is a tile; press one, set its rows to 100, **Save these limits**, then **Back to the site's default** twice. On a space's admin page > **Quota**: send a request, then answer it from the IT page.
 4. **On the site** (Ctrl+F5 first): IT admin > Site settings > **Who may ask for access**: type the work email domain(s), Save. Empty means anyone may ask.
 5. IT admin > Spaces > **Make a test space**, press its tile, then **Open its admin page**.
 6. Press the **Converter** tile, then "Build and access", **I already have a page**, choose `examples/converter/index.html` from the repo, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.
@@ -61,9 +63,11 @@ Besides this file and the changelog: update the chapter of the site book the cha
 ## Next
 Phase 5: on every page the info icon, pinned notes, ideas with votes, and the AI prompt setting; the tool's help text; a space admin tightening the AI setting.
 
-Later, noted (ranked in `docs/IT-REVIEW.md`): a second person approving before Make live; quotas; a version check when two people save the same row; export; charts as a built-in block of the kit (no library); file columns and `Dame.files`; old `.xls` files; renaming or removing a column; two pasted code blocks merged.
+Later, noted (ranked in `docs/IT-REVIEW.md`): a second person approving before Make live; a quota by size and for stored files; a version check when two people save the same row; export; charts as a built-in block of the kit (no library); file columns and `Dame.files`; old `.xls` files; renaming or removing a column; two pasted code blocks merged.
 
 ## Changes tools must know
+**From `011_quotas.sql`:** `Dame.table(...).add` can fail with the code `quota_full` when the space has used its rows; the message says what to do, so a tool that shows `error.message` (as the starter kit asks) needs no change. A tool may have 10 tables by default (before: 30); existing tables stay.
+
 **From 2026-11-27 the check refuses** (before: noted) own colours, pop-up boxes (`alert`, `confirm`, `prompt`), a call to a server, cookies, a changed `--dame-` variable other than `--dame-accent`, and more than 3000 characters of own styles. Live versions are not touched; the rule applies at the next upload.
 
 Additions only: `Dame.table` now works, `Dame.people()`, the `dame-tables` block that declares a tool's tables. From this delivery: `Dame.download` saves only these kinds of file: xlsx, xlsm, csv, txt, json, pdf, png, jpg, jpeg, docx, pptx, xml, md.

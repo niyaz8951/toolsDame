@@ -6,7 +6,7 @@ Rule of the project: every function has an allowed test and refused tests. Nothi
 | Layer | Files | What it proves |
 |---|---|---|
 | Page rules | `tests/phase0.mjs` | Every page starts with the security policy, has no inline script, loads nothing from outside, names only the configured database; the repository holds no key but the publishable one; the shelf library's fingerprint |
-| Database | `tests/sql/001..010_*_test.sql` | 1,024 cases over the ten SQL files. For every function: the allowed case, then signed out, pending, switched off, wrong space, wrong tool, level too low, someone else's row |
+| Database | `tests/sql/001..011_*_test.sql` | 1,193 cases over the eleven SQL files. For every function: the allowed case, then signed out, pending, switched off, wrong space, wrong tool, level too low, someone else's row |
 | Pages in a browser | `tests/browser/phase1..4.mjs`, `accounts.mjs` | The real pages driven by a real browser, at desktop width and at 390 px: sign-in, admin pages, building, uploading, data, My account and password reset |
 | Hostile tool | inside `phase3.mjs` | 33 attacks from inside a tool, all blocked |
 | Company rehearsal | `tests/browser/company.mjs` | 7 departments, 15 people, 14 tools built through the builder, 1,260 cross-department attempts, leaver, stranger, joiner, new user, space off, tool deleted, the site book shown to IT admins only: 145 checks |
@@ -21,7 +21,7 @@ Rule of the project: every function has an allowed test and refused tests. Nothi
 The first test file loops over **every** `dame_*` function there is and calls it signed out, as a pending person and as a switched-off person. A new function is covered by that loop the day it is added: it cannot be forgotten. (One helper used only by the file store answers yes or no instead of refusing; it has its own cases.)
 
 ## How it runs without the real project
-- `tests/sql/run-local.mjs` runs the ten SQL files, in order, in a PostgreSQL that runs inside the test (PGlite), checks each refuses to run twice, then runs every test twice.
+- `tests/sql/run-local.mjs` runs the eleven SQL files, in order, in a PostgreSQL that runs inside the test (PGlite), checks each refuses to run twice, then runs every test twice.
 - `tests/browser/mock-supabase.mjs` is a stand-in for Supabase: it runs the **real** SQL files in that local PostgreSQL and answers the same addresses (sign-in, functions, file store). The file store there honours the same two policies by asking the same database function.
 - The pages are served exactly as GitHub Pages serves them, by `tools/serve.mjs`. Only the database address is swapped for the stand-in.
 
