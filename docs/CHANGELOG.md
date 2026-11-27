@@ -2,6 +2,18 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - The full fix request; own designs and own data storage are refused
+Changed (owner: "site must give a detailed prompt to keep site guidelines and database needs and design needs and it must reject any new designs in html")
+- **The fix request is one complete text.** Before: one paragraph ("correct these points, follow the starter kit"). A page brought from outside was made by an AI that never saw the kit, so that could not work. Now `kit/ai-fix.md`: (1) every point the site found, stops and notes; (2) how to rebuild: keep what the tool does, throw the old design away and map each part to a building block, move everything kept or fetched into tables with the right columns, types and sharing; (3) the whole starter kit; (4) the page itself. The AI must answer with the page, the help text, a list of tables and what it left out.
+- The request adds the database rules by itself when the page kept or fetched anything, and the shelf's Excel library when the page names Excel files (SheetJS is told to be replaced).
+- **Step "What the site found":** one way forward: "Copy the full request for the AI", "Download it as a file", "Show it", three numbered steps, and a line to take real data out of the page first. A page over 120,000 characters is not pasted: the person is told to attach the file.
+- **The check now stops** (before: noted): own colours, pop-up boxes, a call to a server. New stops: cookies, a changed theme variable, more than 3000 characters of own styles.
+- The SVG format name (`http://www.w3.org/2000/svg`) is no longer reported as an outside address.
+- The starter kit says the same limits. All example pages and ready-made pages pass unchanged.
+- Tests: 15 new checks in phase 3, new checks in phase 0 (the template's gaps, its blocks exist, one number for the style limit). All browser tests pass.
+
+Files: `kit/ai-fix.md` (new), `kit/ai-prompt.md`, `kit/v1/pack.js`, `kit/v1/lib/index.json`, `pages/admin-tool.js`, `admin/tool.html`, `help/admin-tool.md`, `kit/tool-guide.md`, the tests, `docs/`, the site book (`18-builder`, `10-notes`, `04`, `09`, `21`).
+SQL to paste: none.
 ## 2026-11-27 - Accounts: My account, password change, reset by IT
 Added (owner: "user accounts with profiles, basic username, password and a few more things as in a company; IT resets a password with a temporary one; this makes it a fully working site before health")
 - **My account** (`account.html`, from the round account button): my name, sign-in, staff number and role (read only), my work details to keep up to date (job title, department, office, work phone), changing my password, everything I can open with my level, and my last ten sign-ins.

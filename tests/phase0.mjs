@@ -19,7 +19,7 @@ const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.h
 const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1/shell.js',
   'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'pages/space.js', 'pages/admin-space.js', 'pages/admin-tool.js', 'pages/tool.js', 'pages/blocks.js', 'kit/v1/pack.js', 'kit/v1/lib/index.json', 'kit/v1/lib/exceljs.js', 'kit/starter/index.html', 'kit/starter/tracker.html', 'examples/converter/index.html',
   'examples/parts-extractor/index.html',
-  'examples/hello-tool/index.html', 'examples/hello-tool/about.html', 'examples/hello-tool/style.css', 'examples/hello-tool/app.js', 'kit/v1/icon.svg', 'kit/ai-prompt.md', 'kit/dame.schema.json',
+  'examples/hello-tool/index.html', 'examples/hello-tool/about.html', 'examples/hello-tool/style.css', 'examples/hello-tool/app.js', 'kit/v1/icon.svg', 'kit/ai-prompt.md', 'kit/ai-fix.md', 'kit/dame.schema.json',
   'help/index.md', 'help/hub.md', 'help/space.md', 'help/tool.md',
   'help/admin-it.md', 'help/admin-space.md', 'help/admin-tool.md', 'help/book.md', 'help/account.md', 'pages/account.js', 'pages/book.js', 'kit/v1/theme.js',
   'book/index.json', 'book/01-what.md', 'book/02-structure.md', 'book/03-people.md', 'book/04-building.md', 'book/05-data.md',
@@ -146,6 +146,18 @@ try {
   for (const gap of ['{{TOOL}}', '{{BRIEF}}', '{{HEAD}}', '{{DATARULE}}', '{{DATA}}', '{{LIBS}}', '{{STARTER}}']) {
     check(prompt.includes(gap), 'the starter kit template has the gap ' + gap);
   }
+  // The fix request: complete in itself, and the same numbers in the checker, the builder page and the kit.
+  const fix = await readFile(join(ROOT, 'kit/ai-fix.md'), 'utf8');
+  for (const gap of ['{{WHAT}}', '{{PROBLEMS}}', '{{NOTES}}', '{{MAXCSS}}', '{{LIBHOW}}', '{{KIT}}', '{{PAGE}}', '<!--notes-->', '<!--/notes-->', '<!--data-->', '<!--/data-->', '<!--nodata-->', '<!--/nodata-->']) {
+    check(fix.includes(gap), 'the fix request template has the gap ' + gap);
+  }
+  const fixUsed = [...new Set([...fix.matchAll(/`(dame-[a-z-]+)`/g)].map((m) => m[1]))];
+  check(fixUsed.length >= 12 && fixUsed.every((c) => classes.includes(c) || c === 'dame-tables'), 'the fix request names only building blocks that exist');
+  check(!/https?:\/\/[a-z0-9]/i.test(fix) && !/@[a-z0-9-]+\.[a-z]{2,}/i.test(fix), 'the fix request template holds no address and no email');
+  const packJs = await readFile(join(ROOT, 'kit/v1/pack.js'), 'utf8');
+  const adminJs = await readFile(join(ROOT, 'pages/admin-tool.js'), 'utf8');
+  const cap = (packJs.match(/var MAX_OWN_CSS = (\d+);/) || [])[1];
+  check(!!cap && new RegExp('var MAX_OWN_CSS = ' + cap + ';').test(adminJs) && prompt.includes('at most ' + cap + ' characters'), 'the checker, the builder page and the starter kit agree on how long a tool\'s own styles may be (' + cap + ')');
 }
 
 // 7. The shelf: each library is the file its publisher made, and fits the sealed frame.

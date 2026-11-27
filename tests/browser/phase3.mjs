@@ -295,7 +295,7 @@ async function run(width, height, label) {
     await di.page.waitForSelector('#body:not([hidden])');
     await upload(di.page, [{ name: 'index.html', mimeType: 'text/html', buffer: Buffer.from(hostile) }]);
     const hostileReport = await di.page.textContent('#up-report');
-    check(/starts a background worker/.test(hostileReport) && /tries to call a server/.test(hostileReport) && await di.page.locator('#up-send').isDisabled(), T + 'hostile tool: the checks refuse it and say why');
+    check(/starts a background worker/.test(hostileReport) && /calls a server/.test(hostileReport) && await di.page.locator('#up-send').isDisabled(), T + 'hostile tool: the checks refuse it and say why');
     // A manager who goes around the checks: the same three calls the page makes, with the file as it is.
     const around = await di.page.evaluate(async (html) => {
       const bytes = new TextEncoder().encode(html);
@@ -386,7 +386,40 @@ async function run(width, height, label) {
     check(await ben.page.locator('#up-send').isDisabled() && await ben.page.locator('#fix-copy').isVisible(), T + 'nothing can be uploaded; a fix request is offered');
     await ben.page.click('#fix-copy');
     const fix = await ben.page.evaluate(() => navigator.clipboard.readText());
-    check(/refused it/.test(fix) && /1\. index\.html has its own <header>/.test(fix) && /complete index\.html again/.test(fix), T + 'the fix request lists the points for the AI');
+    check(/refused it/.test(fix) && /1\. index\.html has its own <header>/.test(fix) && /ONE complete `index\.html`/.test(fix), T + 'the fix request lists the points for the AI');
+    check(/the index\.html you gave me/.test(fix) && /class="dame-card"/.test(fix) && /Dame\.ready\(\)/.test(fix) && /Throw the old design away/.test(fix) && /Comic Sans MS/.test(fix) && /Part 4\. The page to rebuild/.test(fix), T + 'the fix request is complete in itself: the rules, the building blocks, the kit and the refused page');
+    check(/This tool keeps nothing/.test(fix) && !/One table for each kind of thing/.test(fix) && !/dame-tables/.test(fix.split('Part 4.')[0].split('check your own work')[0]), T + 'for a page that keeps nothing, the fix request says so and leaves the database rules out');
+    check(!fix.includes(MOCK) && !fix.includes(KEY) && !/test\.dame|supabase\.co|at_[0-9a-f]{8}/.test(fix) && !/\{\{[A-Z]+\}\}/.test(fix) && !/<!--\/?(notes|data|nodata)-->/.test(fix), T + 'the fix request holds no address, key, token or person, and no unfilled gap');
+
+    // --- a stand-alone page made outside the site: its own design and its own storage are refused, and the request streamlines both
+    await ben.page.click('#wz-back');
+    const alone = '<!doctype html><html><head><title>Quote log</title><style>:root{--brand:#0a5;} .box{background:#ffffff;border:1px solid rgb(10,20,30);} .t{color:hsl(10,50%,50%)}</style></head>' +
+      '<body><div class="box"><h1>Quote log</h1><input id="q"><button onclick="save()">Save</button><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg></div>' +
+      '<script>/* uses xlsx from https://sheetjs.com */ var NS = "http://www.w3.org/2000/svg"; function save() { var all = JSON.parse(localStorage.getItem("quotes") || "[]"); all.push(document.getElementById("q").value); localStorage.setItem("quotes", JSON.stringify(all)); fetch("/api/quotes"); }</scr' + 'ipt></body></html>';
+    await ben.page.fill('#code', alone);
+    await ben.page.click('#code-check');
+    await ben.page.waitForSelector('#fix-box:not([hidden])');
+    const aloneReport = await ben.page.textContent('#up-report');
+    check(/Fix this: index\.html uses its own colours \(4 places\)/.test(aloneReport) && /Fix this: index\.html keeps data in the browser/.test(aloneReport) && /Fix this: index\.html calls a server/.test(aloneReport), T + 'a design of its own, browser storage and a call to a server each stop the upload');
+    check(/sheetjs\.com/.test(aloneReport) && !/w3\.org/.test(aloneReport), T + 'the name of the SVG format is not taken for an outside address');
+    await ben.page.click('#fix-show');
+    const full = await ben.page.textContent('#fix-pre');
+    check(/One table for each kind of thing the tool keeps/.test(full) && /id="dame-tables"/.test(full) && /Dame\.table\('bids'\)/.test(full) && !/This tool keeps nothing/.test(full), T + 'a page that kept data in the browser gets the database rules: tables, columns, sharing');
+    check(/Library: ExcelJS/.test(full) && /not with SheetJS/.test(full) && /\/_dame\/v1\/lib\/exceljs\.js/.test(full), T + 'a page that names Excel files is pointed to the library of the site');
+    check(/The site also noted these/.test(full) && /sheetjs\.com/.test(full.split('Part 2.')[0]) && /localStorage\.setItem\("quotes"/.test(full.split('Part 4.')[1]), T + 'the notes and the page itself are in the request');
+    check(await ben.page.locator('#fix-attach').isHidden() && await ben.page.locator('#to-ai').isHidden() && await fits(ben.page), T + 'one way forward is offered, and the step fits the screen');
+    await ben.page.click('#wz-back');
+    await ben.page.fill('#code', '<!doctype html><html><head><style>' + '.a { margin: 1px; } '.repeat(200) + '</style></head><body><main class="dame-page"><p>x</p></main></body></html>');
+    await ben.page.click('#code-check');
+    await ben.page.waitForSelector('#fix-box:not([hidden])');
+    check(/brings its own design: \d+ characters of styles/.test(await ben.page.textContent('#up-report')), T + 'a long style sheet of its own is refused even without a colour');
+    await ben.page.click('#wz-back');
+    await ben.page.fill('#code', '<!doctype html><html><head><style>:root { --dame-text: red; --dame-accent: #123456; }</style></head><body><main class="dame-page"><p>' + 'long page '.repeat(13000) + '</p></main></body></html>');
+    await ben.page.click('#code-check');
+    await ben.page.waitForSelector('#fix-box:not([hidden])');
+    check(/changes the site's theme \(--dame-text\)/.test(await ben.page.textContent('#up-report')) && !/own colours/.test(await ben.page.textContent('#up-report')), T + 'a tool may set its accent and nothing else of the theme');
+    await ben.page.click('#fix-show');
+    check(await ben.page.locator('#fix-attach').isVisible() && /I attach it to this message as a file/.test(await ben.page.textContent('#fix-pre')) && !/long page long page/.test(await ben.page.textContent('#fix-pre')), T + 'a page too long to paste is attached as a file instead, and the person is told');
     await shot(ben.page, '6-builder-refused');
     await ben.page.click('#wz-back');
     await ben.page.click('#code-starter');

@@ -15,9 +15,9 @@ What it must do:
 3. The site already shows a top bar with the tool's name, the way back and the user. So: no `<header>`, `<nav>` or `<footer>`, no sign-in, no password field, no user menu, no logo.
 4. Nothing from outside the file: no CDN, web font, outside image, script or style sheet; no `fetch`, `XMLHttpRequest` or `WebSocket`; no web worker; no `<iframe>`. All of these are blocked and the upload is refused.
 5. The browser's own storage (`localStorage`, `sessionStorage`, `indexedDB`, cookies) does not work inside a tool and stops the script. {{DATARULE}}
-6. Look: build the page only from the building blocks below. No own fonts. No own colours: use the theme variables `var(--dame-text)`, `var(--dame-muted)`, `var(--dame-line)`, `var(--dame-surface)`, `var(--dame-bg)`, `var(--dame-ok)`, `var(--dame-warn)`. The only thing a tool may set is `--dame-accent` (one colour).
+6. Look: the design belongs to the site. Build the page only from the building blocks below. No own fonts. No own colours (`#hex`, `rgb()`, `hsl()`, colour names): use the theme variables `var(--dame-text)`, `var(--dame-muted)`, `var(--dame-line)`, `var(--dame-surface)`, `var(--dame-bg)`, `var(--dame-ok)`, `var(--dame-warn)`. The only thing a tool may set is `--dame-accent` (one colour). Your own styles are for layout only: at most 3000 characters in all. A page with a design of its own is refused.
 7. It must work on a phone (390 px wide) and on a desktop. Every control is reachable by keyboard and every input has a label.
-8. Plain words on screen, for people who are not technical. Every message says what the person should do next. Show an empty state before there is anything to show. No `alert`, `confirm` or `prompt` boxes.
+8. Plain words on screen, for people who are not technical. Every message says what the person should do next. Show an empty state before there is anything to show. No `alert`, `confirm` or `prompt` boxes: the upload is refused.
 9. No real names, prices, customer data, keys or passwords in the file. Sample values must be invented.
 10. Long work (many files, many rows) is done in small steps with `await Dame.pause();` between them, and a progress bar is shown.
 11. Put data on the page with `textContent`, never by building HTML from data.

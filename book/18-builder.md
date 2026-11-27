@@ -6,7 +6,7 @@ The people who build tools are not developers. The builder exists so that they n
 | Way | Steps |
 |---|---|
 | Build a new page | Describe > database question > starter kit to the AI > paste the answer > what the site found > upload |
-| I already have a page | Choose the file (or paste) > what the site found > upload. One button hands a refused page to the AI to be rebuilt |
+| I already have a page | Choose the file (or paste) > what the site found > upload. A refused page gets one complete request for the AI |
 | Use a ready-made page | Converter, tracker, a list and form for the tool's own tables, or the empty starter page > what the site found > upload |
 
 One step is on screen at a time. "Next" does not move until the step is done.
@@ -37,21 +37,31 @@ The platform itself calls no AI. The person copies the text into the AI his comp
 | A file, script, style, font or picture loaded from outside | Nothing from outside may run on the site |
 | Its own `<header>`, `<nav>`, `<footer>` | The bar belongs to the site |
 | A password field | The site never asks for a password inside a tool |
-| Own fonts | One look |
+| Own fonts, own colours, a changed theme, pop-up boxes, more than 3000 characters of own styles | One look: a design of its own is refused, however good |
 | Frames, background workers | Not allowed in the sealed frame |
 | A library that is not on the shelf | Only approved libraries |
-| Browser storage | The frame has none; data belongs in a table |
+| Browser storage, cookies | The frame has none; data belongs in a table |
+| A call to a server (`fetch`, XHR, web socket) | The frame has no network; data belongs in a table |
 | No `index.html`, bad page names, over 20 MB a page | The database would refuse them |
 
 | Noted, not stopped | |
 |---|---|
-| A call to a server (`fetch`, XHR, web socket) | The frame has no network, so the call is blocked when it runs; the person is told now |
-| Colours of its own | It would not follow day and night |
-| Pop-up boxes | They work, but look foreign |
-| No building block used | The page still gets the site's look for plain HTML |
+| An outside address named in the code | Often only a comment; the format names of w3.org are not counted |
+| No building block used | Plain HTML without styles still gets the site's look |
 | Code saves to a table the page does not list | Saving would fail |
 
-For every stop the site writes a **fix request**: a ready message for the AI naming exactly what to change.
+## The fix request: one complete text
+Most people arrive with a stand-alone page made elsewhere, by an AI that never saw this site. "Follow the starter kit" means nothing to that AI. So for every refused page the site writes one text (`kit/ai-fix.md`, filled in) that is complete in itself:
+
+| Part | Holds |
+|---|---|
+| 1. What the site found | Every stop, numbered, and every note |
+| 2. How to rebuild | Keep what the tool does. Throw the old design away and map each part to a building block. Move everything kept or fetched into tables: one table per kind of thing, one column per field, the type and the sharing to choose, no own ids, users or roles. Libraries only from the shelf |
+| 3. The rules of the site | The whole starter kit, with the database section when the page keeps anything and the shelf library when the page names Excel files |
+| 4. The page | The refused page itself; a page over 120,000 characters is attached to the AI as a file instead, and the person is told |
+| The answer | `index.html`, the help text, a list of tables to compare with the review window, and "Left out": what the old page did that a tool cannot do |
+
+It works in the same AI chat or a new one. Like the starter kit it holds no address, key or person; but it holds the person's page, so the screen says to take real names, prices and customer data out first.
 
 ## The check is help, not the wall
 It runs in the manager's browser. A manager who wants to could go around it. That is accepted, because:

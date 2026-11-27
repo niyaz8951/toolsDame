@@ -149,11 +149,26 @@
             <button class="dame-btn dame-btn-primary" type="button" id="cols-copy" hidden>Copy a request for the AI to use the new columns</button>
           </div>
           <p class="dame-muted" id="cols-text" hidden>The columns you added are in the database, but this page has no field for them yet. You can upload it as it is and add the fields later, or give this request to the AI first and paste its new answer.</p>
+          <div id="fix-box" hidden>
+            <h3>Hand it to the AI to be put right</h3>
+            <p>The request is one text and is complete: the points above, every rule of this site, how the data must be kept in the database, and your page. The AI is told to keep what your page does and to rebuild its look and its data the way this site needs.</p>
+            <ol class="hub-plain">
+              <li>Press "Copy the full request for the AI".</li>
+              <li>Paste it into the approved AI, in the same chat or a new one, and send it.</li>
+              <li>When it answers, press Back and paste the new answer.</li>
+            </ol>
+            <p class="dame-card hub-msg hub-warn" id="fix-attach" hidden>Your page is too long to fit inside the request, or has several files. After pasting the request, also attach your HTML file to the same message in the AI.</p>
+            <div class="dame-row">
+              <button class="dame-btn dame-btn-primary" type="button" id="fix-copy">Copy the full request for the AI</button>
+              <button class="dame-btn" type="button" id="fix-save">Download it as a file</button>
+              <button class="dame-btn" type="button" id="fix-show">Show it</button>
+            </div>
+            <p class="dame-muted">Your page is inside the request. Take real names, prices and customer data out of it before it goes to an AI.</p>
+            <pre class="hub-pre" id="fix-pre" hidden></pre>
+          </div>
           <div class="dame-row">
-            <button class="dame-btn dame-btn-primary" type="button" id="fix-copy" hidden>Copy a fix request for the AI</button>
             <button class="dame-btn" type="button" id="to-ai" hidden>Ask the AI to rebuild this page for the site</button>
           </div>
-          <p class="dame-muted" id="fix-text" hidden>Paste the fix request into the same AI chat. When it answers, press Back and paste the new answer.</p>
         </section>
 
         <section id="step-5" hidden>

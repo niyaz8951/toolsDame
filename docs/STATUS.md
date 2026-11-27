@@ -25,6 +25,7 @@
 - IT admin, Spaces: "Add a space" on top, one tile per space, and a window per space where it is changed or deleted. No SQL.
 - Space admin, Tools: the same way ("Add a tool", a tile per tool, a window per tool). Icons picked from 90 pictures. Back buttons lead to the page the person came from. No SQL.
 - **Accounts (2026-11-27): built and tested locally. Needs `010_accounts.sql` on the real project.** My account (details, password, access, sign-ins); IT's person window (correct, reset password, switch off, role); a temporary password counts 7 days and must be shown again to finish.
+- The fix request for a refused page is one complete text (points, rules, database rules, the page); a design of its own and data outside the tables stop the upload. No SQL.
 - Tests, all passing locally: ten SQL test files, seven browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
@@ -60,4 +61,6 @@ Phase 5: on every page the info icon, pinned notes, ideas with votes, and the AI
 Later, noted (ranked in `docs/IT-REVIEW.md`): a second person approving before Make live; quotas; a version check when two people save the same row; export; charts as a built-in block of the kit (no library); file columns and `Dame.files`; old `.xls` files; renaming or removing a column; two pasted code blocks merged.
 
 ## Changes tools must know
+**From 2026-11-27 the check refuses** (before: noted) own colours, pop-up boxes (`alert`, `confirm`, `prompt`), a call to a server, cookies, a changed `--dame-` variable other than `--dame-accent`, and more than 3000 characters of own styles. Live versions are not touched; the rule applies at the next upload.
+
 Additions only: `Dame.table` now works, `Dame.people()`, the `dame-tables` block that declares a tool's tables. From this delivery: `Dame.download` saves only these kinds of file: xlsx, xlsm, csv, txt, json, pdf, png, jpg, jpeg, docx, pptx, xml, md.

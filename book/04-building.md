@@ -9,7 +9,7 @@ A tool is one page. The site gives it the look, the bar, the sign-in, the people
 2. On the tool's admin page the builder chooses **one of three ways**: build a new page, bring a page he already has, or use a ready-made page.
 3. **Build a new page**: he writes in his own words what the tool should do, and answers one question: does it save data in the database?
 4. He copies the **starter kit** and pastes it into the approved AI. The kit is one text: the rules of the site, the building blocks, a starting page, and his description.
-5. He pastes the AI's answer back. The site **checks** it and says in plain words what is wrong, with a ready "fix request" for the AI.
+5. He pastes the AI's answer back. The site **checks** it and says in plain words what is wrong, with a ready "fix request" for the AI: one complete text with the points, every rule of the site, the database rules and the page itself.
 6. He uploads. The upload becomes the **preview**: only managers see it. He tries it.
 7. He presses **Make live** twice. Now everyone with the tool gets it.
 

@@ -132,6 +132,13 @@
 - **The person's own password rule** (12 characters, mixed) is checked by the page and by the sign-in service's own minimum length; the database never sees a password. The password he has now is checked by a real sign-in that is closed at once.
 - **People on the IT page follow the same design language as spaces and tools:** one line, one button, changes only in the window.
 - Not done: a person changing his own name; password history; forced change every N days (current guidance is against it without a sign of leakage); lock-out after wrong tries (the sign-in service limits tries by itself).
+## Owner, 2026-11-27 (one look, one place for data; the full fix request)
+- Owner: "it must reject any new designs in html"; "almost all users will come up with stand-alone htmls and some database logics which we need to streamline"; "a detailed prompt will help us keep everything aligned".
+- **A design of its own stops the upload.** Own colours, pop-up boxes, a changed theme variable and more than 3000 characters of own styles are now stops (colours and pop-ups were notes). Own fonts, header, menu and footer already were. Plain HTML with no styles still passes and takes the site's look: that is no design of its own.
+- **Data outside the site's tables stops the upload.** Browser storage (already), cookies and a call to a server (was a note). The starter kit always said such a page is refused; the check now does it.
+- **The fix request is complete in itself** (`kit/ai-fix.md`): the points found, how to rebuild the look and the data, the whole starter kit, the page. It replaces the one-paragraph request, which assumed the AI had seen the kit.
+- What this does not do: the check reads the page as text. Code that builds its look or its storage calls in a hidden way is not seen. That stays accepted: the check keeps the site aligned and saves time; the sealed frame and the database protect (see "The check is help, not the wall").
+- 3000 characters is a first number (the largest example page has 328). Say if it should move.
 
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |

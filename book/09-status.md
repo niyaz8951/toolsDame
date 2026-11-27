@@ -5,7 +5,7 @@
 - Accounts: My account (details, password, access, sign-ins); IT opens a person, corrects the account and resets a password.
 - Spaces and tools: create, admins, managers, access, on and off, delete.
 - The sealed frame, the tool kit, uploads, versions, preview, make live, roll back.
-- The guided builder: three ways, one step at a time, the starter kit for the AI, the check, the fix request.
+- The guided builder: three ways, one step at a time, the starter kit for the AI, the check, the complete fix request (rules, database rules and the page).
 - Tables from the site, the review window, the data service, the three sharing rules.
 - The information button, usage guides, day and night, the look.
 - This site book: an overview, and a part for IT with the detail of every mechanism and decision.

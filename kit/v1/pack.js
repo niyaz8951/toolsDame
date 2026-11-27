@@ -5,8 +5,11 @@
  * follows" 3 (nothing from outside).
  * Must not change: the files are only READ here, with the browser's inert
  * parser: nothing in them is ever run or loaded by this page. A problem stops
- * the upload and is said in plain words with what to do. These checks help
- * the person; they protect nothing. The sealed frame does, whatever is uploaded.
+ * the upload and is said in plain words with what to do. A page with a design
+ * of its own (colours, fonts, a long style sheet, pop-up boxes) or data kept
+ * outside the site's tables (browser storage, a call to a server) is a problem,
+ * not a note: one look, one place for data. These checks help the person; they
+ * protect nothing. The sealed frame does, whatever is uploaded.
  */
 (function () {
   'use strict';
@@ -15,6 +18,7 @@
   var MAX_VERSION = 200 * 1024 * 1024;
   var MAX_UNPACKED = 250 * 1024 * 1024;
   var MAX_FILES = 500;
+  var MAX_OWN_CSS = 3000;   // characters of a page's own styles: enough for layout, too little for a design
   var PAGE = /^[a-z0-9][a-z0-9._-]{0,59}\.html$/;
   var KIT_CSS = '/_dame/v1/dame.css';
   var KIT_JS = '/_dame/v1/dame.js';
@@ -195,7 +199,11 @@
 
     // url(...) inside styles: a chosen file is put inside; an outside address is a problem.
     var colours = {};
+    var ownCss = {};
     function lint(css, where) {
+      ownCss[where] = (ownCss[where] || 0) + css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').length;
+      var theme = css.match(/--dame-(?!accent\b)[a-z0-9-]+\s*:/i);
+      if (theme) { problem(where + ' changes the site\'s theme (' + theme[0].replace(/\s*:$/, '') + '). A tool may set only --dame-accent: remove that line.'); }
       if (/@font-face/i.test(css)) { problem(where + ' brings its own font (@font-face). Tools use the site\'s font: remove it.'); }
       css.replace(/font-family\s*:\s*([^;}]*)/gi, function (all, value) {
         if (!/^\s*(inherit|initial|unset|var\(|ui-monospace|monospace)/i.test(value)) {
@@ -223,16 +231,25 @@
 
     function scan(js, where) {
       js.replace(/\bDame\s*\.\s*table\s*\(\s*(['"])([a-z][a-z0-9_]{1,40})\1/g, function (all, q, name) { uses[name] = true; return all; });
-      var m = js.match(/https?:\/\/[^\s'"`)<>]{4,80}/);
-      if (m) { note(where + ' mentions the outside address ' + m[0] + '. Outside calls are blocked on this site; the tool must work without it.'); }
-      if (/\b(localStorage|sessionStorage|indexedDB)\b/.test(js)) { problem(where + ' uses the browser\'s own storage (localStorage, sessionStorage or indexedDB). Inside a tool that stops the script at once. Remove it; to keep data use a table and Dame.table.'); }
-      if (/\b(fetch|XMLHttpRequest|WebSocket|EventSource)\s*\(/.test(js)) { note(where + ' tries to call a server. That is blocked; data goes only through Dame.table.'); }
+      if (/\bDame\s*\.\s*table\s*\(/.test(js)) { keeps = true; }
+      // Addresses that only name a format (the SVG and XML names of w3.org) are not calls.
+      var m = (js.match(/https?:\/\/[^\s'"`)<>]{4,80}/g) || []).filter(function (a) { return !/^https?:\/\/(www\.)?w3\.org\//i.test(a); })[0];
+      if (m) { note(where + ' mentions the outside address ' + m + '. Outside calls are blocked on this site; the tool must work without it.'); }
+      if (/\b(localStorage|sessionStorage|indexedDB)\b/.test(js) || /\bdocument\s*\.\s*cookie\b/.test(js)) {
+        keeps = true;
+        problem(where + ' keeps data in the browser (localStorage, sessionStorage, indexedDB or cookies). Inside a tool that stops the script at once. Remove it; what must be kept goes into a table of this site, declared in the page and used with Dame.table.');
+      }
+      if (/\b(fetch|XMLHttpRequest|WebSocket|EventSource)\s*\(/.test(js)) {
+        keeps = true;
+        problem(where + ' calls a server (fetch, XMLHttpRequest, WebSocket or EventSource). A tool has no network. Remove the call; data is read and saved only in the tables of this site, with Dame.table.');
+      }
       if (/\bnew\s+(Shared)?Worker\s*\(|\bimportScripts\s*\(/.test(js)) { problem(where + ' starts a background worker. Tools have none: do long work in small steps and write "await Dame.pause();" between them so the screen stays alive.'); }
-      if (/(^|[^.\w])(alert|confirm|prompt)\s*\(/.test(js)) { note(where + ' uses a pop-up box (alert, confirm or prompt). Show messages with Dame.toast or a dame-note instead.'); }
+      if (/(^|[^.\w])(alert|confirm|prompt)\s*\(/.test(js)) { problem(where + ' uses a pop-up box (alert, confirm or prompt). Remove it: show a message with Dame.toast or a dame-note, ask for a value with a field, and ask "are you sure" with a second button on the page.'); }
     }
 
     var inlineTables = '';
     var uses = {};          // table names the code asks for: Dame.table('name')
+    var keeps = false;      // the page keeps or fetches data somewhere: storage, a server, or the site's tables
     var pageNames = paths.filter(function (p) { return /\.html?$/i.test(p) && p.indexOf('/') < 0; });
     paths.filter(function (p) { return /\.html?$/i.test(p) && p.indexOf('/') >= 0; }).forEach(function (p) {
       problem('The page ' + p + ' is inside a folder. Put every page next to index.html.');
@@ -364,7 +381,7 @@
       });
 
       if (!doc.querySelector('[class*="dame-"]')) {
-        note(name + ' uses none of the site\'s building blocks. It will work and get the site\'s basic look, but not its layout. The starter kit makes the AI use them.');
+        note(name + ' uses none of the site\'s building blocks. Plain HTML gets the site\'s basic look, but not its layout: build the page from the blocks (dame-page, dame-card, dame-btn, dame-input, dame-table).');
       }
 
       // The kit first, so it is in place before any of the tool's own code runs.
@@ -378,8 +395,14 @@
       pages.push({ name: name, bytes: bytes, size: bytes.length, sha256: hex(await crypto.subtle.digest('SHA-256', bytes)) });
     }
 
+    // One look: a page that brings a design of its own is refused, not noted.
     Object.keys(colours).forEach(function (where) {
-      note(where + ' uses its own colours (' + colours[where] + ' places). Tools take their colours from the theme, for example var(--dame-text), var(--dame-line), var(--dame-ok), var(--dame-warn); a tool sets only --dame-accent.');
+      problem(where + ' uses its own colours (' + colours[where] + ' places). The look belongs to the site: remove every colour value and take colours only from the theme, for example var(--dame-text), var(--dame-muted), var(--dame-line), var(--dame-surface), var(--dame-ok), var(--dame-warn). A tool may set only --dame-accent.');
+    });
+    Object.keys(ownCss).forEach(function (where) {
+      if (ownCss[where] > MAX_OWN_CSS) {
+        problem(where + ' brings its own design: ' + ownCss[where] + ' characters of styles, and a tool may have ' + MAX_OWN_CSS + ' at most. Remove the styles and build the page from the site\'s building blocks (dame-page, dame-card, dame-btn, dame-input, dame-table and the others); keep only a few lines for layout.');
+      }
     });
     if (pages.length > 50) { problem('A version has 50 pages at most.'); }
     var total = pages.reduce(function (sum, p) { return sum + p.size; }, 0);
@@ -400,7 +423,7 @@
       }
     }
 
-    return { pages: pages, problems: problems, notes: notes, manifest: manifest, total: total, uses: Object.keys(uses) };
+    return { pages: pages, problems: problems, notes: notes, manifest: manifest, total: total, uses: Object.keys(uses), keeps: keeps || !!manifest };
   }
 
   window.DamePack = Object.freeze({ collect: collect, fromCode: fromCode, pack: pack });

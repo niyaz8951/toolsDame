@@ -8,9 +8,9 @@ Nobody but you (its managers and the space admins) can open it. People who have 
 ## How to build it
 1. Under **Build this tool** choose one of the three ways. The site then shows one step at a time.
 2. **Build a new page**: say in your own words what the tool should do. Answer whether it must save data in the database. Copy the starter kit, paste it into the approved AI, and bring its answer back.
-3. **I already have a page**: choose your HTML file. If the site refuses it, one button hands it to the AI to be rebuilt.
+3. **I already have a page**: choose your HTML file. A page made outside this site is almost always refused the first time: it has its own design and keeps its data in its own way. The site then writes one complete request for the AI, which rebuilds the page with this site's look and this site's database.
 4. **Use a ready-made page**: no AI. A converter, a tracker, or a list and form for this tool's tables.
-5. Read **What the site found**. If something is wrong, "Copy a fix request for the AI" writes the message for you.
+5. Read **What the site found**. If something is wrong, press **Copy the full request for the AI**. It holds the points the site found, every rule of the site, how data must be kept, and your page. Paste it into the approved AI (the same chat or a new one), then press Back and paste the answer.
 6. **Upload**, press **Open the preview** and try it. Then press **Make live** twice.
 
 ## What to upload
@@ -20,8 +20,9 @@ Nobody but you (its managers and the space admins) can open it. People who have 
 
 ## What a tool may not do (the site refuses these)
 - Load anything from the internet or call a server.
-- Have its own header, sign-in, fonts or colours.
-- Use the browser's storage or background workers.
+- Have a design of its own: its own header, sign-in, fonts, colours, pop-up boxes, or more than a few lines of styles (3000 characters). The look belongs to the site.
+- Keep data anywhere but in this site's tables: no browser storage, no call to a server.
+- Use background workers.
 - Ask for a password.
 
 ## If the tool saves data

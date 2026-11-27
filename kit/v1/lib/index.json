@@ -10,6 +10,8 @@
       "source": "npm package exceljs 4.4.0, file dist/exceljs.bare.min.js, unchanged",
       "sha256": "b039e32bfb7164dadd84a6973b30200dc07e1b58e1f21c546378fca6920a1f94",
       "use": "read and write Excel files (.xlsx)",
+      "hints": ["xlsx", "sheetjs", "exceljs", "excel"],
+      "instead": "Reading and writing Excel files is done with ExcelJS from the site, not with SheetJS/XLSX or any other Excel library: rewrite those calls.",
       "line": "<script src=\"/_dame/v1/lib/exceljs.js\"></script>",
       "how": [
         "It gives the global `ExcelJS`. It reads and writes .xlsx (and .xlsm) only; for an old .xls file tell the user to open it in Excel and save it as .xlsx.",

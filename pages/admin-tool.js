@@ -5,7 +5,9 @@
  * each change calls one dame_* function and then reloads, so the page shows
  * what the database holds; pasted code and chosen files are only read by
  * kit/v1/pack.js in the helper page, never run here; a version with a problem
- * is not uploaded; the starter kit holds no address, key or user data.
+ * is not uploaded; the starter kit holds no address, key or user data; the
+ * fix request is complete in itself (the points, all the rules, the data
+ * rules, the page), because the AI that gets it may never have seen the kit.
  */
 (function () {
   'use strict';
@@ -130,6 +132,11 @@
 
   var shelf = [];          // libraries on the shelf, from kit/v1/lib/index.json
   var template = '';       // kit/ai-prompt.md
+  var fixTemplate = '';    // kit/ai-fix.md
+  var lastNotes = [];
+  var lastKeeps = false;   // the checked page keeps or fetches data somewhere
+  var MAX_OWN_CSS = 3000;  // the same number as in kit/v1/pack.js
+  var MAX_PASTE = 120000;  // a longer page is attached to the AI as a file instead of pasted into the request
   var starter = '';        // kit/starter/index.html, without its repo note
   var toolName = '';
   var isLive = false;
@@ -236,22 +243,25 @@
   }
 
   // The starter kit: the prompt template with this tool, the description and the chosen libraries filled in.
-  function starterKit() {
-    var libs = shelf.filter(function (l) { return chosenLibs().indexOf(l.id) >= 0; });
+  // o (all optional): { brief, data, libs, plain } - the fix request fills these from the checked page.
+  function starterKit(o) {
+    o = o || {};
+    var withData = o.data === undefined ? $('need-data').checked : o.data;
+    var libs = o.libs || shelf.filter(function (l) { return chosenLibs().indexOf(l.id) >= 0; });
     var head = ['   `<link rel="stylesheet" href="/_dame/v1/dame.css">`', '   `<script src="/_dame/v1/dame.js"></script>`']
       .concat(libs.map(function (l) { return '   `' + l.line + '`'; })).join('\n');
     var libText = libs.map(function (l) {
       return '## Library: ' + l.name + ' ' + l.version + ' (' + l.use + ')\nThe site provides it; load it with the line above and nothing else.\n' +
         l.how.map(function (h) { return '- ' + h; }).join('\n') + '\n\n';
     }).join('');
-    var brief = $('brief').value.trim() || '(Describe here what the tool should do: who uses it, what goes in, what comes out.)';
+    var brief = o.brief || $('brief').value.trim() || '(Describe here what the tool should do: who uses it, what goes in, what comes out.)';
     var page = starterPage();
     if (libs.length) {
       page = page.replace('<script src="/_dame/v1/dame.js"></script>',
         '<script src="/_dame/v1/dame.js"></script>\n' + libs.map(function (l) { return l.line; }).join('\n'));
     }
     // A page the person already has (kept when he chose "Ask the AI to rebuild this page") is handed over.
-    var existing = oldPage.trim();
+    var existing = o.plain ? '' : oldPage.trim();
     var convert = (existing && /<[a-z!][\s\S]*>/i.test(existing))
       ? '\n## The page I already have\nRebuild this page as a DAME tool. Keep what it does and its words. Replace its look with the building blocks, ' +
         'remove everything the rules forbid (outside files, own header, own fonts, browser storage), and after the code tell me in one line anything it did that a DAME tool cannot do.\n' +
@@ -261,14 +271,14 @@
       .split('{{TOOL}}').join(toolName)
       .split('{{BRIEF}}').join(brief)
       .split('{{HEAD}}').join(head)
-      .split('{{DATARULE}}').join($('need-data').checked ? 'To keep data use the tables of this site, as described below.'
+      .split('{{DATARULE}}').join(withData ? 'To keep data use the tables of this site, as described below.'
         : 'This tool saves nothing: it works with what the person types or the files he chooses, and gives results on screen or as a download. Do not use `Dame.table`.')
-      .split('{{DATA}}').join($('need-data').checked ? dataText() : '')
+      .split('{{DATA}}').join(withData ? dataText() : '')
       .split('{{LIBS}}').join(libText)
       .split('{{STARTER}}').join(page);
   }
 
-  async function copy(textToCopy, button, done) {
+  async function copy(textToCopy, button, done, pre) {
     try {
       await navigator.clipboard.writeText(textToCopy);
       var old = button.textContent;
@@ -276,8 +286,9 @@
       setTimeout(function () { button.textContent = old; }, 2500);
     } catch (e) {
       // The browser did not allow copying: show the text so it can be copied by hand.
-      $('kit-pre').textContent = textToCopy;
-      $('kit-pre').hidden = false;
+      pre = pre || $('kit-pre');
+      pre.textContent = textToCopy;
+      pre.hidden = false;
       ui.say($('msg'), 'The browser did not allow copying. The text is shown below: select all of it and copy it.', 'warn');
     }
   }
@@ -293,10 +304,47 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
   }
 
-  // What to tell the AI when the site refused its answer.
+  // What to tell the AI when the site refused a page. Complete in itself: the points
+  // the site found, how to rebuild (look, data, files), the whole starter kit and the
+  // page. Most pages people bring were made outside the site, by an AI that never saw
+  // the rules, so "follow the starter kit" alone means nothing to it.
+  function pick(textIn, name, keep) {
+    var block = new RegExp('<!--' + name + '-->\\r?\\n?([\\s\\S]*?)<!--/' + name + '-->\\r?\\n?', 'g');
+    return textIn.replace(block, keep ? '$1' : '');
+  }
+
+  function pageFits() { return !!sourceText && sourceText.length <= MAX_PASTE; }
+
   function fixRequest() {
-    return 'The DAME site checked the index.html you gave me and refused it. Correct exactly these points and give me the complete index.html again, in one code block, still following every rule of the starter kit:\n\n' +
-      lastProblems.map(function (p, i) { return (i + 1) + '. ' + p; }).join('\n') + '\n';
+    var seen = sourceText.toLowerCase();
+    // Libraries: those ticked in step 1, and those the page plainly needs (it names Excel files, say).
+    var libs = shelf.filter(function (l) {
+      return chosenLibs().indexOf(l.id) >= 0 || (l.hints || []).some(function (h) { return seen.indexOf(h) >= 0; });
+    });
+    var withData = lastKeeps || $('need-data').checked || tables.length > 0;
+    var brief = way === 'ai' ? $('brief').value.trim() : '';   // a description left from another try says nothing about a page brought from outside
+    var kit = starterKit({
+      brief: (brief ? brief + '\n\n' : '') + 'Do exactly what the page in part 4 does today, rebuilt to these rules.',
+      data: withData, libs: libs, plain: true
+    });
+    var page = pageFits()
+      ? 'This is the page the site refused. Read all of it before you write anything.\n```html\n' + sourceText.trim() + '\n```'
+      : 'The page is too long to paste here, or it has several files. I attach it to this message as a file. If you see no attached file, ask me for it and write nothing else.';
+    var out = pick(pick(pick(fixTemplate, 'notes', lastNotes.length > 0), 'data', withData), 'nodata', !withData);
+    return out
+      .split('{{WHAT}}').join(way === 'ai' ? 'the index.html you gave me' : 'a page I already have')
+      .split('{{PROBLEMS}}').join(lastProblems.map(function (p, i) { return (i + 1) + '. ' + p; }).join('\n'))
+      .split('{{NOTES}}').join(lastNotes.map(function (n) { return '- ' + n; }).join('\n'))
+      .split('{{MAXCSS}}').join(String(MAX_OWN_CSS))
+      .split('{{LIBHOW}}').join(libs.map(function (l) { return l.instead || ''; }).filter(Boolean).join(' '))
+      .split('{{KIT}}').join(kit.replace(/^(#{1,2}) /gm, '##$1 '))
+      .split('{{PAGE}}').join(page);
+  }
+
+  function offerFix(yes) {
+    $('fix-box').hidden = !yes;
+    $('fix-pre').hidden = true;
+    $('fix-attach').hidden = !yes || pageFits();
   }
 
   // ------------------------------------------------------------------ check and upload
@@ -642,11 +690,12 @@
     $('cols-text').hidden = true;
     closeFocus();
     lastProblems = [];
+    lastNotes = [];
+    lastKeeps = false;
     $('after-upload').hidden = true;
     $('tables-need').hidden = true;
     $('up-send').disabled = true;
-    $('fix-copy').hidden = true;
-    $('fix-text').hidden = true;
+    offerFix(false);
     $('to-ai').hidden = true;
     uploaded = false;
     report([['Reading.', '']]);
@@ -673,15 +722,16 @@
         lines.unshift(['The check passed: ' + result.pages.map(function (p) { return p.name; }).join(', ') + ' (' + size(result.total) + '). ' + (waits ? 'One thing left before the upload: the database tables below.' : 'Press "Next: upload".'), 'hub-ok']);
       } else {
         lastProblems = result.problems;
-        lines.push(['Nothing was uploaded. That is normal on a first try. Copy the fix request, give it to the AI, then press Back and paste the new answer.', '']);
-        $('fix-copy').hidden = false;
-        $('fix-text').hidden = false;
-        $('to-ai').hidden = way !== 'own' || aiMode === 'off';
+        lastNotes = result.notes;
+        lastKeeps = !!result.keeps;
+        lines.push(['Nothing was uploaded. That is normal for a page made outside this site. ' + (aiMode === 'off'
+          ? 'Correct the points above in your page, then press Back and bring it again.'
+          : 'Press "Copy the full request for the AI" below, give it to the AI, then press Back and paste the new answer.'), '']);
+        offerFix(aiMode !== 'off');
       }
       report(lines);
     } catch (err) {
-      lastProblems = [(err && err.message) || 'The code could not be read.'];
-      report([['Fix this: ' + lastProblems[0], 'hub-warn']]);
+      report([['Fix this: ' + ((err && err.message) || 'The code could not be read.'), 'hub-warn']]);
     }
     if (!way) { way = 'own'; }
     go('step-4');
@@ -828,7 +878,8 @@
   // 'loading' is the page's own data, already on its way: the kit files are fetched at the same time.
   async function builder(me, loading) {
     aiMode = me.ai_mode;
-    var loaded = await Promise.all([text('kit/ai-prompt.md'), text('kit/starter/index.html'), text('kit/v1/lib/index.json'), loading]);
+    var loaded = await Promise.all([text('kit/ai-prompt.md'), text('kit/starter/index.html'), text('kit/v1/lib/index.json'), loading, text('kit/ai-fix.md')]);
+    fixTemplate = loaded[4];
     template = loaded[0];
     starter = loaded[1].replace(/<!--[\s\S]*?-->\s*/, '');
     shelf = JSON.parse(loaded[2]).libraries;
@@ -916,7 +967,12 @@
       var files = $('up-files').files;
       if (files.length) { check(function (packer) { return packer.collect(files); }); }
     });
-    $('fix-copy').addEventListener('click', function () { copy(fixRequest(), $('fix-copy'), 'Copied. Paste it into the AI.'); });
+    $('fix-copy').addEventListener('click', function () { copy(fixRequest(), $('fix-copy'), 'Copied. Paste it into the AI.', $('fix-pre')); });
+    $('fix-save').addEventListener('click', function () { saveFile('dame-fix-request-' + tool + '.md', fixRequest()); });
+    $('fix-show').addEventListener('click', function () {
+      $('fix-pre').textContent = fixRequest();
+      $('fix-pre').hidden = !$('fix-pre').hidden;
+    });
     $('up-send').addEventListener('click', send);
 
     // Choosing a file: the name is shown, and a file can be dropped on the area.

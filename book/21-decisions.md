@@ -50,7 +50,7 @@ Each line: the question, what was chosen, and why. The full record with dates is
 |---|---|---|
 | Does the site call an AI? | No. The person copies a text to the approved AI | Nothing leaves the site by itself; no key to guard |
 | What does the AI get? | Public rules, building blocks, the description | No data, no address, no account |
-| What if the answer is wrong? | The site says what, in words, and writes the fix request | A failed first check is normal |
+| What if the answer is wrong? | The site says what, in words, and writes a complete fix request (rules, data, the page) | A failed first check is normal |
 | Charts? | Later, as a building block of the kit | Not a second library to trust |
 
 ## The demo itself

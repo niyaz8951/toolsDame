@@ -3,6 +3,9 @@
 The running log of the site. Newest first. Every change to the site adds a line here and updates the chapter it touches.
 
 ## 2026-11-27
+- The fix request is now one complete text: the points, how to rebuild, every rule, the database rules, the page. Reason: people bring stand-alone pages made by an AI that never saw the site; the short request ("follow the starter kit") could not work there.
+- A design of its own now stops the upload (colours, pop-up boxes, a changed theme, over 3000 characters of styles), and so does data kept outside the tables (browser storage, cookies, a call to a server). Before, some of these were only noted. Plain HTML without styles still passes and gets the site's look.
+- The format name of SVG (a w3.org address inside the code) is no longer reported as an outside address.
 - Tool page: "Tool admin" moved to the right end of the strip; the way back (Hub / space / tool) stays on the left.
 - Space admin follows the same rule as IT admin: "Add a tool", tiles, and a window per tool. A new tool opens its window at once with "Build and access" in front.
 - Icons are picked from 90 pictures kept in the site (Lucide, ISC); the database still keeps one short text (`i-fan`), so nothing changed there.
