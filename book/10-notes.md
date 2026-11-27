@@ -3,6 +3,7 @@
 The running log of the site. Newest first. Every change to the site adds a line here and updates the chapter it touches.
 
 ## 2026-11-27
+- Presenting: a press on the slide goes forward, a press on its left third goes back, also with the laser or spotlight on. Five steps in a row stay on one line.
 - **The book in pictures.** Owner: the people who decide have little time; the book read badly and presented badly. New first chapter "DAME in five minutes": the whole case on eleven slides, almost all pictures, with its own button. Seven kinds of picture (numbers, cards, chain, tree, walls, steps with who acts, compare) are drawn by the site from a few lines of text; they are in the key chapters too.
 - **Presenting:** topic nodes on the left (hover shows the chapter, a press jumps to it), marks under the slide for the slides of the open chapter, a laser pointer, a spotlight and a pen, a progress line, and a red Close. Code and tables on a dark title slide are readable now.
 - **The site book is shown to IT admins only**: the hub shows its card to them, and the book page opens for them only. It stays a set of files in the repository. Reason (owner): the whole site is built on the assumption that IT moves it to its own servers, inside the company's domains, where the web server decides who reaches a file. For one morning the text was moved into the database to lock it in the demo too; that was withdrawn, and the rule written down: the database is for what people enter and what must be checked per person; what the site is made of stays a file.

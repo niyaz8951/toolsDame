@@ -2,6 +2,14 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - Presenting: a press on the slide turns the page
+Changed (owner: "clicking, even with laser or anything apart from pen, must also change the slide: the major part of the screen forward, a small part back")
+- A press anywhere on the slide goes forward; a press on its left third goes back. It works with the laser and the spotlight on. With the pen on, a press draws. Buttons and marked text do not turn the page. The mouse pointer shows which way a press will go.
+- Fixed: the presentation could sit a little to the left, cutting the topic nodes and the Back button. A chain of five steps now stays on one line on a wide screen.
+- Tests: 2 new checks in the rehearsal (147 in all). No SQL.
+
+Files: `pages/book.js`, `kit/v1/shell.css`, `help/book.md`, `tests/browser/company.mjs`, the site book (`08`, `10-notes`).
+SQL to paste: none.
 ## 2026-11-27 - Quotas: tools in a space
 New (owner: "yes add tools limit too")
 - **A fourth limit per space: tools, 10 by default** (IT may give 1 to 200). Tables were limited per tool, so a space had no ceiling; now a space on the defaults holds at most 10 tools and 100 tables.

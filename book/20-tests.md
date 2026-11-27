@@ -9,7 +9,7 @@ Rule of the project: every function has an allowed test and refused tests. Nothi
 | Database | `tests/sql/001..011_*_test.sql` | 1,193 cases over the eleven SQL files. For every function: the allowed case, then signed out, pending, switched off, wrong space, wrong tool, level too low, someone else's row |
 | Pages in a browser | `tests/browser/phase1..4.mjs`, `accounts.mjs` | The real pages driven by a real browser, at desktop width and at 390 px: sign-in, admin pages, building, uploading, data, My account and password reset |
 | Hostile tool | inside `phase3.mjs` | 33 attacks from inside a tool, all blocked |
-| Company rehearsal | `tests/browser/company.mjs` | 7 departments, 15 people, 14 tools built through the builder, 1,260 cross-department attempts, leaver, stranger, joiner, new user, space off, tool deleted, the site book shown to IT admins only: 145 checks |
+| Company rehearsal | `tests/browser/company.mjs` | 7 departments, 15 people, 14 tools built through the builder, 1,260 cross-department attempts, leaver, stranger, joiner, new user, space off, tool deleted, the site book shown to IT admins only: 147 checks |
 
 ## How a database test is built
 - One file, pasted into the SQL editor like the SQL files, so the owner can run it on the real project.

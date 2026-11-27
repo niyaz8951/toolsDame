@@ -8,7 +8,7 @@ This book is written for IT. The hub shows it to IT admins only, and this page o
 
 ## Presenting
 1. **Present in 5 minutes** shows the whole case on eleven slides. The other buttons present the overview, the detail, or the chapter that is open.
-2. Next and Back, or the arrow keys left and right, or the space bar. Arrow up and down: the chapter before and after.
+2. Press anywhere on the slide to go forward; press its left third to go back. Also Next and Back, the arrow keys left and right, or the space bar. Arrow up and down: the chapter before and after.
 3. **The nodes on the left** are the chapters: hover to see the name, press to jump. The marks under the slide are the slides of the open chapter.
 4. **Pointing:** L laser, S spotlight, P pen (C wipes it). Press the key again, or Esc, to put the tool away.
 5. F is full screen. Esc, or the red Close, ends the presentation.

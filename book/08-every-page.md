@@ -43,4 +43,4 @@ Things the site gives every page and every tool, with no work by the builder.
 ## The site book, to read and to present
 - Pictures instead of long lists: numbers, cards, chains, a tree, walls inside walls, steps that name who acts, demo beside target. Written as a few lines of text; the site draws them, in day and night, on a phone too.
 - **Present in 5 minutes**: one chapter, eleven slides, the whole case.
-- While presenting: topic nodes on the left to jump to any chapter (hover shows its name), marks under the slide, a laser pointer (L), a spotlight (S), a pen (P, wiped with C), arrows up and down for the chapter before and after, F for full screen. Close is red.
+- While presenting: a press on the slide goes forward, a press on its left third goes back (also with the laser or the spotlight on; with the pen a press draws). Topic nodes on the left to jump to any chapter (hover shows its name), marks under the slide, a laser pointer (L), a spotlight (S), a pen (P, wiped with C), arrows up and down for the chapter before and after, F for full screen. Close is red.

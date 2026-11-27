@@ -707,3 +707,15 @@ button.hub-tile { font: inherit; text-align: left; cursor: pointer; width: 100%;
   .hub-dg-stats.hub-dg-c5 { grid-template-columns: repeat(5, 1fr); }
   .hub-book-page .hub-dg-cards.hub-dg-c4 { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* A press on the slide turns the page: left third back, the rest forward. The pointer shows which. */
+.hub-present { overflow: hidden; }
+.hub-stage { overflow: hidden; cursor: e-resize; }
+.hub-stage.is-back { cursor: w-resize; }
+.hub-stage.is-pen, .hub-stage button { cursor: auto; }
+.hub-stage button { cursor: pointer; }
+@media (min-width: 900px) {
+  .hub-dg-chain { flex-wrap: nowrap; gap: .8em 2em; }
+  .hub-dg-link { flex: 1 1 0; min-width: 0; }
+}
+.hub-stage.is-laser, .hub-stage.is-laser.is-back { cursor: none; }

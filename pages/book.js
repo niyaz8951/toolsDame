@@ -268,6 +268,19 @@
     show = { slides: list, i: 0, node: node, stage: stage, wrap: wrap, ink: ink, dots: dots, rail: railBox, bar: bar, count: count,
       back: back, next: next, wipe: clean, tool: '', tools: { laser: laser, spot: spot, pen: pen }, screen: screen };
     pointing(wrap, ink);
+    // A press on the slide turns the page: the left third goes back, the rest goes forward.
+    // Not while the pen is on (a press draws then), and not on a button or on marked text.
+    wrap.addEventListener('click', function (ev) {
+      if (!show || show.tool === 'pen' || ev.button !== 0) { return; }
+      if (ev.target.closest && ev.target.closest('button, a, .hub-dots')) { return; }
+      if (String(window.getSelection ? window.getSelection() : '') !== '') { return; }
+      var r = wrap.getBoundingClientRect();
+      step(ev.clientX - r.left < r.width * 0.3 ? -1 : 1);
+    });
+    wrap.addEventListener('pointermove', function (ev) {
+      var r = wrap.getBoundingClientRect();
+      wrap.classList.toggle('is-back', ev.clientX - r.left < r.width * 0.3);
+    });
     rail();
     draw();
     next.focus();
