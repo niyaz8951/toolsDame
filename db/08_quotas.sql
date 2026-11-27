@@ -1,4 +1,4 @@
--- db/install/08_quotas.sql - how much of the database a space may use.
+-- db/08_quotas.sql - how much of the database a space may use.
 -- Four limits per space, set by IT:
 --   rows    : rows in the whole space, all its tools, live and preview together
 --   tools   : tools in the space
@@ -13,8 +13,8 @@
 -- dame_table_*, dame_rows_add), the pages only show them. A full space still
 -- reads, changes and deletes; only something new is refused. Nobody raises his
 -- own limit: asking and deciding are two different roles.
--- How to run: as part of db/install/install.sql (psql), or pasted in number
--- order. Only into an empty database; see db/install/README.md.
+-- How to run: as part of db/install.sql (psql), or pasted in number
+-- order. Only into an empty database; see db/README.md.
 
 -- ---------------------------------------------------------------------------
 -- 1. Helpers

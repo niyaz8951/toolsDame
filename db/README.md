@@ -1,19 +1,13 @@
-# Database install (final version, for IT)
+# The database
 
-This folder is **the whole DAME database in one clean set of files**: every table in its final form and every function once, in its latest version, sorted by subject. It is what IT reads, reviews and runs to build a new database.
-
-It makes **exactly the same database** as the twelve numbered files in `db/core/` that built the demo, run one after the other. This is proved by a test (below), not just claimed.
-
-| Folder | What it is | Who uses it |
-|---|---|---|
-| `db/install/` (this one) | The final version. One definition of everything. | IT, for a new, empty database |
-| `db/core/001..012` | The history: the files that built the live demo database, step by step, in the order they were written. Many functions there are replaced by a later file. Kept as the record; never edited. | The owner, for the live demo only |
+This folder is **the whole DAME database, once**: every table in its final form and every function once, sorted by subject. It is what IT reads, reviews and runs to build a database. There is no other copy and no history of steps to replay.
 
 ## The files
 
 | File | What it makes |
 |---|---|
 | `install.sql` | Runs 01 to 09 in one transaction with psql: it finishes completely or changes nothing |
+| `check.sql` | Asks a database whether it is this final version: one row, yes or no (reads only) |
 | `01_base.sql` | Checks that the database is empty; schema `core`; default rights taken away; small helpers (id rule, levels, refusals, text cleaning); the two trigger functions |
 | `02_tables.sql` | All 16 tables of `core` in their final form, indexes, triggers, the six default settings; row security on and forced on every table, no policies, no rights |
 | `03_access.sql` | The audit and the `core.require_*` checks (who is calling; space and tool roles; a person's level on a tool) |
@@ -28,13 +22,13 @@ In numbers: 16 tables, 120 functions (71 `dame_*` functions, the API; 49 `core.*
 
 ## How to run
 
-Into an **empty** database only. `01_base.sql` refuses to run where schema `core` exists, so it can never damage the live demo.
+Into an **empty** database only. `01_base.sql` refuses to run where schema `core` exists, so it can never damage a database in use.
 
 With psql, from the repo root:
 ```
-psql "<connection>" -f db/install/install.sql
+psql "<connection>" -f db/install.sql
 ```
-The last result must be an empty table (`core.security_check()` found nothing).
+The last result must be an empty table (`core.security_check()` found nothing). Then `db/check.sql` must say `yes`.
 
 In a SQL editor without `\ir` (for example a fresh Supabase project): paste `01` to `09` in number order, then run `select * from core.security_check();`. Do not open the site before `09` has run.
 
@@ -74,43 +68,36 @@ Every function that touches Supabase itself says so in its comment, on a line st
 
 With company sign-in, `dame_user_create`, `dame_user_password_reset`, `dame_password_done` and `dame_password_changed` are not needed at all (DEMO-STACK.md).
 
-## How the tidy-up was done, and what did not change
+## Is a database the final version?
 
-Done:
-- Each of the 24 functions that a later file replaced (`dame_request_access` had five versions) is written once, in the version the live database runs.
-- The columns added later (`alter table ... add column` in 003, 006, 009, 010, 012) are in the `create table` itself, **in the same column order**, with the same constraint names.
-- The "Rights" block that ended every file runs once, at the end.
-- Comments say what a function does now, not "as in 004" or "new in 010". Function bodies are copied character for character.
-- `create function` in place of `create or replace function`: on an empty database nothing may be replaced by accident.
+Paste `db/check.sql` into the SQL editor (or `psql -f db/check.sql`). It takes a fingerprint of every `core.*` and `dame_*` function (name and arguments), every column of the core tables with its type, and the keys of the site settings, and compares it with the fingerprint of this folder. One row: `yes` or `no`. It reads only.
 
-Left out, because an empty database has no rows to fix: the one-time data fixes of 010 (password fingerprints and dates of accounts that existed then), 011 (counting the rows already there) and 012 (requests that waited before the tools limit).
+Use it on the live demo before the hand-over: `yes` means the live database is exactly what these files make, so its data can move as it is (below).
 
-Not changed: any rule, check, message, right or behaviour. The site, the kit and the tools need nothing.
+## How these files were made, and the proof
 
-## The proof
+On 2026-11-27 the twelve numbered files that had built the demo step by step (`001_init.sql` to `012_tools_quota.sql`) were folded into these nine: each of the 24 functions that a later file had replaced written once, in the version the live database runs; the columns added later put into their `create table` in the same order with the same constraint names; the rights given once; comments rewritten to say what each function does now. Function bodies were copied character for character.
 
+The two ways were then built and compared object by object (every column, constraint, index, trigger, policy, function with its whole code, right, row security, setting and the bucket): identical, also as `pg_dump --schema-only` on a real PostgreSQL 16 server, and every SQL test passed on both. The twelve files were then removed; they are in the repository's history (commit `eaada5f`) for anyone who needs them.
+
+Today's proof, at every delivery:
 ```
 npm install --no-save @electric-sql/pglite      (once; a test tool only)
-node tests/sql/same-schema.mjs                  the two databases are the same
-node tests/sql/run-local.mjs --install          the 12 test files pass on db/install
-node tests/sql/run-local.mjs                    and still pass on db/core/001..012
+node tests/sql/run-local.mjs
 ```
-
-`same-schema.mjs` builds one throw-away database from `db/core/001..012` and one from `db/install`, then compares them object by object: every column (order, type, default, not null), constraint, index, trigger, policy, function (its whole code, rights and settings), row security, rights on schemas and tables, default rights, settings and the bucket. One difference fails it. It was also run on a real PostgreSQL 16 server with `pg_dump --schema-only` of both: the dumps are identical, and all 12 test files (1,253 cases) pass on both.
+It builds the database from `install.sql`, checks it refuses to run twice, checks `check.sql` says `yes`, and runs every test file in `tests/sql/` twice (1,253 cases).
 
 ## Moving the demo's data
 
 The tables are the same, column for column, so the data copies over as it is:
-1. Build the new database with `install.sql`.
+1. On the live demo, `db/check.sql` says `yes`. Build the new database with `db/install.sql`.
 2. Copy the rows of the `core` tables (for example `pg_dump --data-only --schema=core` from the demo, restored as a role that bypasses row security). The audit only takes new rows, so copy it into the empty new table.
 3. Copy each tool's schemas `t_<space>__<tool>` and `p_<space>__<tool>` whole (structure and rows: `pg_dump --schema='t_*' --schema='p_*'`). They match `core.tool_tables`, which came over in step 2.
 4. Copy the files of bucket `tools` (paths `<space>/<tool>/<version>/<page>`). Each version's fingerprints are in `core.tool_versions.files`; `dame_version_seal` checked them once.
 5. Run `select * from core.security_check();`: no rows.
 
-## From now on
+## A change from now on
 
-A change to the database is made twice, in the same delivery:
-1. a new numbered file `db/core/013_...sql` for the live demo (files that ran are never edited), and
-2. the same change folded into the right file here.
-
-`tests/sql/same-schema.mjs` fails until both say the same thing.
+1. Change the file of the subject in this folder, so that it stays the final version.
+2. Put the new fingerprint into `check.sql` (`run-local.mjs` fails and prints it).
+3. For a database that already runs (the live demo), the delivery brings one more file, `db/upgrade.sql`: only the change, refusing to run twice, ending with `check.sql`'s question. Before it ships it is tested on a database built from the version before. Once it has run on the live project, the next delivery removes it. So `db/` never holds the database twice.

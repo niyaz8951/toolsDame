@@ -1,10 +1,10 @@
--- db/install/03_access.sql - the audit and the require-checks: the first line
+-- db/03_access.sql - the audit and the require-checks: the first line
 -- of every dame_* function is one of the core.require_* checks below.
 -- Serves: contracts 1 (Identity), 3 (Access) and 7 (Audit).
 -- Must not change: the database decides who may do what, never the page.
 -- One person = one user id; only his newest sign-in counts, for 12 hours.
--- How to run: as part of db/install/install.sql (psql), or pasted in number
--- order. Only into an empty database; see db/install/README.md.
+-- How to run: as part of db/install.sql (psql), or pasted in number
+-- order. Only into an empty database; see db/README.md.
 
 -- ---------------------------------------------------------------------------
 -- 1. The audit

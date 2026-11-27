@@ -53,7 +53,7 @@ The running log of the site. Newest first. Every change to the site adds a line 
 
 - Tools per space (2026-11-27): a fourth quota, 10 tools a space by default, set and asked for in the same Quotas windows. Reason: tables are limited per tool, so without it a space had no ceiling. A space that already has more keeps its tools. SQL: file 012.
 
-- The database for IT (2026-11-27): the same database in one clean set of files, `db/install/` (nine files by subject and `install.sql`), every function once in its final version, the columns added later folded into their tables. Proved: built both ways and compared object by object, identical; all 1,253 SQL cases pass on both; every browser test passes. The ten places that use Supabase's sign-in or file store are marked `SUPABASE:`. Owner: "rewrite database codes as we wrote many things on the go; final version so that it is easier for IT to migrate". Nothing on the site changed. No SQL to paste.
+- The database for IT (2026-11-27): the whole database in one clean set of files, `db/` (nine files by subject, `install.sql`, and `check.sql`, which says whether a database is the final version). Every function once in its final version, the columns added later folded into their tables. Proved identical to the twelve step files that had built the demo, which were then removed (owner: "dont keep db twice, lets streamline for single files"); they stay in the repository's history. The SQL tests are named by subject. The pages lost the "not switched on yet" branches for a half-built database. All 1,253 SQL cases and every browser test pass. The ten places that use Supabase's sign-in or file store are marked `SUPABASE:`.
 
 ## Ideas noted, not decided
 - Tell the people of a space when a new tool goes live.

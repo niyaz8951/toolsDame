@@ -1,115 +1,25 @@
--- db/core/003_versions.sql - phase 3: a tool's versions and its files.
+-- db/06_releases.sql - a tool's versions and its files.
 -- Upload > check > preview > make live > roll back; the private file store.
--- Serves: contract 6 (Releases: versions immutable) and SECURITY "Database" 6
--- (bucket tools private; preview readable by managers only).
--- Must not change: once run, never edited; a fix is a new file. A version
--- that is ready is never changed: its file list and the fingerprint of every
--- file are fixed. Files are reached only through the two policies below.
---
--- How to run: after 002. Paste the whole file into the Supabase SQL editor and
--- press Run. It finishes completely or changes nothing. The last result must
--- be an empty table.
-
-begin;
+-- Serves: contract 6 (Releases: versions immutable) and SECURITY "Database"
+-- (bucket tools private; the preview readable by managers only).
+-- Must not change: a ready version is never changed (its file list and the
+-- fingerprint of every file are fixed). Files are reached only through the
+-- two policies below. There is no update and no delete policy: a stored file
+-- is never changed or removed from the site.
+-- SUPABASE: the bucket and the policies are on Supabase Storage (storage.*).
+-- How to run: as part of db/install.sql (psql), or pasted in number
+-- order. Only into an empty database; see db/README.md.
 
 do $$
 begin
-  if pg_catalog.to_regprocedure('core.require_tool_manager(text, text)') is null then
-    raise exception 'Run db/core/002_spaces_tools.sql first.';
-  end if;
-  if pg_catalog.to_regclass('core.tool_versions') is not null then
-    raise exception '003 was already run. Do not run it twice.';
-  end if;
   if pg_catalog.to_regclass('storage.buckets') is null or pg_catalog.to_regclass('storage.objects') is null then
-    raise exception 'Supabase Storage was not found in this project. Tell the builder.';
+    raise exception 'Supabase Storage (storage.buckets, storage.objects) was not found. See db/README.md.';
   end if;
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 1. Tables
+-- 1. The file store: one private bucket, two policies
 -- ---------------------------------------------------------------------------
-
-alter table core.tools
-  add column live_version integer,
-  add column preview_version integer;
-
--- One row per upload. files: [{ "name": "index.html", "size": 1234, "sha256": "..." }]
-create table core.tool_versions (
-  space        text not null,
-  tool         text not null,
-  version      integer not null check (version > 0),
-  state        text not null default 'uploading' check (state in ('uploading', 'ready', 'discarded')),
-  note         text not null default '',
-  files        jsonb not null,
-  total_bytes  bigint not null,
-  created_at   timestamptz not null default pg_catalog.now(),
-  created_by   uuid not null references core.profiles (id),
-  sealed_at    timestamptz,
-  primary key (space, tool, version),
-  foreign key (space, tool) references core.tools (space, id)
-);
-alter table core.tool_versions enable row level security;
-alter table core.tool_versions force row level security;
-revoke all on table core.tool_versions from public, anon, authenticated;
-
-create function core.version_is_immutable() returns trigger
-language plpgsql set search_path = '' as $$
-begin
-  if old.state = 'ready' then
-    raise exception 'A version that is ready can never be changed.';
-  end if;
-  if new.space <> old.space or new.tool <> old.tool or new.version <> old.version
-     or new.files <> old.files or new.created_by <> old.created_by then
-    raise exception 'Only the state of a version can change.';
-  end if;
-  return new;
-end $$;
-
-create trigger version_no_change before update on core.tool_versions
-  for each row execute function core.version_is_immutable();
-
--- ---------------------------------------------------------------------------
--- 2. Helpers
--- ---------------------------------------------------------------------------
-
--- Who is calling, if he is signed in with his one valid session and approved.
--- Reads only (for the file policies); returns null instead of refusing.
-create function core.peek_user() returns uuid
-language plpgsql stable set search_path = '' as $$
-declare
-  v_claims jsonb := auth.jwt();
-  v_uid    uuid  := auth.uid();
-  v_sid    uuid;
-begin
-  if v_uid is null
-     or coalesce(v_claims ->> 'role', '') <> 'authenticated'
-     or coalesce(v_claims ->> 'is_anonymous', 'false') <> 'false' then
-    return null;
-  end if;
-  begin
-    v_sid := (v_claims ->> 'session_id')::uuid;
-  exception when others then
-    return null;
-  end;
-  if not exists (select 1 from core.profiles p where p.id = v_uid and p.status = 'active') then
-    return null;
-  end if;
-  if not exists (
-       select 1 from core.sessions s
-        where s.session_id = v_sid and s.user_id = v_uid and s.ended_at is null
-          and s.first_seen >= pg_catalog.now() - interval '12 hours'
-          and s.seq = (select max(x.seq) from core.sessions x where x.user_id = v_uid)) then
-    return null;
-  end if;
-  return v_uid;
-end $$;
-
-create function core.is_tool_manager(p_uid uuid, p_space text, p_tool text) returns boolean
-language sql stable set search_path = '' as $$
-  select core.is_space_admin(p_uid, p_space)
-      or exists (select 1 from core.tool_managers m
-                  where m.space = p_space and m.tool = p_tool and m.user_id = p_uid);
-$$;
 
 -- A page of a tool: small letters, digits, dot, dash, underscore, ending in .html
 create function core.page_ok(p_name text) returns boolean
@@ -117,30 +27,11 @@ language sql immutable set search_path = '' as $$
   select p_name is not null and p_name ~ '^[a-z0-9][a-z0-9._-]{0,59}\.html$' and p_name !~ '\.\.';
 $$;
 
--- Deleting a tool also forgets its versions. The stored files stay behind,
--- unreachable (no policy opens them); clearing them is part of phase 6.
-create or replace function core.tool_remove(p_space text, p_tool text) returns void
-language plpgsql volatile set search_path = '' as $$
-begin
-  delete from core.tool_versions where space = p_space and tool = p_tool;
-  delete from core.tool_access where space = p_space and tool = p_tool;
-  delete from core.tool_managers where space = p_space and tool = p_tool;
-  delete from core.tools where space = p_space and id = p_tool;
-  insert into core.retired_ids (kind, space, id) values ('tool', p_space, p_tool);
-end $$;
-
--- ---------------------------------------------------------------------------
--- 3. The file store: one private bucket, two policies
--- ---------------------------------------------------------------------------
-
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('tools', 'tools', false, 20971520, array['text/html'])
-on conflict (id) do update set public = false, file_size_limit = 20971520, allowed_mime_types = array['text/html'];
-
 -- May the caller read or write this file? The name is <space>/<tool>/<version>/<page>.
 --   read : managers, any version; everyone else, the live version of a tool he has.
 --   write: the manager who started this upload, while it is still uploading,
 --          and only the pages he announced.
+-- Used by the two policies on storage.objects below.
 create function public.dame_file_allowed(p_name text, p_action text) returns boolean
 language plpgsql stable security definer set search_path = '' as $$
 declare
@@ -182,14 +73,18 @@ exception when others then
   return false;
 end $$;
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('tools', 'tools', false, 20971520, array['text/html'])
+on conflict (id) do update set public = false, file_size_limit = 20971520, allowed_mime_types = array['text/html'];
+
 create policy dame_tools_read on storage.objects for select to authenticated
   using (bucket_id = 'tools' and public.dame_file_allowed(name, 'read'));
+
 create policy dame_tools_write on storage.objects for insert to authenticated
   with check (bucket_id = 'tools' and public.dame_file_allowed(name, 'write'));
--- No update and no delete policy: a stored file is never changed or removed from the site.
 
 -- ---------------------------------------------------------------------------
--- 4. Versions: the tool's managers and the admins of its space
+-- 2. Versions: the tool's managers and the admins of its space
 -- ---------------------------------------------------------------------------
 
 -- Step 1 of an upload: announce the pages. Returns the new version number.
@@ -246,6 +141,7 @@ end $$;
 
 -- Step 3 of an upload (step 2 is sending the files): close the version. From
 -- here on it can never change. It becomes the preview.
+-- SUPABASE: checks the files in storage.objects.
 create function public.dame_version_seal(p_space text, p_tool text, p_version integer) returns void
 language plpgsql volatile security definer set search_path = '' as $$
 declare
@@ -315,6 +211,7 @@ begin
     null, pg_catalog.jsonb_build_object('from', coalesce(v_old::text, 'none'), 'to', p_version::text), p_space, p_tool);
 end $$;
 
+-- The ready versions of a tool, newest first, with which is live and which is the preview.
 create function public.dame_versions_list(p_space text, p_tool text) returns jsonb
 language plpgsql volatile security definer set search_path = '' as $$
 declare
@@ -334,9 +231,10 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 5. Opening a tool: everyone with at least "read"; the preview for managers
+-- 3. Opening a tool: everyone with at least "read"; the preview for managers
 -- ---------------------------------------------------------------------------
 
+-- Opens a tool: everyone with at least "read" gets the live version; managers may ask for the preview.
 create function public.dame_tool_open(p_space text, p_tool text, p_preview boolean default false) returns jsonb
 language plpgsql volatile security definer set search_path = '' as $$
 declare
@@ -370,24 +268,3 @@ begin
       from core.tool_versions v
      where v.space = p_space and v.tool = p_tool and v.version = v_version and v.state = 'ready');
 end $$;
-
--- Rights: nobody by default, then each function by name.
-do $$
-declare f record;
-begin
-  for f in select p.oid::regprocedure as sig, p.proname from pg_catalog.pg_proc p
-           join pg_catalog.pg_namespace n on n.oid = p.pronamespace
-           where n.nspname = 'public' and p.proname like 'dame\_%'
-  loop
-    execute pg_catalog.format('revoke all on function %s from public, anon, authenticated', f.sig);
-    execute pg_catalog.format('grant execute on function %s to authenticated', f.sig);
-    if f.proname = 'dame_site_info' then
-      execute pg_catalog.format('grant execute on function %s to anon', f.sig);
-    end if;
-  end loop;
-end $$;
-
-commit;
-
--- Must show no rows.
-select * from core.security_check();

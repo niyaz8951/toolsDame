@@ -1,10 +1,10 @@
--- tests/sql/008_space_look_test.sql - allowed and refused cases for
--- db/core/008_space_look.sql: who may change the icon and colour of a space.
+-- tests/sql/space_look_test.sql - allowed and refused cases for who may change the icon and colour
+-- of a space (db/05_spaces_tools.sql).
 -- Serves: contract 3 (Access) and 7 (Audit).
 -- Must not change: the test leaves nothing behind. Everything it does
 -- is undone before the result is shown.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;

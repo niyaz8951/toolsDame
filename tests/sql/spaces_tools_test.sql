@@ -1,12 +1,12 @@
--- tests/sql/002_spaces_tools_test.sql - allowed and refused cases for
--- db/core/002_spaces_tools.sql.
+-- tests/sql/spaces_tools_test.sql - allowed and refused cases for spaces and tools, their admins,
+-- members, managers and access (db/05_spaces_tools.sql).
 -- Serves: phase 2 test: "an admin acts alone inside his space; every action
 -- outside it is refused". Also: IT admin, tool manager, member, last admin,
 -- ids never reused, delete with cleanup.
 -- Must not change: the test leaves nothing behind. Everything it creates is
 -- undone before the result is shown, including its audit rows.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;

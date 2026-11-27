@@ -309,7 +309,7 @@
         return res.ok ? { title: 'How to build this tool', text: await res.text() } : null;
       }
       var h = null;
-      try { h = await api.rpc('dame_tool_help_get', { p_space: space, p_tool: tool }); } catch (e) { /* the guide is not switched on yet: the site's general text is shown */ }
+      try { h = await api.rpc('dame_tool_help_get', { p_space: space, p_tool: tool }); } catch (e) { /* the guide could not be read: the site's general text is shown */ }
       if (!h) { return null; }
       return { title: 'How to use ' + h.name, text: h.text || ui.toolGuide(h),
         note: h.text ? 'Written by ' + (h.by || 'the tool\'s manager') + (h.at ? ', ' + ui.when(h.at) : '') + '.'

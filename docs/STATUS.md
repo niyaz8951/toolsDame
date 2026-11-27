@@ -12,36 +12,33 @@
 **Phase 4 (2026-11-26): built and tested locally. Not yet run on the real Supabase project.** Tables from the site, the one data service, the test space.
 
 **Hardening and the department rehearsal (2026-11-26): built and tested locally. Not yet run on the real project.**
-- `db/core/005_hardening.sql`: who may ask for access (email domains), sign-ins in the audit.
+- Who may ask for access (email domains), sign-ins in the audit.
 - Downloads through the site with an allow-list; a request limit per tool; script errors shown to the tool's manager.
 - The builder: "I already have a page", plain HTML styled like the site, "Open the preview" and "Make live" right after the upload.
 - `tests/browser/company.mjs`: seven departments, 14 tools, 1,176 cross-department tries, all refused. Write-up: `docs/IT-REVIEW.md`.
 - The builder is a guide: two choices ("Use a ready-made page" was removed on 2026-11-27), then one step at a time; a database question in plain words; every link a button; pages load about twice as fast.
 - The look of the DAME hub: palette, mark, movement, a day and night button that tools follow.
-- The information button on every page, a usage guide per tool (`006_help.sql`), IT adds a person by email (`007_add_people.sql`).
-- A review window for the database tables of an uploaded page (add columns before they are made); colour and icon of a space (`008_space_look.sql`).
-- New user with username and temporary password (`009_new_user.sql`); the site book (`book.html`).
+- The information button on every page, a usage guide per tool, IT adds a person by email.
+- A review window for the database tables of an uploaded page (add columns before they are made); colour and icon of a space.
+- New user with username and temporary password; the site book (`book.html`).
 - The finish: one-line bar with an account button, admin pages as tabs (one part at a time, kept in the address), a tool's managers and delete folded, finger-sized targets, notch-safe pages, plain dates. No SQL.
 - IT admin, Spaces: "Add a space" on top, one tile per space, and a window per space where it is changed or deleted. No SQL.
 - Space admin, Tools: the same way ("Add a tool", a tile per tool, a window per tool). Icons picked from 90 pictures. Back buttons lead to the page the person came from. No SQL.
-- **Accounts (2026-11-27): built and tested locally. Needs `010_accounts.sql` on the real project.** My account (details, password, access, sign-ins); IT's person window (correct, reset password, switch off, role); a temporary password counts 7 days and must be shown again to finish.
-- **Quotas (2026-11-27): built and tested locally. Needs `011_quotas.sql` on the real project.** Per space: 10,000 rows, 10 tools (file `012_tools_quota.sql`), 10 tables a tool, 60 columns a table by default. IT admin, Quotas: "Change the default", a tile per space, limits and requests in the space's window. Space admin, Quota: what is used, a warning from 80%, "Ask IT for more". Until 011 is run both parts say so and the rest works as before.
+- **Accounts (2026-11-27): built and tested locally.** My account (details, password, access, sign-ins); IT's person window (correct, reset password, switch off, role); a temporary password counts 7 days and must be shown again to finish.
+- **Quotas (2026-11-27): built and tested locally.** Per space: 10,000 rows, 10 tools, 10 tables a tool, 60 columns a table by default. IT admin, Quotas: "Change the default", a tile per space, limits and requests in the space's window. Space admin, Quota: what is used, a warning from 80%, "Ask IT for more".
 - The fix request for a refused page is one complete text (points, rules, database rules, the page); a design of its own and data outside the tables stop the upload. No SQL.
 - **The site book (2026-11-27):** shown to IT admins only (hub card and book page); stays in `book/`. In pictures: a 5-minute chapter of eleven slides, seven kinds of picture drawn from text (`:::kind` blocks), topic nodes, laser, spotlight and pen while presenting. Reread against the repo: 28 chapters in four parts, with a new part "What a reviewer asks" (threats, sharing of rights, data handling, running it). No SQL.
-- **The database for IT (2026-11-27): `db/install/`.** The same database as `db/core/001..012` in one clean set of files: nine files by subject plus `install.sql`, every function once in its final version, later columns folded into their tables, the ten Supabase stand-ins marked `SUPABASE:`. Proved identical (`tests/sql/same-schema.mjs`; also `pg_dump` on a real PostgreSQL 16); the twelve SQL test files pass on both. Read `db/install/README.md`. Nothing on the site changed; nothing to paste.
-- Tests, all passing locally: twelve SQL test files (1,253 cases) on `db/core` and on `db/install`, the comparison of the two, eight browser tests, the hostile-tool test (33 attempts).
+- **One database, final version (2026-11-27): `db/`.** Nine files by subject plus `install.sql` (one transaction) and `check.sql` (is a database this version? yes or no). Every function once, every table in its final form, the ten Supabase stand-ins marked `SUPABASE:`. Proved identical to the twelve step files that built the demo before they were removed (they are in the repository's history). The pages lost the "not switched on yet" branches that only served a half-built database. Read `db/README.md`.
+- Tests, all passing locally: twelve SQL test files by subject (1,253 cases) on the database built from `db/`, eight browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
 ## The owner does now, in this order
-1. **SQL editor:** paste all of `db/core/004_tables.sql`, Run. The result must be an empty table.
-2. **SQL editor:** paste all of `tests/sql/004_tables_test.sql`, Run. First row: "... passed, 0 failed".
-3. **SQL editor:** the same with `db/core/005_hardening.sql`, then `tests/sql/005_hardening_test.sql`.
-   Then the same with `006_help.sql`, `007_add_people.sql`, `008_space_look.sql` and `009_new_user.sql`, each followed by its test file of the same number.
-   After 009: IT admin > Add a person > **New user**, make a trial account, sign in with it in a private window and choose a password. If the sign-in fails, send the exact message: this file is the one most tied to Supabase itself.
-   Then `010_accounts.sql` and `tests/sql/010_accounts_test.sql`. After 010, three things to try (Ctrl+F5 first): (a) the round button top right > **My account**: save a job title, then change your password; (b) IT admin > People > **Open** on the trial account > **Generate** > **Reset password** twice; (c) in a private window sign in as the trial account with that temporary password and choose a new one. If (b) or (c) fails, send the exact message: like 009, a reset writes into Supabase's own sign-in tables.
-   Then `011_quotas.sql` and `tests/sql/011_quotas_test.sql` (first row: "144 passed, 0 failed"). After 011 (Ctrl+F5 first): IT admin > **Quotas**: every space is a tile; press one, set its rows to 100, **Save these limits**, then **Back to the site's default** twice. On a space's admin page > **Quota**: send a request, then answer it from the IT page.
-   Then `012_tools_quota.sql` and `tests/sql/012_tools_quota_test.sql` (first row: "60 passed, 0 failed"). After 012 (Ctrl+F5): the Quotas windows show a fourth box, "Tools in the space".
+1. **SQL editor of the live Supabase project:** paste all of `db/check.sql`, Run.
+   - `yes`: the live database is the final version. Go on with step 2.
+   - `no`: send the row. The live project missed some of the earlier step files. Either I send one `db/upgrade.sql` for exactly what it misses, or, since the demo holds sample data only, start a fresh Supabase project and run `db/01` to `db/09` there (then `select core.make_first_admin('your email');`).
+2. **SQL editor:** paste any test file of `tests/sql/` (for example `accounts_test.sql`), Run. First row: "... passed, 0 failed". The tests undo everything they do.
+3. **On the site** (Ctrl+F5 first), three things to try: (a) the round button top right > **My account**: save a job title, then change your password; (b) IT admin > Add a person > **New user**, make a trial account; People > **Open** it > **Generate** > **Reset password** twice; (c) in a private window sign in as the trial account with that temporary password and choose a new one. If (b) or (c) fails, send the exact message: these write into Supabase's own sign-in tables. IT admin > **Quotas**: press a tile, set its rows to 100, **Save these limits**, then **Back to the site's default** twice.
 4. **On the site** (Ctrl+F5 first): IT admin > Site settings > **Who may ask for access**: type the work email domain(s), Save. Empty means anyone may ask.
 5. IT admin > Spaces > **Make a test space**, press its tile, then **Open its admin page**.
 6. Press the **Converter** tile, then "Build and access", **I already have a page**, choose `examples/converter/index.html` from the repo, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.
@@ -53,7 +50,7 @@
 If a step fails, send the exact message on screen.
 
 ## With every delivery
-A change to the database: a new `db/core/NNN_*.sql` for the live demo **and** the same change in `db/install/`; `node tests/sql/same-schema.mjs` must pass.
+A change to the database: change the file of its subject in `db/`, put the new fingerprint in `db/check.sql`, and bring `db/upgrade.sql` (only the change) for the live project; `node tests/sql/run-local.mjs` must pass. The next delivery after it ran removes `db/upgrade.sql`.
 
 Besides this file and the changelog: update the chapter of the site book the change touches (`book/*.md`) and add a line to `book/10-notes.md`.
 
@@ -70,7 +67,7 @@ Phase 5: on every page the info icon, pinned notes, ideas with votes, and the AI
 Later, noted (ranked in `docs/IT-REVIEW.md`): a second person approving before Make live; a quota by size and for stored files; a version check when two people save the same row; export; charts as a built-in block of the kit (no library); file columns and `Dame.files`; old `.xls` files; renaming or removing a column; two pasted code blocks merged.
 
 ## Changes tools must know
-**From `011_quotas.sql`:** `Dame.table(...).add` can fail with the code `quota_full` when the space has used its rows; the message says what to do, so a tool that shows `error.message` (as the starter kit asks) needs no change. A tool may have 10 tables by default (before: 30); existing tables stay.
+**From the quotas (2026-11-27):** `Dame.table(...).add` can fail with the code `quota_full` when the space has used its rows; the message says what to do, so a tool that shows `error.message` (as the starter kit asks) needs no change. A tool may have 10 tables by default (before: 30); existing tables stay.
 
 **From 2026-11-27 the check refuses** (before: noted) own colours, pop-up boxes (`alert`, `confirm`, `prompt`), a call to a server, cookies, a changed `--dame-` variable other than `--dame-accent`, and more than 3000 characters of own styles. Live versions are not touched; the rule applies at the next upload.
 

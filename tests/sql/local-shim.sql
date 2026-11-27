@@ -36,7 +36,7 @@ grant usage on schema storage to anon, authenticated;
 grant all on storage.objects to anon, authenticated;
 grant select on storage.buckets to anon, authenticated;
 
--- Supabase Auth's own tables, as far as db/core/009 and 010 write to them, and the two
+-- Supabase Auth's own tables, as far as db/04_people.sql writes to them, and the two
 -- password functions of the pgcrypto extension (here a plain stand-in: the real
 -- ones make a bcrypt hash; the tests only need "same password, same salt -> same hash").
 create table auth.users (

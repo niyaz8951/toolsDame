@@ -1,10 +1,10 @@
--- tests/sql/005_hardening_test.sql - allowed and refused cases for
--- db/core/005_hardening.sql: who may ask for access, sign-ins in the audit.
+-- tests/sql/access_requests_test.sql - allowed and refused cases for who may ask for access (email
+-- domains), sign-ins in the audit, reading the settings (db/03_access.sql, db/04_people.sql).
 -- Serves: contract 1 (Identity) and 7 (Audit).
 -- Must not change: the test leaves nothing behind. Everything it does,
 -- the setting included, is undone before the result is shown.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;

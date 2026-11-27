@@ -1,11 +1,11 @@
--- tests/sql/010_accounts_test.sql - allowed and refused cases for
--- db/core/010_accounts.sql: a person's own account, IT correcting an account,
--- IT resetting a password, and what a temporary password must go through.
+-- tests/sql/accounts_test.sql - allowed and refused cases for a person's own account, IT correcting
+-- an account, IT resetting a password, and what a temporary password must go
+-- through (db/04_people.sql).
 -- Serves: contract 1 (Identity), 3 (Access) and 7 (Audit).
 -- Must not change: the test leaves nothing behind. Everything it does,
 -- the rows in the sign-in tables included, is undone before the result is shown.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;

@@ -1,11 +1,10 @@
--- tests/sql/003_versions_test.sql - allowed and refused cases for
--- db/core/003_versions.sql: uploads, the file rules, preview, make live,
--- roll back, versions that never change.
+-- tests/sql/releases_test.sql - allowed and refused cases for uploads, the file rules, preview,
+-- make live, roll back, versions that never change (db/06_releases.sql).
 -- Serves: contract 6 (Releases) and SECURITY "Database" 6.
 -- Must not change: the test leaves nothing behind. Everything it creates is
 -- undone before the result is shown, including its audit rows.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;

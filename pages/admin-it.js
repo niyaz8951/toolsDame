@@ -19,7 +19,6 @@
 
   var me = null;
   var firstAdmin = null;
-  var byEmailOff = false;
   var idTouched = false;
   var act = null;
   var loadAudit = null;
@@ -126,7 +125,7 @@
     return i;
   }
 
-  // u: the line from the people list. card: the full account (null until db/core/010 is run).
+  // u: the line from the people list. card: the full account, or null when it could not be read.
   function drawPerson(u, card) {
     var w = pwin;
     var body = ui.clear(w.body);
@@ -207,7 +206,7 @@
         body.appendChild(reset);
       }
     } else {
-      body.appendChild(ui.el('p', 'dame-hint', 'Details and password reset are not switched on yet: the owner pastes db/core/010_accounts.sql into the database first.'));
+      body.appendChild(ui.el('p', 'dame-hint', 'The details of this account could not be read. Close the window and open it again.'));
     }
 
     // -- the account itself
@@ -235,7 +234,7 @@
     try {
       card = await api.rpc('dame_user_get', { p_user: w.id });
     } catch (err) {
-      if (!(err && err.code === 'server')) { if (pwin === w) { ui.sayError(w.msg, err); } }
+      if (pwin === w) { ui.sayError(w.msg, err); }
     }
     if (pwin === w) { drawPerson(u, card); }
   }
@@ -312,9 +311,9 @@
     if (win === w) { w.msg.scrollIntoView({ block: 'nearest' }); }
   }
 
-  // ---- database quotas (db/core/011): one tile per space; a space's limits are changed, and its
+  // ---- database quotas: one tile per space; a space's limits are changed, and its
   // request answered, only inside the window its tile opens. The default has its own small window.
-  var quotas = null;   // what dame_quota_list gave, or null until 011 is run
+  var quotas = null;   // what dame_quota_list gave (null until the page has loaded)
   var qwin = null;     // the open quota window, or null
 
   function num(n) { return Number(n || 0).toLocaleString('en'); }
@@ -345,18 +344,9 @@
     return i;
   }
 
-  // The tools limit arrives with db/core/012: until it is run, the pages show and send three numbers.
-  function hasTools() { return !!quotas && quotas.defaults.tools !== undefined && quotas.defaults.tools !== null; }
-
   function limits(o) {
-    return num(o.rows) + ' rows in the space, ' + (o.tools !== undefined && o.tools !== null ? num(o.tools) + ' tools in the space, ' : '') +
+    return num(o.rows) + ' rows in the space, ' + num(o.tools) + ' tools in the space, ' +
       num(o.tables) + ' tables in a tool, ' + num(o.columns) + ' columns in a table';
-  }
-
-  // The arguments of a call, with the tools number only where the database knows it.
-  function withTools(args, value) {
-    if (hasTools()) { args.p_tools = value; }
-    return args;
   }
 
   function isFull(q) { return Number(q.rows_used) >= Number(q.max_rows); }
@@ -370,7 +360,7 @@
     t.appendChild(ui.el('span', 'hub-tile-icon', (q.name.trim().charAt(0) || 'S').toUpperCase()));
     t.appendChild(ui.el('span', 'hub-tile-name', q.name));
     t.appendChild(ui.el('span', 'hub-tile-text', num(q.rows_used) + ' of ' + num(q.max_rows) + ' rows used' +
-      (hasTools() ? ', ' + num(q.tools_used) + ' of ' + num(q.max_tools) + ' tools' : '')));
+      ', ' + num(q.tools_used) + ' of ' + num(q.max_tools) + ' tools'));
     if (q.request) { t.appendChild(ui.el('span', 'hub-pill', 'Request waiting')); }
     if (isFull(q)) { t.appendChild(ui.el('span', 'hub-pill', 'Full')); }
     else if (isNear(q)) { t.appendChild(ui.el('span', 'hub-pill', 'Nearly full')); }
@@ -417,7 +407,7 @@
     body.appendChild(title);
     body.appendChild(ui.el('p', 'dame-muted', num(q.rows_used) + ' of ' + num(q.max_rows) + ' rows used' +
       (isFull(q) ? ': the space is full, its tools take no new rows. ' : '. ') +
-      (hasTools() ? num(q.tools_used) + ' of ' + num(q.max_tools) + ' tools. ' : '') +
+      num(q.tools_used) + ' of ' + num(q.max_tools) + ' tools. ' +
       'It has ' + num(q.tables) + (Number(q.tables) === 1 ? ' table' : ' tables') + '; the tool with most has ' + num(q.most_tables) + ' of ' + num(q.max_tables) + '.'));
 
     var r = q.request;
@@ -430,7 +420,7 @@
       card.appendChild(ui.el('p', 'dame-hint', 'Change a number to give less or more than asked. Granting sets the limits of this space to these numbers.'));
       var two = ui.el('div', 'hub-two');
       var rows = numberField(two, 'Rows to give', 'rq-rows', r.rows, 100, 10000000);
-      var rTools = hasTools() ? numberField(two, 'Tools in the space', 'rq-tools', r.tools, 1, 200) : null;
+      var rTools = numberField(two, 'Tools in the space', 'rq-tools', r.tools, 1, 200);
       var tables = numberField(two, 'Tables in one tool', 'rq-tables', r.tables, 1, 100);
       var cols = numberField(two, 'Columns in one table', 'rq-columns', r.columns, 1, 200);
       card.appendChild(two);
@@ -444,10 +434,10 @@
       card.appendChild(noteLabel);
       var answer = ui.el('div', 'dame-row');
       var grant = ui.confirmButton('Grant', 'dame-btn-primary', function (btn) {
-        var n = whole([rows.value, tables.value, cols.value, rTools ? rTools.value : 1]);
+        var n = whole([rows.value, tables.value, cols.value, rTools.value]);
         if (!n) { ui.say(qwin.msg, 'Write whole numbers in all the boxes.', 'warn'); btn.disabled = false; btn.textContent = 'Grant'; btn.classList.remove('hub-armed'); return; }
-        inQuota('dame_quota_answer', withTools({ p_request: r.id, p_grant: true, p_rows: n[0], p_tables: n[1], p_columns: n[2], p_note: note.value }, n[3]),
-          q.name + ' now has ' + limits({ rows: n[0], tables: n[1], columns: n[2], tools: rTools ? n[3] : null }) + '.');
+        inQuota('dame_quota_answer', { p_request: r.id, p_grant: true, p_rows: n[0], p_tables: n[1], p_columns: n[2], p_note: note.value, p_tools: n[3] },
+          q.name + ' now has ' + limits({ rows: n[0], tables: n[1], columns: n[2], tools: n[3] }) + '.');
       });
       grant.id = 'rq-grant';
       var decline = ui.confirmButton('Decline', '', function () {
@@ -468,7 +458,7 @@
     form.noValidate = true;
     var three = ui.el('div', 'hub-two');
     var qRows = numberField(three, 'Rows in the space (100 to 10,000,000)', 'sq-rows', q.max_rows, 100, 10000000);
-    var qTools = hasTools() ? numberField(three, 'Tools in the space (1 to 200)', 'sq-tools', q.max_tools, 1, 200) : null;
+    var qTools = numberField(three, 'Tools in the space (1 to 200)', 'sq-tools', q.max_tools, 1, 200);
     var qTables = numberField(three, 'Tables in one tool (1 to 100)', 'sq-tables', q.max_tables, 1, 100);
     var qCols = numberField(three, 'Columns in one table (1 to 200)', 'sq-columns', q.max_columns, 1, 200);
     form.appendChild(three);
@@ -478,7 +468,7 @@
     row.appendChild(save);
     if (q.own) {
       var back = ui.confirmButton('Back to the site\'s default', '', function () {
-        inQuota('dame_quota_set', withTools({ p_space: q.space, p_rows: null, p_tables: null, p_columns: null }, null), q.name + ' is back on the site\'s default.');
+        inQuota('dame_quota_set', { p_space: q.space, p_rows: null, p_tables: null, p_columns: null, p_tools: null }, q.name + ' is back on the site\'s default.');
       });
       back.id = 'sq-default';
       row.appendChild(back);
@@ -486,9 +476,9 @@
     form.appendChild(row);
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
-      var n = whole([qRows.value, qTables.value, qCols.value, qTools ? qTools.value : 1]);
+      var n = whole([qRows.value, qTables.value, qCols.value, qTools.value]);
       if (!n) { ui.say(qwin.msg, 'Write whole numbers in all the boxes.', 'warn'); return; }
-      inQuota('dame_quota_set', withTools({ p_space: q.space, p_rows: n[0], p_tables: n[1], p_columns: n[2] }, n[3]), 'The limits of ' + q.name + ' are saved.');
+      inQuota('dame_quota_set', { p_space: q.space, p_rows: n[0], p_tables: n[1], p_columns: n[2], p_tools: n[3] }, 'The limits of ' + q.name + ' are saved.');
     });
     body.appendChild(form);
   }
@@ -526,9 +516,7 @@
   }
 
   function drawQuotas() {
-    $('q-off').hidden = quotas !== null;
-    $('q-body').hidden = quotas === null;
-    if (!quotas) { return; }
+    $('q-body').hidden = false;
     var d = quotas.defaults;
     $('q-default-text').textContent = 'Default: ' + limits(d) + '.';
     var waiting = quotas.spaces.filter(function (q) { return q.request; }).length;
@@ -554,8 +542,7 @@
       $('qd-rows').value = quotas.defaults.rows;
       $('qd-tables').value = quotas.defaults.tables;
       $('qd-columns').value = quotas.defaults.columns;
-      $('qd-tools').value = hasTools() ? quotas.defaults.tools : '';
-      $('qd-tools-field').hidden = !hasTools();
+      $('qd-tools').value = quotas.defaults.tools;
       $('qd-rows').focus();
     } else if (!on) {
       $('q-default').focus();
@@ -725,8 +712,7 @@
         ui.say($('msg'), 'The account ' + made.username + ' (' + made.name + ') is made. Tell the person the username and the temporary password by voice. At the first sign-in the site asks for a new password.', 'ok');
         $('msg').scrollIntoView({ block: 'nearest' });
       } catch (err) {
-        if (err && err.code === 'server') { ui.say(msg, 'This part is not switched on yet: the owner pastes db/core/009_new_user.sql into the database first.', 'warn'); }
-        else { ui.sayError(msg, err); }
+        ui.sayError(msg, err);
         create.disabled = false;
       }
     });
@@ -741,12 +727,9 @@
   }
 
   async function load() {
-    // All four questions go out together; the page waits for the slowest, not for the sum.
-    // "Add a person" needs db/core/007: until it is run, that card says so and the rest of the page works.
+    // All five questions go out together; the page waits for the slowest, not for the sum.
     var asked = [api.rpc('dame_users_list', { p_status: null }), api.rpc('dame_spaces_all'), api.rpc('dame_settings_get'),
-      api.rpc('dame_users_added').catch(function () { return null; }),
-      // Quotas need db/core/011: until it is run, that card says so and the rest of the page works.
-      api.rpc('dame_quota_list').catch(function () { return null; })];
+      api.rpc('dame_users_added'), api.rpc('dame_quota_list')];
     var audit = loadAudit();
     audit.catch(function () {});
     var got = await Promise.all(asked);
@@ -787,13 +770,8 @@
     $('domains-warn').hidden = !!settings.signup_domains;
 
     var added = ui.clear($('added'));
-    byEmailOff = got[3] === null;
-    if (byEmailOff) { $('form-add').hidden = true; }
-    $('added-title').hidden = !(got[3] && got[3].length);
-    if (got[3] === null) {
-      added.appendChild(ui.el('li', null, 'This part is not switched on yet: the owner pastes db/core/007_add_people.sql into the database first.'));
-    }
-    (got[3] || []).forEach(function (p) {
+    $('added-title').hidden = !got[3].length;
+    got[3].forEach(function (p) {
       var li = ui.el('li', 'hub-person');
       var text = ui.el('div', 'hub-grow');
       text.appendChild(ui.el('strong', null, p.name));
@@ -833,11 +811,11 @@
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('quota-default').hidden) { showDefault(false); } });
     $('form-quota').addEventListener('submit', async function (ev) {
       ev.preventDefault();
-      var n = whole([$('qd-rows').value, $('qd-tables').value, $('qd-columns').value, hasTools() ? $('qd-tools').value : 1]);
+      var n = whole([$('qd-rows').value, $('qd-tables').value, $('qd-columns').value, $('qd-tools').value]);
       if (!n) { ui.say($('qd-msg'), 'Write whole numbers in all the boxes.', 'warn'); return; }
       $('qd-save').disabled = true;
       try {
-        await api.rpc('dame_quota_default_set', withTools({ p_rows: n[0], p_tables: n[1], p_columns: n[2] }, n[3]));
+        await api.rpc('dame_quota_default_set', { p_rows: n[0], p_tables: n[1], p_columns: n[2], p_tools: n[3] });
         showDefault(false);
         await load();
         ui.say($('msg'), 'The default is saved. It holds now for every space without limits of its own.', 'ok');
@@ -853,7 +831,7 @@
     });
     $('by-email').addEventListener('click', function () {
       $('by-email-text').hidden = !$('by-email-text').hidden;
-      $('form-add').hidden = byEmailOff || $('by-email-text').hidden;
+      $('form-add').hidden = $('by-email-text').hidden;
     });
     $('new-user').addEventListener('click', newUser);
     $('form-add').addEventListener('submit', async function (ev) {

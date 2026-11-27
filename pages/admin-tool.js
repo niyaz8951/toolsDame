@@ -973,10 +973,7 @@
       catch (e) { return null; }
     }
     var first = await guide();
-    if (first === null) {
-      $('help-by').textContent = 'The usage guide is not switched on yet: the owner pastes db/core/006_help.sql into the database first.';
-      $('help-save').disabled = true;
-    } else {
+    if (first !== null) {
       $('help-text').value = first.text;
       $('help-by').textContent = first.text ? 'Last written by ' + (first.by || 'a manager') + ', ' + ui.when(first.at) + '.' : 'No guide written yet: people get the site\'s own short text.';
     }

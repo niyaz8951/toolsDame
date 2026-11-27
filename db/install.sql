@@ -1,14 +1,15 @@
--- db/install/install.sql - installs the whole DAME core into an EMPTY database
+-- db/install.sql - installs the whole DAME core into an EMPTY database
 -- in one transaction: it finishes completely or changes nothing.
--- Serves: the hand-over to IT. The same end state as db/core/001..012 (the
--- files that built the demo database), proved by tests/sql/same-schema.mjs.
+-- Serves: the hand-over to IT; all seven contracts of docs/BEDROCK.md.
 -- Must not change: the order of the files; a new file goes before 09_rights.sql.
+-- db/check.sql afterwards says whether a database is this final version.
 --
 -- Run with psql from the repo root (the \ir lines read the files next to this one):
---   psql "<connection>" -f db/install/install.sql
+--   psql "<connection>" -f db/install.sql
 -- Then, once, after the first IT admin has signed in on the site:
 --   select core.make_first_admin('email');
--- In a SQL editor that has no \ir (Supabase): paste 01 to 09 in number order.
+-- In a SQL editor that has no \ir (Supabase): paste 01 to 09 in number order,
+-- then run select * from core.security_check();
 
 \set ON_ERROR_STOP on
 begin;

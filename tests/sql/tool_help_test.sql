@@ -1,10 +1,10 @@
--- tests/sql/006_help_test.sql - allowed and refused cases for
--- db/core/006_help.sql: who reads and who writes the usage guide of a tool.
+-- tests/sql/tool_help_test.sql - allowed and refused cases for who reads and who writes the usage
+-- guide of a tool (db/05_spaces_tools.sql).
 -- Serves: contract 3 (Access) and 7 (Audit).
 -- Must not change: the test leaves nothing behind. Everything it does
 -- is undone before the result is shown.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;

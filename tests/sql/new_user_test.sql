@@ -1,11 +1,11 @@
--- tests/sql/009_new_user_test.sql - allowed and refused cases for
--- db/core/009_new_user.sql: an IT admin makes an account with a username and
--- a temporary password; the person must choose his own before anything opens.
+-- tests/sql/new_user_test.sql - allowed and refused cases for an IT admin makes an account with a
+-- username and a temporary password; the person must choose his own before
+-- anything opens (db/04_people.sql).
 -- Serves: contract 1 (Identity) and 7 (Audit).
 -- Must not change: the test leaves nothing behind. Everything it does,
 -- the rows in the sign-in tables included, is undone before the result is shown.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;
@@ -114,7 +114,7 @@ begin
     perform dame_test.expect('saying "done" while the temporary password is still in place is refused', 'bad_request', dame_test.run(cw, 'select public.dame_password_done()'));
     perform dame_test.expect('still refused everywhere', 'must_change', dame_test.run(cw, 'select public.dame_me()'));
     update auth.users set encrypted_password = extensions.crypt('My-Own-Pass-777', extensions.gen_salt('bf')) where id = w;  -- what the sign-in service does when he chooses
-    -- From db/core/010 on, "done" also asks for the temporary password; before 010 it takes nothing.
+    -- "done" asks for the temporary password (the branch keeps the test usable on an older database).
     perform dame_test.expect('after he chose his own password, "done" is accepted', 'ok', dame_test.run(cw,
       case when to_regprocedure('public.dame_password_done(text)') is not null then $q$select public.dame_password_done('Temp-Pass-12345')$q$ else 'select public.dame_password_done()' end));
     perform dame_test.expect('now he is in', 'Zz Sara', dame_test.val(cw, $q$select public.dame_me() ->> 'name'$q$));

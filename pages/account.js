@@ -96,15 +96,7 @@
   async function start() {
     await ui.guard();
     $('main').hidden = false;
-    try {
-      await load();
-    } catch (err) {
-      if (err && err.code === 'server') {
-        ui.say($('msg'), 'This page is not switched on yet: the owner pastes db/core/010_accounts.sql into the database first.', 'warn');
-        return;
-      }
-      throw err;
-    }
+    await load();
 
     $('form-details').addEventListener('submit', async function (ev) {
       ev.preventDefault();

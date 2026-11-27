@@ -3,7 +3,7 @@
 Contract 5: each tool has its own tables; every table has five standard columns and one sharing rule; the row rules are written by the platform, not by the tool.
 
 ## Who makes a table, and how
-Nobody types SQL. File `004_tables.sql`, pasted once by the owner, installed a table maker. From then on:
+Nobody types SQL. The database holds a table maker (`db/07_data.sql`). From then on:
 1. A page says what it needs, inside itself: `<script type="application/json" id="dame-tables">` with table names, columns and a sharing rule. (For a tool of several files, a `dame.json` with the same content.)
 2. After the check, the review window shows that list. The manager may add columns.
 3. He presses "Create in the database and go on". The page calls `dame_table_create(space, tool, name, sharing, columns)` (tool manager only).
@@ -67,7 +67,7 @@ For a private table, a row that is not yours answers "not found", the same as a 
 - Row changes are not written to the audit one by one. Each row carries who changed it last and when.
 
 ## Quotas: how much of the database a space may use
-Four limits per space, enforced by the database (`db/core/011_quotas.sql`, tools: `012_tools_quota.sql`), shown by the pages.
+Four limits per space, enforced by the database (`db/08_quotas.sql`), shown by the pages.
 
 | Limit | Counts | Default | IT may set |
 |---|---|---|---|

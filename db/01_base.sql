@@ -1,11 +1,11 @@
--- db/install/01_base.sql - the schema core, default rights, and the small
+-- db/01_base.sql - the schema core, default rights, and the small
 -- helpers every other file uses.
 -- Serves: contracts 2 (Structure: the id rule) and 3 (Access: the four levels).
 -- Must not change: an id is lower case, digits, single dashes, 3-30 chars;
 -- levels are read < contribute < edit < approve. Nothing here is reachable
 -- from the site.
--- How to run: as part of db/install/install.sql (psql), or pasted in number
--- order. Only into an empty database; see db/install/README.md.
+-- How to run: as part of db/install.sql (psql), or pasted in number
+-- order. Only into an empty database; see db/README.md.
 
 do $$
 begin
@@ -14,7 +14,7 @@ begin
     raise exception 'Run this as the database owner (postgres in Supabase).';
   end if;
   if pg_catalog.to_regnamespace('core') is not null then
-    raise exception 'Schema core already exists. db/install is for an empty database only; see db/install/README.md.';
+    raise exception 'Schema core already exists. db/install.sql is for an empty database only; see db/README.md.';
   end if;
   if pg_catalog.to_regrole('anon') is null or pg_catalog.to_regrole('authenticated') is null then
     raise exception 'The roles anon and authenticated are missing (Supabase has them; elsewhere make them first, see README).';

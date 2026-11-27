@@ -2,7 +2,7 @@
  * tests/browser/accounts.mjs - accounts in a real browser, at desktop width
  * and at 390 px: "My account" (details, password, access, sign-ins), IT opening
  * a person, correcting the details and resetting a forgotten password.
- * Serves: db/core/010 test ("a reset opens nothing without the temporary
+ * Serves: the accounts rule ("a reset opens nothing without the temporary
  * password; one person never reaches another") and SECURITY "Browser".
  * Must not change: it uses the pages exactly as they are in the repo; only the
  * database address is pointed at the stand-in.

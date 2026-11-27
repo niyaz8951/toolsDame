@@ -171,11 +171,13 @@
 
 ## Owner, 2026-11-27 (the final database for IT)
 - Owner: "without changing anything on the site, rewrite database codes or any other codes that needed, as we wrote many things on the go and may be duplicated; I need final version code/sql or logics on the repo so that it is easier for the IT to migrate"; then "ensure to test the final codes match the behaviour of the current site repo".
-- **`db/install/` is the final version** for a new database: one definition of everything, sorted by subject. `db/core/001..012` stays as the history of the live demo database and is never edited.
-- **Same database, proved.** `tests/sql/same-schema.mjs` compares the two builds object by object; the 12 SQL test files run on both (`run-local.mjs --install`). Also checked once on a real PostgreSQL 16 with `pg_dump`: identical.
-- **A change is written twice** from now on (a numbered file for the demo, the same change in `db/install/`); the comparison test fails until both agree.
+- **`db/` holds the database once.** Owner, the same day: "dont keep db twice, lets streamline for single files". The twelve step files (`db/core/001..012`) were proved identical to the final files, then removed; they stay in the repository's history (commit `eaada5f`). `db/install/` became `db/`.
+- **`db/check.sql` says whether a database is the final version** (a fingerprint of functions, columns and settings keys); `run-local.mjs` keeps it true.
+- **A change to a running database comes as one `db/upgrade.sql`**, only the change, tested on the version before, and removed by the next delivery once it ran. So the repository never shows the database twice.
+- **The SQL tests are named by subject** (`accounts_test.sql`, not `010_accounts_test.sql`); their content is unchanged.
+- **The pages lost the branches for a half-built database** ("not switched on yet: the owner pastes 0xx..."), and the tools number is always sent. Where a read can fail for other reasons (a person's card, a tool's guide) the page still says so in plain words.
 - **Function bodies copied character for character**, only the comments around them rewritten, so the live database and the install run the very same code.
-- **The pages and the kit were reviewed and left as they are.** Every `dame_*` function the site calls exists and every function exists for a reason (the row functions are called by name built in `pages/tool.js`; `dame_file_allowed` by the storage policies; `dame_site_info` is the one function open to a signed-out visitor). The repeats left in the pages are one- to three-line helpers inside each page; moving them into the shared kit would change every page for no gain in safety or clarity, so they stay.
+- **The rest of the pages and the kit were reviewed and left as they are.** Every `dame_*` function the site calls exists and every function exists for a reason (the row functions are called by name built in `pages/tool.js`; `dame_file_allowed` by the storage policies; `dame_site_info` is the one function open to a signed-out visitor). The repeats left in the pages are one- to three-line helpers inside each page; moving them into the shared kit would change every page for no gain in safety or clarity, so they stay.
 
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |

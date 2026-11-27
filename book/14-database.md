@@ -13,7 +13,7 @@ So the complete list of things the internet can ask this database to do is a lis
 1. `security definer`: it runs with the rights of its owner, not of the caller. That is the only way anything reaches a table.
 2. `set search_path = ''`: every name inside is written in full (`core.profiles`, `pg_catalog.now()`), so nobody can slip a look-alike table or function in front of the real one.
 3. The first thing it does is a `core.require_*` check. Before that line, nothing has been read.
-4. `revoke ... from public, anon`; then `grant execute ... to authenticated`, function by function. Each SQL file ends by setting these rights again for **all** `dame_*` functions, so a new function can never be left open by forgetting.
+4. `revoke ... from public, anon`; then `grant execute ... to authenticated`, function by function. `db/09_rights.sql` (and every `db/upgrade.sql`) sets these rights again for **all** `dame_*` functions, so a new function can never be left open by forgetting.
 5. Values from the caller are passed as parameters, never glued into SQL text.
 
 ## Row security
@@ -37,13 +37,12 @@ A space id and a tool id together may have 59 characters, because a schema name 
 - The page reads the code to decide what to do (for example: back to the start page) and shows the sentence to the person as written. No technical text reaches a person.
 
 ## How the database is changed
-- **For a new database there is one clean set of files, `db/install/`**: the 16 tables in their final form and the 120 functions once each, sorted by subject (base, tables, access, people, spaces and tools, releases, data, quotas, rights). `install.sql` runs them in one transaction. A test builds a database both ways and compares every column, constraint, index, policy, function and right: they are identical, and all 1,253 SQL test cases pass on both.
-- The live demo was built by the numbered files `db/core/001_init.sql` to `012_tools_quota.sql`, kept as its history. The owner reads a file, pastes it into the Supabase SQL editor and runs it. Nobody else pastes SQL, ever. A change from now on is a new numbered file and the same change in `db/install/`.
-- Every function that touches the provider's sign-in or file store says so on a line starting `SUPABASE:`; those ten places are what IT replaces for company sign-in (`db/install/README.md`).
-- Each file is one transaction: it finishes completely or changes nothing.
-- Each file first checks that the file before it was run and that it was **not** already run itself, and stops with a sentence if not.
-- A file that was run is never edited. A correction is a new file. So the files in the repository are the exact history of the database.
-- Each file ends with `select * from core.security_check();` which must show no rows.
+- **The whole database is in one folder, `db/`, once**: the 16 tables in their final form and the 120 functions once each, sorted by subject (base, tables, access, people, spaces and tools, releases, data, quotas, rights). There is no second copy and no chain of step files.
+- `install.sql` builds an empty database in one transaction: it finishes completely or changes nothing, and it refuses to run where the database already exists.
+- `check.sql` asks any database one question: is it this final version? One row, yes or no. It is how the owner checks the live demo and how IT checks its copy.
+- A change to a database in use comes as one file, `db/upgrade.sql`, holding only the change. The owner reads it, pastes it into the SQL editor and runs it; nobody else pastes SQL, ever. The next delivery removes it, so `db/` always shows the final state.
+- Every function that touches the provider's sign-in or file store says so on a line starting `SUPABASE:`; those ten places are what IT replaces for company sign-in (`db/README.md`).
+- After an install or a change, `select * from core.security_check();` must show no rows.
 
 ## core.security_check()
 It returns one row for each of these problems:

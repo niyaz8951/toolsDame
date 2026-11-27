@@ -1,12 +1,11 @@
--- tests/sql/004_tables_test.sql - allowed and refused cases for
--- db/core/004_tables.sql: making tables from the site and the data service
--- with its three sharing presets, for every role and level.
+-- tests/sql/data_test.sql - allowed and refused cases for making tables from the site and the
+-- data service with its three sharing presets, for every role and level (db/07_data.sql).
 -- Serves: contract 5 (Data), SECURITY "Database" 5, and the phase 4 test
 -- ("saves shared rows; every refused case fails correctly").
 -- Must not change: the test leaves nothing behind. Everything it creates,
 -- tables included, is undone before the result is shown.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;

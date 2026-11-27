@@ -144,13 +144,7 @@
         if (!(first && first.code === 'same_password' && form.dataset.saved === '1')) { throw first; }
       }
       form.dataset.saved = '1';
-      try {
-        await api.rpc('dame_password_done', { p_temp_password: given });
-      } catch (err) {
-        // A database that has not had db/core/010 yet knows this step without the temporary password.
-        if (!(err && err.code === 'server')) { throw err; }
-        await api.rpc('dame_password_done');
-      }
+      await api.rpc('dame_password_done', { p_temp_password: given });
       temp = '';
       form.dataset.saved = '';
       $('np-temp').value = '';

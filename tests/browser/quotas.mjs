@@ -3,7 +3,7 @@
  * width and at 390 px: the space admin sees what his space uses, the space
  * fills up, he asks IT for more, IT grants less than asked, declines, sets one
  * space's limits and the site's default.
- * Serves: db/core/011 ("nobody raises his own limit") and SECURITY "Database".
+ * Serves: the quotas rule ("nobody raises his own limit") and SECURITY "Database".
  * Must not change: it uses the pages exactly as they are in the repo; only the
  * database address is pointed at the stand-in.
  *

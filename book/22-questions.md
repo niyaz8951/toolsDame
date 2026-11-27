@@ -45,7 +45,7 @@ Short answers. Each names the chapter with the detail. Where the honest answer i
 - **Who can run SQL?** The owner, in the project's own editor. Nobody else, until the audited per-space console is built. *(Tables and rows)*
 - **Can a tile admin break the database by making tables?** He chooses from eight column kinds and three sharing rules; the space's quota limits tables a tool and columns a table (10 and 60 by default, set by IT). No defaults, triggers or constraints of his own. *(Tables and rows)*
 - **Can one department fill the database?** No. Each space has a quota set by IT: rows in the whole space (10,000 by default), tools in the space (10), tables a tool (10), columns a table (60). A full space still reads, changes and deletes; new rows are refused until its admin deletes rows or IT grants more. The admin asks from his page; IT answers on the Quotas tab; every step is in the audit. *(Tables and rows)*
-- **How do we know a new function was not left open?** Every SQL file ends by setting the rights of all functions again, `core.security_check()` must come back empty, and one test calls every function there is signed out, pending and switched off. *(The database; Tests)*
+- **How do we know a new function was not left open?** The last install file (`db/09_rights.sql`, and every `db/upgrade.sql`) sets the rights of all functions again, `core.security_check()` must come back empty, and one test calls every function there is signed out, pending and switched off. *(The database; Tests)*
 - **How is the database changed, and by whom?** Numbered files the owner reads and pastes. A file that ran is never edited. *(The database; Running it)*
 - **Two people edit the same row?** The later save wins, without a warning. A version check is planned. *(Where data lives)*
 
@@ -73,7 +73,7 @@ Short answers. Each names the chapter with the detail. Where the honest answer i
 
 ## Proof
 - **How do we know it holds?** 1,193 database cases over eleven files, eight browser tests, a hostile tool with 33 attacks, a rehearsal of seven departments with 147 checks, and control runs showing the tests fail when the wall is loosened. All in the repository, all re-runnable. *(Tests)*
-- **Was it tested on the real project?** Sign-in, spaces, tools, a real upload and a tool that saves rows: yes, by the owner. The newest SQL files: as they are pasted. *(Where we are)*
+- **Was it tested on the real project?** Sign-in, spaces, tools, a real upload and a tool that saves rows: yes, by the owner. That the live database is the final version: `db/check.sql` says yes or no. *(Where we are)*
 - **What was not tested?** Load, browsers other than Chrome, screen readers, the sign-in service's own limits and emails. *(Tests)*
 
 ## The future

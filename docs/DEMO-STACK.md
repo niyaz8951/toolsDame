@@ -21,7 +21,7 @@ The demo proves the idea and the contracts. It is not the production design: rea
 | Vault | Supabase Vault and function secrets | - |
 | Backups, point-in-time restore | Whatever the Supabase plan gives | Free tier: none worth relying on |
 | Audit to SIEM | `core.audit`, shown in the admin page | Not forwarded |
-| Pipeline, staging | Owner pastes numbered SQL files; no staging project | Nothing is tested before live except locally |
+| Pipeline, staging | Owner pastes `db/upgrade.sql` (a new database: `db/install.sql`); no staging project | Nothing is tested before live except locally |
 
 ## What stays identical (so tools move unchanged)
 The seven contracts in `BEDROCK.md`: ids, roles and levels, the two kit lines, the `Dame` API, `dame.json`, standard columns, presets, the release steps, the audit.

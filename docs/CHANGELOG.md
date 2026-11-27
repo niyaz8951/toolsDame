@@ -2,6 +2,19 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - One database folder, no second copy
+Changed (owner: "remove unwanted files and keep final version"; "dont keep db twice, lets streamline for single files")
+- **`db/` is the database, once.** The nine final files, `install.sql` and the README moved up from `db/install/`. The twelve step files `db/core/001..012` and the comparison test `tests/sql/same-schema.mjs` are removed: they had proved the final files identical and are kept in the repository's history (commit `eaada5f`).
+- **New `db/check.sql`:** pasted into any SQL editor, it says in one row whether that database is the final version (a fingerprint of every function's name and arguments, every core column and type, the settings keys). Checked: `yes` on a database built from the step files and on one built from `db/`; `no` on one built without the last step file. `run-local.mjs` fails if it ever says no.
+- **SQL tests named by subject:** `core_test`, `spaces_tools_test`, `releases_test`, `data_test`, `access_requests_test`, `tool_help_test`, `add_people_test`, `space_look_test`, `new_user_test`, `accounts_test`, `quotas_test`, `tools_quota_test`. Content unchanged, headers say which `db/` file they cover.
+- **`run-local.mjs` and the browser tests' stand-in build the database from `db/install.sql`**, as IT will.
+- **The pages lost the branches for a half-built database:** IT admin, space admin, tool admin, My account and the start page no longer say "not switched on yet: the owner pastes db/core/0xx", and the tools number is always sent. A read that fails for another reason still says so in plain words.
+- A change to a database in use comes from now on as one `db/upgrade.sql` (only the change), removed again once it ran.
+- Tests: phase0, the SQL tests (1,253 cases, twice) and all seven browser tests pass.
+
+Files: `db/` (moved from `db/install/`, `check.sql` new), `db/core/` (removed), `tests/sql/same-schema.mjs` (removed), `tests/sql/*_test.sql` (renamed), `tests/sql/run-local.mjs`, `tests/sql/local-shim.sql`, `tests/browser/mock-supabase.mjs`, `accounts.mjs`, `quotas.mjs`, `pages/account.js`, `pages/index.js`, `pages/admin-it.js`, `pages/admin-space.js`, `pages/admin-tool.js`, `pages/tool.js` (a comment), `admin/it.html`, `admin/space.html`, `docs/` (STATUS, RUNBOOK, DECISIONS, IT-REVIEW, SECURITY, DEMO-STACK), `tests/README.md`, `PROJECT-INSTRUCTIONS.md`, the site book (`09`, `10-notes`, `12`, `14`, `17`, `20`, `21`, `22`, `27`).
+SQL to paste: none. Owner: paste `db/check.sql` into the live project's SQL editor and send the row.
+
 ## 2026-11-27 - The final database for IT: `db/install/`
 New (owner: "rewrite database codes as we wrote many things on the go and may be duplicated; I need the final version on the repo so that it is easier for IT to migrate"; "ensure to test the final codes match the behaviour of the current site")
 - **`db/install/`: the whole database in one clean set of files**, for a new, empty database. `01_base`, `02_tables`, `03_access`, `04_people`, `05_spaces_tools`, `06_releases`, `07_data`, `08_quotas`, `09_rights`, and `install.sql` that runs them in one transaction. 165 KB in place of 220 KB.

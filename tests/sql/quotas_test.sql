@@ -1,11 +1,11 @@
--- tests/sql/011_quotas_test.sql - allowed and refused cases for
--- db/core/011_quotas.sql: the three limits of a space at work, who sees them,
--- who sets them, who asks for more and who answers.
+-- tests/sql/quotas_test.sql - allowed and refused cases for the limits of a space on rows, tables
+-- and columns at work, who sees them, who sets them, who asks for more and who
+-- answers (db/08_quotas.sql).
 -- Serves: contract 5 (Data), 3 (Access) and 7 (Audit).
 -- Must not change: the test leaves nothing behind. Everything it does, the
 -- site's default limits included, is undone before the result is shown.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;

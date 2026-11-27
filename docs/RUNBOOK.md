@@ -20,8 +20,6 @@ node tests/phase0.mjs
 npm install --no-save @electric-sql/pglite playwright-core     (once; test tools only)
 node tests/phase0.mjs
 node tests/sql/run-local.mjs
-node tests/sql/run-local.mjs --install
-node tests/sql/same-schema.mjs
 node tests/browser/phase1.mjs
 node tests/browser/phase2.mjs
 node tests/browser/phase3.mjs     (includes the hostile-tool test)
@@ -46,12 +44,12 @@ node tests/browser/company.mjs    (the rehearsal)
 - Data API settings > Exposed schemas: only `public`.
 - Optional, stronger: Authentication > password settings > minimum length 12 (the page already asks for 12).
 
-## Core SQL
-Files `db/core/NNN_*.sql` are pasted by the owner into the Supabase SQL editor, in number order, after reading them. Each file ends by showing `core.security_check()`: it must be an empty table. Then paste the matching `tests/sql/NNN_*_test.sql`: first row "N passed, 0 failed". The test undoes everything it does. Then Advisors > Security: no errors.
-
-A new database (IT, or a fresh Supabase project): not the numbered files but `db/install/`, in one go: `psql "<connection>" -f db/install/install.sql`, or paste `01` to `09` in order. It refuses to run where schema `core` exists. Read `db/install/README.md` first.
-
-A change to the database is written twice in the same delivery: a new `db/core/NNN_*.sql` for the live demo and the same change in `db/install/`. `node tests/sql/same-schema.mjs` must pass.
+## The database
+Everything is in `db/`, once: read `db/README.md`.
+- A new, empty database: `psql "<connection>" -f db/install.sql`, or paste `db/01` to `db/09` into the SQL editor in number order. It refuses to run where schema `core` exists. The last result must be an empty table (`core.security_check()`), and `db/check.sql` must say `yes`.
+- Is a database the final version: paste `db/check.sql`. One row, `yes` or `no`.
+- Tests: any file of `tests/sql/`, pasted into the SQL editor: first row "N passed, 0 failed". Each test undoes everything it does. Then Advisors > Security: no errors.
+- A change: the file of its subject in `db/` is changed, `db/check.sql` gets the new fingerprint, and the live project gets `db/upgrade.sql` (only the change), removed again by the next delivery.
 
 ## First IT admin (once)
 Request access and sign in on the site, then in the SQL editor: `select core.make_first_admin('your email');`. Later IT admins are named on the IT admin page.

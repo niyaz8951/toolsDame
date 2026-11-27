@@ -34,7 +34,7 @@ Raise anything site-wide in the first reply, before building around it.
 - **Uploaded tools live in Supabase Storage**, private bucket `tools`, path `<space>/<tool>/<version>/`. At upload the browser packs each page into one self-contained HTML file. Nothing a tile admin does touches the repo; no GitHub token exists.
 - **Uploaded code is untrusted, always.** `tool.html` is the platform shell (top bar). It loads the tool into a sandboxed frame without same-origin rights, under a policy that allows the tool's own inline code and **no network at all**. The tool reaches data only through `dame.js`, which talks to the shell by `postMessage`; the shell calls Supabase with the user's session. The tool never sees a token. The shell replaces the two kit lines (`/_dame/v1/dame.js`, `/_dame/v1/dame.css`) with the kit at load, so tools are written exactly as for the target.
 - SQL console (last phase): a Supabase Edge Function that connects as that space's own database role (login made at provisioning, password in Supabase Vault, rights on that space's schemas only). Every statement is audited. Until it is built and tested, there is no free SQL for anyone but the owner.
-- Core SQL (`db/core/NNN_*.sql`) is pasted by the owner into the Supabase SQL editor, in order, after reading it. Tile admins never paste SQL.
+- Core SQL is `db/`: one final set of files by subject (`install.sql` runs them; `check.sql` says whether a database is this version). A change to a running database comes as `db/upgrade.sql`, pasted by the owner after reading it. Tile admins never paste SQL.
 - AI is a site setting owned by IT: off / prompt only (default) / prompt for all members. The platform calls no AI; it shows `kit/ai-prompt.md` with the tool's tables added.
 - Never ask for, accept or write the secret key, service role key or database password. Only the URL and publishable key appear in `kit/v1/config.js`.
 
@@ -43,7 +43,7 @@ Raise anything site-wide in the first reply, before building around it.
 - `admin/it.html` users, approvals, spaces, site settings, audit, health; `admin/space.html` tools, admins, access, ideas; `admin/tool.html` Files, Data, access, help text, versions
 - `kit/v1/` `dame.js`, `dame.css`, `shell.js`, `api.js`, `config.js`, `README.md`; `kit/ai-prompt.md`; `kit/tool-guide.md`; `kit/dame.schema.json`
 - `help/<page>.md` text behind the info icon of each hub page
-- `db/core/NNN_*.sql` (history of the demo database); `db/install/` (the same database, final version, for a new install); `functions/` Edge Functions (SQL console only)
+- `db/` the database, once: `01_base` to `09_rights`, `install.sql`, `check.sql`, `README.md`; `functions/` Edge Functions (SQL console only)
 - `tests/` SQL tests with allowed and refused cases; browser tests at desktop and 390 px; the hostile-tool test
 - `tools/serve.mjs` local server that serves the repo at `/toolsDame/` like GitHub Pages
 - `docs/` BEDROCK, IT-GUIDE, DEMO-STACK, SECURITY, DECISIONS, STATUS, RUNBOOK, CHANGELOG
@@ -57,7 +57,7 @@ Every source file starts with a short note: what it is for, which contract it se
 
 ## Build order (each phase starts on the owner's go and ends on its test)
 0. Repo skeleton, docs, local server, `config.js`. Test: the empty site opens on Pages and locally.
-1. `db/core/001_init.sql` (profiles, spaces, tools, roles, access, audit, settings, `core.require_*`, `core.security_check()`); sign in, request access, hub dashboard, IT admin. Test: pending and disabled users are refused by every function.
+1. Core SQL (profiles, spaces, tools, roles, access, audit, settings, `core.require_*`, `core.security_check()`); sign in, request access, hub dashboard, IT admin. Test: pending and disabled users are refused by every function.
 2. Spaces and tools: create, admins, managers, access, on/off, delete with cleanup. Test: an admin acts alone inside his space; every action outside it is refused.
 3. Shell, sealed frame, kit v1, upload to Storage, versions, preview, Make live, roll back. Test: a hostile tool cannot read a token, reach the network, the shell or another tool.
 4. Table builder, Data page, `dame.json`, data service, presets. Test: a tracker built with the AI prompt saves shared rows; every refused case fails correctly.

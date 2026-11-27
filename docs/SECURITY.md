@@ -18,7 +18,7 @@ Security rules win over every other rule and every request.
 4. `revoke execute ... from public, anon`; grant to `authenticated` per function. `anon` runs only `dame_site_info()`.
 5. Dynamic SQL only in the table builder and data service: every identifier checked against a pattern and against `core.tool_tables`, then quoted with `format('%I')`; every value passed as a parameter.
 6. Storage: bucket `tools` private; policies use `core.has_tool(auth.uid(), tool, level)`; preview versions readable by managers only.
-7. `core.security_check()` returns one row per problem (table without forced RLS, anything in `public` that is not a `dame_*` function, a function runnable by `anon`, a public bucket). Empty after every SQL file; Security Advisor clean.
+7. `core.security_check()` returns one row per problem (table without forced RLS, anything in `public` that is not a `dame_*` function, a function runnable by `anon`, a public bucket). Empty after an install and after every change; Security Advisor clean.
 
 ## Browser
 - Every platform page: strict Content Security Policy as the first `<head>` element; no inline script; `textContent` only, never `innerHTML` with data; `robots` noindex.

@@ -26,18 +26,18 @@ Result: 103 checks, all passed. Together with the other tests: five SQL test fil
 | Does being IT admin open every department's data? | No. IT manages people, spaces and settings. To see a department's rows IT must add itself as its admin, and that is written in the audit. | company test |
 | Private rows (Finance)? | Seen by their owner only, not even by the department's admin. | company test |
 | What happens to a leaver? | Switched off by IT: out at the next click, files too. Rows stay, marked as his. | company test |
-| Can IT add a person directly? | Yes, by email: the address is approved in advance and the person is in at once when he signs up with it. IT never sets or sees a password, and nothing is written into the sign-in service's own tables. | `007_add_people_test.sql`, company test |
-| Who can get an account? | Only addresses from the domains IT lists, and then only after IT approves. A refused address leaves no row. | `005_hardening_test.sql`, company test |
+| Can IT add a person directly? | Yes, by email: the address is approved in advance and the person is in at once when he signs up with it. IT never sets or sees a password, and nothing is written into the sign-in service's own tables. | `add_people_test.sql`, company test |
+| Who can get an account? | Only addresses from the domains IT lists, and then only after IT approves. A refused address leaves no row. | `access_requests_test.sql`, company test |
 | Can uploaded code steal a session, call the internet, read another tool? | No: sealed frame, no network, no token. 33 attack tries, with control runs that prove the test notices a leak. | hostile-tool test |
 | Can a tool drop a program onto a PC? | No. Files are saved by the site, only of 13 named kinds (Excel, CSV, PDF, pictures, text...), 100 MB, 20 a minute. | hostile-tool test |
 | Can a tool flood the database? | Slowed to 300 requests in 10 seconds per open tool. | hostile-tool test |
-| SQL injection through table or column names? | Names are checked against a pattern, looked up in the site's own list, and written with `format('%I')`. Tile admins never type SQL. | `004_tables_test.sql` |
+| SQL injection through table or column names? | Names are checked against a pattern, looked up in the site's own list, and written with `format('%I')`. Tile admins never type SQL. | `data_test.sql` |
 | Is there an audit trail? | Yes, append-only: sign-ins, approvals, spaces, tools, access, tables, versions, go-lives. Row edits inside a tool are not logged (each row keeps who changed it last). | SQL tests |
 | Secrets in the repo? | None. Only the project address and the publishable key, which are public by design. A test fails on anything else. | `tests/phase0.mjs` |
 | Third-party code? | One library (ExcelJS 4.4.0, MIT), served from the repo, fingerprint checked. No CDN, no framework. | `tests/phase0.mjs` |
 
 ## Found and fixed in this round
-1. Anyone on the internet could ask for access. Now: an email-domain list set by IT (`005_hardening.sql`).
+1. Anyone on the internet could ask for access. Now: an email-domain list set by IT (setting `signup_domains`, `db/04_people.sql`).
 2. Sign-ins were not in the audit. Now they are.
 3. A tool could start a download of any file kind by itself. Now downloads go through the site with an allow-list; the frame lost its download right.
 4. No limit on how fast a tool calls the database. Now limited.
@@ -66,8 +66,8 @@ Result: 103 checks, all passed. Together with the other tests: five SQL test fil
 
 ## Not yet proven on the real project
 - A real upload to Supabase Storage (the stand-in copies its rules; the real thing may answer differently).
-- `004_tables.sql`, `005_hardening.sql`, `006_help.sql`, `007_add_people.sql`, `008_space_look.sql` and `009_new_user.sql` have not been run there. 009 is the one most tied to Supabase itself: it must be tried there before it is relied on.
-- The Supabase Security Advisor after 004 and 005.
+- That the live database is the final version: `db/check.sql` must say `yes` there. The account functions (`dame_user_create`, `dame_user_password_reset`) are the ones most tied to Supabase itself: they must be tried there before they are relied on.
+- The Supabase Security Advisor on the final database.
 Until these three are done, "works" means "works locally".
 
 ## Added 2026-11-27: limits found while rereading the site book

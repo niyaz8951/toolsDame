@@ -1,12 +1,12 @@
--- db/install/05_spaces_tools.sql - spaces and tools: create, change, on/off,
+-- db/05_spaces_tools.sql - spaces and tools: create, change, on/off,
 -- delete with cleanup; admins, members, managers, access; a tool's usage
 -- guide; finding people; the audit of a space or a tool.
 -- Serves: contracts 2 (Structure), 3 (Access) and 7 (Audit).
 -- Must not change: Hub > Space > Tool, three levels. Ids are permanent and
 -- never reused: a deleted space or tool leaves its id in core.retired_ids.
 -- An admin acts only inside his own space.
--- How to run: as part of db/install/install.sql (psql), or pasted in number
--- order. Only into an empty database; see db/install/README.md.
+-- How to run: as part of db/install.sql (psql), or pasted in number
+-- order. Only into an empty database; see db/README.md.
 
 -- ---------------------------------------------------------------------------
 -- 1. Helpers

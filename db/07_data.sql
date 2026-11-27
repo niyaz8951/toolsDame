@@ -1,4 +1,4 @@
--- db/install/07_data.sql - a tool's tables and the one data service.
+-- db/07_data.sql - a tool's tables and the one data service.
 -- Tables are made from the site (a name, columns from a fixed list of types,
 -- a sharing preset). Every tool reads and writes rows through the same five
 -- functions. Nobody types SQL.
@@ -9,8 +9,8 @@
 -- the preview has its own copy p_<space>__<tool>. No table is reachable
 -- except through dame_rows_*. The five standard columns (id, owner,
 -- created_at, updated_at, updated_by) are set by these functions, never by a tool.
--- How to run: as part of db/install/install.sql (psql), or pasted in number
--- order. Only into an empty database; see db/install/README.md.
+-- How to run: as part of db/install.sql (psql), or pasted in number
+-- order. Only into an empty database; see db/README.md.
 
 -- ---------------------------------------------------------------------------
 -- 1. Helpers

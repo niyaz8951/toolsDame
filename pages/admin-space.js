@@ -238,14 +238,12 @@
     $('title').textContent = s.name + ': admin';
     if (document.activeElement !== $('sp-name')) { $('sp-name').value = s.name; }
     if (document.activeElement !== $('sp-desc')) { $('sp-desc').value = s.description; }
-    // The tile's icon and colour (db/core/008): until that file is run, the two fields are not offered.
-    var look = await api.rpc('dame_space_look_get', { p_space: space }).catch(function () { return null; });
-    $('sp-look').hidden = look === null;
-    if (look) {
-      if (document.activeElement !== $('sp-icon') && !$('sp-icons').contains(document.activeElement)) { spaceIcon.set(look.icon || ''); }
-      $('sp-colour').value = /^#[0-9a-f]{6}$/.test(look.colour) ? look.colour : '#0078b8';
-      hadLook = true;
-    }
+    // The tile's icon and colour.
+    var look = await api.rpc('dame_space_look_get', { p_space: space });
+    $('sp-look').hidden = false;
+    if (document.activeElement !== $('sp-icon') && !$('sp-icons').contains(document.activeElement)) { spaceIcon.set(look.icon || ''); }
+    $('sp-colour').value = /^#[0-9a-f]{6}$/.test(look.colour) ? look.colour : '#0078b8';
+    hadLook = true;
 
     tools = s.tools;
     var box = ui.clear($('tools'));
@@ -267,7 +265,7 @@
     await audit;
   }
 
-  // ---- the database quota of the space (db/core/011): what is used, the limits, asking IT for more.
+  // ---- the database quota of the space: what is used, the limits, asking IT for more.
   var askFor = '';        // the limits the "ask for more" boxes were filled from
   var askTyped = false;   // the admin changed a number in those boxes
 
@@ -280,27 +278,20 @@
     box.appendChild(d);
   }
 
-  var toolsLimit = false; // the tools limit arrives with db/core/012: until it is run, three numbers are shown and sent
-
   function limitsText(o) {
-    return num(o.rows) + ' rows in the space, ' + (o.tools !== undefined && o.tools !== null ? num(o.tools) + ' tools in the space, ' : '') +
+    return num(o.rows) + ' rows in the space, ' + num(o.tools) + ' tools in the space, ' +
       num(o.tables) + ' tables in a tool, ' + num(o.columns) + ' columns in a table';
   }
 
-  // Until 011 is run the card says so and the rest of the page works.
   async function loadQuota() {
-    var q = await api.rpc('dame_quota_get', { p_space: space }).catch(function () { return null; });
-    $('q-off').hidden = q !== null;
-    $('q-body').hidden = q === null;
-    if (!q) { return; }
+    var q = await api.rpc('dame_quota_get', { p_space: space });
+    $('q-body').hidden = false;
     var used = Number(q.rows_used);
     var max = Number(q.max_rows);
     var share = max > 0 ? used / max : 1;
     var stats = ui.clear($('q-stats'));
-    toolsLimit = q.max_tools !== undefined && q.max_tools !== null;
-    $('qr-tools-field').hidden = !toolsLimit;
     stat(stats, num(used) + ' of ' + num(max), 'rows used in this space');
-    if (toolsLimit) { stat(stats, num(q.tools_used) + ' of ' + num(q.max_tools), 'tools in this space'); }
+    stat(stats, num(q.tools_used) + ' of ' + num(q.max_tools), 'tools in this space');
     stat(stats, num(q.most_tables) + ' of ' + num(q.max_tables), 'tables in the tool that has most');
     stat(stats, num(q.max_columns), 'columns allowed in one table');
     $('q-bar').firstElementChild.style.width = (Math.min(1, share) * 100).toFixed(1) + '%';
@@ -346,7 +337,7 @@
         $('qr-rows').value = q.max_rows;
         $('qr-tables').value = q.max_tables;
         $('qr-columns').value = q.max_columns;
-        $('qr-tools').value = toolsLimit ? q.max_tools : '';
+        $('qr-tools').value = q.max_tools;
         askTyped = false;
       }
       askFor = now;
@@ -405,14 +396,12 @@
     $('form-quota').addEventListener('submit', function (ev) {
       ev.preventDefault();
       var want = { rows: Number($('qr-rows').value), tables: Number($('qr-tables').value), columns: Number($('qr-columns').value),
-        tools: toolsLimit ? Number($('qr-tools').value) : 1 };
+        tools: Number($('qr-tools').value) };
       if (![want.rows, want.tables, want.columns, want.tools].every(function (n) { return Number.isInteger(n) && n > 0; })) {
         ui.say($('msg'), 'Write whole numbers in all the boxes. Leave a number as it is if you do not need more of it.', 'warn');
         return;
       }
-      var args = { p_space: space, p_rows: want.rows, p_tables: want.tables, p_columns: want.columns, p_reason: $('qr-reason').value };
-      if (toolsLimit) { args.p_tools = want.tools; }
-      act('dame_quota_request', args,
+      act('dame_quota_request', { p_space: space, p_rows: want.rows, p_tables: want.tables, p_columns: want.columns, p_reason: $('qr-reason').value, p_tools: want.tools },
         'The request is sent to IT. The answer shows here.');
     });
 

@@ -1,7 +1,7 @@
 /*
  * tests/browser/mock-supabase.mjs - a stand-in for the Supabase project, for
  * tests on this computer only: sign-up, sign-in and the dame_* calls, backed
- * by a throw-away PostgreSQL that runs the real db/core/*.sql.
+ * by a throw-away PostgreSQL that runs the real db/*.sql.
  * Serves: browser tests. Must not change: it runs the very SQL the owner
  * pastes; it copies how Supabase answers (apikey header, user token in
  * Authorization, PT4xx refusals as HTTP 4xx). It is NOT proof that the real
@@ -9,7 +9,7 @@
  */
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PGlite } from '@electric-sql/pglite';
@@ -28,9 +28,10 @@ function lit(v) {
 export async function startMock(port, { confirmEmail = true } = {}) {
   const db = new PGlite();
   await db.exec(await readFile(join(ROOT, 'tests/sql/local-shim.sql'), 'utf8'));
-  for (const f of (await readdir(join(ROOT, 'db/core'))).filter((n) => /^\d{3}_.+\.sql$/.test(n)).sort()) {
-    await db.exec(await readFile(join(ROOT, 'db/core', f), 'utf8'));
-  }
+  // The database as db/install.sql builds it: its files, in its order, in one transaction.
+  const runner = await readFile(join(ROOT, 'db/install.sql'), 'utf8');
+  const parts = [...runner.matchAll(/^\\ir\s+(\S+)/gm)].map((m) => m[1]);
+  await db.exec('begin;\n' + (await Promise.all(parts.map((f) => readFile(join(ROOT, 'db', f), 'utf8')))).join('\n') + '\ncommit;');
 
   const users = new Map();      // email -> { id, password, name, confirmed }
   const tokens = new Map();     // access token -> claims
@@ -119,12 +120,12 @@ export async function startMock(port, { confirmEmail = true } = {}) {
         if (url.pathname === '/auth/v1/token' && url.searchParams.get('grant_type') === 'password') {
           let u = users.get(String(body.email || '').toLowerCase());
           if (u) {
-            // IT may have reset the password in the database (db/core/010): the stored hash decides, as in the real service.
+            // IT may have reset the password in the database (dame_user_password_reset): the stored hash decides, as in the real service.
             const now = await db.query('select encrypted_password = extensions.crypt($2, encrypted_password) as ok from auth.users where id = $1', [u.id, String(body.password || '')]).catch(() => ({ rows: [] }));
             if (now.rows[0]) { u.password = now.rows[0].ok ? body.password : null; }
           }
           if (!u) {
-            // An account the database made itself (db/core/009): checked against its stored hash, like the real service.
+            // An account the database made itself (dame_user_create): checked against its stored hash, like the real service.
             const made = await db.query('select id::text as id, encrypted_password = extensions.crypt($2, encrypted_password) as ok, raw_user_meta_data ->> \'name\' as name from auth.users where email = $1', [String(body.email || '').toLowerCase(), String(body.password || '')]).catch(() => ({ rows: [] }));
             if (made.rows[0] && made.rows[0].ok) { u = { id: made.rows[0].id, password: body.password, name: made.rows[0].name, confirmed: true, inDb: true }; users.set(String(body.email).toLowerCase(), u); }
           }

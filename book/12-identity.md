@@ -4,7 +4,7 @@ Contract 1: one person is one account id. Tools have no logins, no passwords and
 
 ## Where an account lives
 - The **sign-in service** (Supabase Auth) knows the account: email, hashed password, and issues tokens. It knows nothing about roles.
-- The **core** knows the person: `core.profiles` with `id` (the same id as in the sign-in service), `email`, `name`, `status` (`pending`, `active`, `disabled`), `is_it`, since file 009 `username`, `must_change`, and since file 010 the work details (`job_title`, `department`, `office`, `phone`, `staff_no`) and when the password was last chosen.
+- The **core** knows the person: `core.profiles` with `id` (the same id as in the sign-in service), `email`, `name`, `status` (`pending`, `active`, `disabled`), `is_it`, `username`, `must_change`, and the work details (`job_title`, `department`, `office`, `phone`, `staff_no`) and when the password was last chosen.
 - A valid token alone opens nothing. Every function first asks the core who this is.
 
 ## The three ways an account is made
@@ -28,7 +28,7 @@ Contract 1: one person is one account id. Tools have no logins, no passwords and
 
 **Why the database checks the hash itself:** a page could simply claim "I changed it". The database trusts nothing the page says.
 
-## A person's own account (file 010)
+## A person's own account
 - `account.html` calls `dame_account_get()`: name, sign-in, staff number, role, work details, the spaces and tools he can open with his level, his last ten sign-ins (from the audit). The function takes no user id, so there is nothing to tamper with.
 - `dame_account_set(job title, department, office, phone)` changes his work details only. Text is tidied (no control characters, single spaces, cut to length); a phone may hold digits, spaces and `+ ( ) . / -`. The audit names the fields, not the values.
 - Name, username and staff number are IT's: `dame_user_details_set`. A changed name is in the audit with old and new.

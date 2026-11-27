@@ -1,10 +1,11 @@
--- tests/sql/001_core_test.sql - allowed and refused cases for db/core/001_init.sql.
+-- tests/sql/core_test.sql - allowed and refused cases for sign-in, sessions, access requests, the IT admin's
+-- approvals and roles, settings, the audit (db/03_access.sql, db/04_people.sql).
 -- Serves: "Rules of work": every function has an allowed test and refused tests
 -- (signed out, pending, disabled, level too low, other user's session).
 -- Must not change: the test leaves nothing behind. Everything it creates is
 -- undone before the result is shown, including its audit rows.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- Read the result table: the first row is the summary; any row with pass =
 -- false is a failure. Safe to run at any time, also on a site in use.
 

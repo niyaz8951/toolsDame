@@ -61,7 +61,7 @@ Each line: the question, what was chosen, and why. The full record with dates is
 |---|---|---|
 | Where does it run? | GitHub Pages and one Supabase project | Free, quick, enough to prove the design |
 | Which keys exist in the repository? | The project address and the publishable key | Public by design; they open nothing without a session and the function checks |
-| Who changes the database? | The owner, by pasting numbered files he has read | No pipeline secret; exact history |
+| Who changes the database? | The owner, by pasting `db/upgrade.sql` after reading it; `db/` always shows the final version | No pipeline secret; history in the repository |
 | Other sites on the same GitHub address? | Accepted for a demo with sample data | The risk does not exist on IT's own address |
 | The look? | Taken from the earlier DAME hub | Owner's wish; no code or data was taken |
 

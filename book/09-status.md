@@ -17,18 +17,18 @@
 | Spaces and tools | Yes | Yes |
 | Uploading a tool and making it live | Yes | Yes, done by the owner |
 | A tool that saves rows | Yes | Yes, done by the owner |
-| Email domains, sign-ins in the audit | Yes | Once file 005 is run there |
-| Usage guide, add by email, space colour, new user | Yes | Once files 006 to 009 are run there |
-| My account, password change, reset by IT | Yes | Once file 010 is run there |
+| Email domains, sign-ins in the audit | Yes | When `db/check.sql` says yes there |
+| Usage guide, add by email, space colour, new user | Yes | When `db/check.sql` says yes there |
+| My account, password change, reset by IT | Yes | When `db/check.sql` says yes there |
 
 ## Not built yet
 - Pinned notes and ideas with votes on every page.
 - A second person approving before a tool goes live.
-- Export, a health page, a free SQL console for space admins. (Quotas on rows, tools, tables and columns are built: files 011 and 012.)
+- Export, a health page, a free SQL console for space admins. (Quotas on rows, tools, tables and columns are built.)
 - Charts as a building block.
 - Company sign-in (that is the target, not the demo).
 
 ## What the owner does next
-1. Paste the SQL files that are not run yet, in number order, each followed by its test.
+1. Paste `db/check.sql` into the live project's SQL editor: `yes` means the live database is the final version.
 2. Try "New user" once on the live demo: it is the part most tied to the sign-in service.
 3. Walk IT through this book. "Threats, one by one", "Questions IT will ask" and "Open gaps and hand-over" are the three chapters to open first.

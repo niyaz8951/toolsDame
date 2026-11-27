@@ -1,11 +1,11 @@
--- tests/sql/012_tools_quota_test.sql - allowed and refused cases for
--- db/core/012_tools_quota.sql: how many tools a space may have, who sets the
--- limit, asking for more, and that calls written before this file still work.
+-- tests/sql/tools_quota_test.sql - allowed and refused cases for how many tools a space may have, who
+-- sets the limit, asking for more, and calls that leave the tools number out
+-- (db/08_quotas.sql).
 -- Serves: contract 2 (Structure), 3 (Access) and 7 (Audit).
 -- Must not change: the test leaves nothing behind. Everything it does, the
 -- site's default limits included, is undone before the result is shown.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;
@@ -165,7 +165,7 @@ begin
     perform dame_test.expect('the admin reads what was asked', '20', dame_test.val(ca, format($q$select public.dame_quota_get(%L) -> 'answers' -> 0 ->> 'tools'$q$, s)));
     perform dame_test.expect('and tool 13 is made', 'ok', dame_test.run(ca, format(mk, s, 'tool-b3')));
 
-    -- ------------------------------------------------ 4. calls written before this file
+    -- ------------------------------------------------ 4. calls that leave the tools number out
     perform dame_test.expect('a request without the tools number asks for the tools the space has', 'ok',
       dame_test.run(ca, format($q$select public.dame_quota_request(%L, 20000, 10, 60, 'More rows, the old way of asking.')$q$, s)));
     perform dame_test.expect('it is kept with 15 tools', '15', (select want_tools::text from core.quota_requests where space = s and status = 'open'));

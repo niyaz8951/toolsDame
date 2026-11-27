@@ -1,11 +1,11 @@
--- db/install/09_rights.sql - who may call what, and the checks for the owner.
+-- db/09_rights.sql - who may call what, and the checks for the owner.
 -- Serves: SECURITY "Database": the API exposes only dame_* functions in public,
 -- each security definer with an empty search path; a signed-out visitor runs
 -- only dame_site_info; no table is ever reachable.
 -- Must not change: rights are given by name to each dame_* function, never by
 -- default. core.security_check() must return no rows.
--- How to run: as part of db/install/install.sql (psql), or pasted in number
--- order. Only into an empty database; see db/install/README.md.
+-- How to run: as part of db/install.sql (psql), or pasted in number
+-- order. Only into an empty database; see db/README.md.
 
 -- ---------------------------------------------------------------------------
 -- 1. For the owner, in the SQL editor only (not reachable from the site)

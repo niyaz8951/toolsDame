@@ -1,13 +1,13 @@
--- db/install/04_people.sql - sign-in, access requests, accounts, site settings
+-- db/04_people.sql - sign-in, access requests, accounts, site settings
 -- and the IT admin's People part.
 -- Serves: contracts 1 (Identity), 3 (Access) and 7 (Audit).
 -- Must not change: an account is pending until an IT admin approves it (or IT
 -- added it). A temporary password is never stored readable, never written to
 -- the audit, valid 7 days, and nothing opens until the person chose his own.
 -- The functions marked SUPABASE stand in for company sign-in in the demo and
--- are what IT replaces (see db/install/README.md).
--- How to run: as part of db/install/install.sql (psql), or pasted in number
--- order. Only into an empty database; see db/install/README.md.
+-- are what IT replaces (see db/README.md).
+-- How to run: as part of db/install.sql (psql), or pasted in number
+-- order. Only into an empty database; see db/README.md.
 
 -- ---------------------------------------------------------------------------
 -- 1. Signed out, and right after sign-in

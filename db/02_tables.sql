@@ -1,4 +1,4 @@
--- db/install/02_tables.sql - every table of schema core, in its final form,
+-- db/02_tables.sql - every table of schema core, in its final form,
 -- with its indexes, its triggers and the site's default settings.
 -- Serves: contracts 1 (Identity), 2 (Structure), 3 (Access), 5 (Data),
 -- 6 (Releases) and 7 (Audit).
@@ -6,8 +6,8 @@
 -- no policy: nobody reaches a table except through the dame_* functions. The
 -- audit is append-only; a ready version never changes. Column order is the
 -- same as in the demo database, so its data can be copied over as it is.
--- How to run: as part of db/install/install.sql (psql), or pasted in number
--- order. Only into an empty database; see db/install/README.md.
+-- How to run: as part of db/install.sql (psql), or pasted in number
+-- order. Only into an empty database; see db/README.md.
 
 -- ---------------------------------------------------------------------------
 -- 1. People and sessions

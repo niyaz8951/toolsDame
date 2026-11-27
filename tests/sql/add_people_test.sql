@@ -1,10 +1,10 @@
--- tests/sql/007_add_people_test.sql - allowed and refused cases for
--- db/core/007_add_people.sql: an IT admin adds a person by email.
+-- tests/sql/add_people_test.sql - allowed and refused cases for an IT admin adds a person by email
+-- (db/04_people.sql).
 -- Serves: contract 1 (Identity) and 7 (Audit).
 -- Must not change: the test leaves nothing behind. Everything it does,
 -- the setting included, is undone before the result is shown.
 --
--- How to run: paste the whole file into the Supabase SQL editor and press Run.
+-- How to run: on a database built from db/, paste the whole file into the SQL editor and press Run.
 -- First row is the summary; any row with pass = false is a failure.
 
 drop table if exists dame_test_result;
