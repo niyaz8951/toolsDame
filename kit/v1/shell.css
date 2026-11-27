@@ -378,7 +378,8 @@ p, li { text-wrap: pretty; }
 .hub-menu { position: absolute; right: 0; top: calc(100% + 10px); z-index: 30; width: max-content; min-width: 220px; max-width: min(300px, calc(100vw - 24px)); padding: 14px; border-radius: 18px; background: var(--dame-surface); border: 1px solid var(--dame-line); box-shadow: var(--dame-shadow-lg); transform-origin: top right; animation: hub-menu .18s var(--dame-ease); }
 .hub-menu-name { margin: 0; max-width: none; color: var(--dame-text); font-weight: 650; }
 .hub-menu-sub { margin: 0; color: var(--dame-muted); font-size: .88rem; overflow-wrap: anywhere; }
-.hub-menu .hub-signout { width: 100%; margin-top: 12px; min-height: 40px; }
+.hub-menu .hub-signout, .hub-menu .hub-myaccount { width: 100%; margin-top: 12px; min-height: 40px; }
+.hub-menu .hub-signout { margin-top: 8px; }
 @keyframes hub-menu { from { opacity: 0; transform: scale(.94) translateY(-4px); } }
 
 /* The parts of a long page: a row of tabs, one card on screen at a time. */
@@ -564,3 +565,12 @@ button.hub-tile { font: inherit; text-align: left; cursor: pointer; width: 100%;
 
 /* The tool's strip: where you are on the left, "Tool admin" at the right edge. */
 .hub-strip #admin { margin-left: auto; }
+/* My account and the person window: a label over its value; small tags inside a list line. */
+.hub-list em.hub-pill { font-style: normal; }
+.hub-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 var(--dame-gap); margin-bottom: 4px; }
+.hub-facts li { border-bottom: 0; padding: 8px 0; }
+.hub-facts li span { font-size: .85rem; }
+.hub-facts li strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.hub-temp { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.hub-temp .dame-input { flex: 1 1 220px; width: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; }
+.hub-row-sub { display: block; color: var(--dame-muted); font-size: .85rem; }

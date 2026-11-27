@@ -48,6 +48,10 @@ Known limits, said plainly:
 
 ## Accounts
 - Who may ask for access: the email domains IT lists (site setting); then IT approves each person. Sign-ins are in the audit.
+- A person's functions (`dame_account_*`, `dame_password_*`) take no user id: they answer for the caller only. Opening, correcting or resetting another person is `core.require_it()` first.
+- A temporary password (new account or reset) is hashed by the database, never in the audit, shown to IT only until the window closes, valid 7 days. A reset ends every session of the person, in the core and in the sign-in service.
+- After a temporary password nothing opens until the stored password changed AND the caller showed the temporary one. A leftover sign-in of someone else cannot finish a reset.
+- No password is ever kept by a page: not in storage, not in an address. The start page holds the temporary one in memory until the new password is saved or the page is left.
 - Gaps ranked for the demo: `IT-REVIEW.md`.
 
 ## Accounts and keys

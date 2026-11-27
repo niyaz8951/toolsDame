@@ -24,7 +24,8 @@
 - The finish: one-line bar with an account button, admin pages as tabs (one part at a time, kept in the address), a tool's managers and delete folded, finger-sized targets, notch-safe pages, plain dates. No SQL.
 - IT admin, Spaces: "Add a space" on top, one tile per space, and a window per space where it is changed or deleted. No SQL.
 - Space admin, Tools: the same way ("Add a tool", a tile per tool, a window per tool). Icons picked from 90 pictures. Back buttons lead to the page the person came from. No SQL.
-- Tests, all passing locally: nine SQL test files, six browser tests, the hostile-tool test (33 attempts).
+- **Accounts (2026-11-27): built and tested locally. Needs `010_accounts.sql` on the real project.** My account (details, password, access, sign-ins); IT's person window (correct, reset password, switch off, role); a temporary password counts 7 days and must be shown again to finish.
+- Tests, all passing locally: ten SQL test files, seven browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
@@ -34,6 +35,7 @@
 3. **SQL editor:** the same with `db/core/005_hardening.sql`, then `tests/sql/005_hardening_test.sql`.
    Then the same with `006_help.sql`, `007_add_people.sql`, `008_space_look.sql` and `009_new_user.sql`, each followed by its test file of the same number.
    After 009: IT admin > Add a person > **New user**, make a trial account, sign in with it in a private window and choose a password. If the sign-in fails, send the exact message: this file is the one most tied to Supabase itself.
+   Then `010_accounts.sql` and `tests/sql/010_accounts_test.sql`. After 010, three things to try (Ctrl+F5 first): (a) the round button top right > **My account**: save a job title, then change your password; (b) IT admin > People > **Open** on the trial account > **Generate** > **Reset password** twice; (c) in a private window sign in as the trial account with that temporary password and choose a new one. If (b) or (c) fails, send the exact message: like 009, a reset writes into Supabase's own sign-in tables.
 4. **On the site** (Ctrl+F5 first): IT admin > Site settings > **Who may ask for access**: type the work email domain(s), Save. Empty means anyone may ask.
 5. IT admin > Spaces > **Make a test space**, press its tile, then **Open its admin page**.
 6. Press the **Converter** tile, then "Build and access", **Use a ready-made page**, **Use it**, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.
@@ -50,7 +52,7 @@ Besides this file and the changelog: update the chapter of the site book the cha
 ## Still needed from the owner
 - `docs/IT-GUIDE.md`.
 - MFA on GitHub and Supabase; secret scanning and push protection on for the repo.
-- A "go" for phase 5.
+- A "go" for health (per space and for IT), which the owner put before phase 5, or for phase 5.
 
 ## Next
 Phase 5: on every page the info icon, pinned notes, ideas with votes, and the AI prompt setting; the tool's help text; a space admin tightening the AI setting.

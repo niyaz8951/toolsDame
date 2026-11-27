@@ -39,6 +39,13 @@ export async function startMock(port, { confirmEmail = true } = {}) {
   const calls = [];
   const stored = new Map();     // file name -> bytes
 
+  // Like the real sign-in service: every account has a row in auth.users with its password hashed.
+  async function keep(email) {
+    const u = users.get(email);
+    if (u.inDb) { return; }
+    await db.query("insert into auth.users (id, email, encrypted_password) values ($1, $2, extensions.crypt($3, extensions.gen_salt('bf'))) on conflict (id) do update set encrypted_password = excluded.encrypted_password", [u.id, email, String(u.password)]);
+  }
+
   function session(email, sessionId) {
     const u = users.get(email);
     const access = 'at_' + randomUUID();
@@ -105,11 +112,17 @@ export async function startMock(port, { confirmEmail = true } = {}) {
           if (String(body.password || '').length < 6) { return reply(422, { error_code: 'weak_password', msg: 'weak' }); }
           if (!users.has(email)) {
             users.set(email, { id: randomUUID(), password: body.password, name: (body.data || {}).name, confirmed: !confirmEmail });
+            await keep(email);
           }
           return reply(200, confirmEmail ? { id: users.get(email).id, email } : session(email));
         }
         if (url.pathname === '/auth/v1/token' && url.searchParams.get('grant_type') === 'password') {
           let u = users.get(String(body.email || '').toLowerCase());
+          if (u) {
+            // IT may have reset the password in the database (db/core/010): the stored hash decides, as in the real service.
+            const now = await db.query('select encrypted_password = extensions.crypt($2, encrypted_password) as ok from auth.users where id = $1', [u.id, String(body.password || '')]).catch(() => ({ rows: [] }));
+            if (now.rows[0]) { u.password = now.rows[0].ok ? body.password : null; }
+          }
           if (!u) {
             // An account the database made itself (db/core/009): checked against its stored hash, like the real service.
             const made = await db.query('select id::text as id, encrypted_password = extensions.crypt($2, encrypted_password) as ok, raw_user_meta_data ->> \'name\' as name from auth.users where email = $1', [String(body.email || '').toLowerCase(), String(body.password || '')]).catch(() => ({ rows: [] }));
@@ -130,8 +143,11 @@ export async function startMock(port, { confirmEmail = true } = {}) {
           const u = users.get(claims.email);
           if (String(body.password || '').length < 6) { return reply(422, { error_code: 'weak_password', msg: 'weak' }); }
           if (u.password === body.password) { return reply(422, { error_code: 'same_password', msg: 'New password should be different from the old password.' }); }
+          // The stored hash decides whether it is the same password (IT may have reset it since this sign-in).
+          const same = await db.query('select encrypted_password = extensions.crypt($2, encrypted_password) as ok from auth.users where id = $1', [u.id, String(body.password)]).catch(() => ({ rows: [] }));
+          if (same.rows[0] && same.rows[0].ok) { return reply(422, { error_code: 'same_password', msg: 'New password should be different from the old password.' }); }
           u.password = body.password;
-          if (u.inDb) { await db.query('update auth.users set encrypted_password = extensions.crypt($2, extensions.gen_salt(\'bf\')) where id = $1', [u.id, body.password]); }
+          await db.query('update auth.users set encrypted_password = extensions.crypt($2, extensions.gen_salt(\'bf\')) where id = $1', [u.id, body.password]);
           return reply(200, { id: u.id, email: claims.email });
         }
         if (url.pathname === '/auth/v1/logout') {
@@ -191,6 +207,7 @@ export async function startMock(port, { confirmEmail = true } = {}) {
     async addUser(email, name, password, isIt = false) {
       const id = randomUUID();
       users.set(email, { id, password, name, confirmed: true });
+      await keep(email);
       await db.query('insert into core.profiles (id, email, name, status, is_it) values ($1, $2, $3, $4, $5)', [id, email, name, 'active', isIt]);
       return id;
     },

@@ -253,7 +253,7 @@
     writeSession(res.data, Date.now());
   }
 
-  // The signed-in person chooses a new password (first sign-in of an account made by IT).
+  // The signed-in person chooses a new password (after a temporary password from IT, or on his account page).
   async function setPassword(password) {
     var res;
     try {
@@ -268,8 +268,26 @@
     try { data = await res.json(); } catch (e2) { /* empty answer */ }
     if (!res.ok) {
       if (data && (data.error_code === 'same_password')) { throw new DameError('same_password', 'The new password must differ from the temporary one.', res.status); }
+      if (data && (data.error_code === 'reauthentication_needed' || data.error_code === 'reauth_nonce_missing' || data.error_code === 'session_not_found')) {
+        throw new DameError('sign_in_again', 'Sign out, sign in again and change the password right after that.', res.status);
+      }
       throw authError(res.status, data);
     }
+  }
+
+  // Is this the person's current password? Asked before he changes it on his account page.
+  // The sign-in it makes is closed at once and never used: his session stays the one he has.
+  async function passwordOk(who, password) {
+    var name = String(who).trim().toLowerCase();
+    if (name.indexOf('@') === -1) { name += USER_DOMAIN; }
+    var res = await post('/auth/v1/token?grant_type=password', { email: name, password: password });
+    if (res.ok && res.data && res.data.access_token) {
+      try { await post('/auth/v1/logout?scope=local', {}, String(res.data.access_token)); } catch (e) { /* it runs out by itself */ }
+      return true;
+    }
+    var err = authError(res.status, res.data);
+    if (err.code === 'invalid_credentials') { return false; }
+    throw err;
   }
 
   // Returns 'signed_in', or 'confirm_email' when the person must open the link first.
@@ -301,6 +319,7 @@
     signedIn: function () { return readSession() !== null; },
     signIn: signIn,
     setPassword: setPassword,
+    passwordOk: passwordOk,
     userDomain: USER_DOMAIN,
     signUp: signUp,
     signOut: signOut,

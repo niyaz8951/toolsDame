@@ -5,7 +5,9 @@
  * each button calls one dame_* function and then reloads the lists, so the
  * page always shows what the database holds, not what the page assumes.
  * Spaces: the page shows "Add a space" and one tile per space; a space is
- * changed or deleted only inside the window its tile opens.
+ * changed or deleted only inside the window its tile opens. People: one line
+ * per person; an account is changed only inside the window "Open" shows. A
+ * temporary password lives in that window's memory until it closes, nowhere else.
  */
 (function () {
   'use strict';
@@ -22,6 +24,8 @@
   var loadAudit = null;
   var spaces = [];
   var win = null;   // the open space window, or null
+  var pwin = null;  // the open person window, or null
+  var users = [];
 
   function $(id) { return document.getElementById(id); }
 
@@ -53,23 +57,219 @@
     return email.slice(-d.length) === d ? 'username: ' + email.slice(0, -d.length) : email;
   }
 
+  // A person is one line: name, sign-in, state, and "Open". Everything that changes an account
+  // is in the window that "Open" shows, and nowhere else on the page.
+  function pills(box, u) {
+    box.appendChild(ui.el('span', 'hub-pill' + (u.status === 'active' ? ' hub-pill-ok' : ''),
+      u.status === 'active' ? 'Active' : u.status === 'pending' ? 'Waiting' : 'Switched off'));
+    if (u.is_it) { box.appendChild(ui.el('span', 'hub-pill', 'IT admin')); }
+    if (u.temp_expired) { box.appendChild(ui.el('span', 'hub-pill', 'Temporary password too old')); }
+    else if (u.must_change) { box.appendChild(ui.el('span', 'hub-pill', 'Must choose a password')); }
+    return box;
+  }
+
   function personRow(body, u) {
-    var state = ui.el('span');
-    state.appendChild(ui.el('span', 'hub-pill' + (u.status === 'active' ? ' hub-pill-ok' : ''),
-      u.status === 'active' ? 'Active' : 'Switched off'));
-    if (u.is_it) { state.appendChild(ui.el('span', 'hub-pill', 'IT admin')); }
-    var change;
-    if (u.is_me) {
-      change = ui.el('span', 'dame-muted', 'Another IT admin changes your account.');
-    } else if (u.status === 'active') {
-      change = buttons([
-        ui.confirmButton('Switch off', '', status(u, 'disabled', u.name + ' is switched off.')),
-        u.is_it ? ui.confirmButton('Remove IT admin', '', role(u, false, u.name + ' is no longer an IT admin.'))
-          : ui.confirmButton('Make IT admin', '', role(u, true, u.name + ' is now an IT admin.'))]);
+    var open = ui.el('button', 'dame-btn hub-small', 'Open');
+    open.type = 'button';
+    open.setAttribute('data-user', u.id);
+    open.addEventListener('click', function () { openPerson(u.id); });
+    var who = ui.el('span', null, u.name + (u.is_me ? ' (you)' : ''));
+    var job = [u.job_title, u.department].filter(Boolean).join(', ');
+    if (job) { who.appendChild(ui.el('span', 'hub-row-sub', job)); }
+    ui.addRow(body, [who, shown(u.email), pills(ui.el('span'), u), buttons([open])]);
+  }
+
+  // ---- the window of one person
+  function closePerson() {
+    if (!pwin) { return; }
+    var id = pwin.id;
+    pwin.back.remove();
+    document.removeEventListener('keydown', pwin.onKey);
+    pwin = null;
+    var btn = document.querySelector('#people [data-user="' + id + '"]');
+    if (btn) { btn.focus(); }
+  }
+
+  // One action inside the window: do it, read the lists and the person again, say what happened.
+  async function inPerson(name, args, done) {
+    var w = pwin;
+    ui.say(w.msg, '');
+    var failed = null;
+    try { await api.rpc(name, args); } catch (err) { failed = err; }
+    await load().catch(function () {});
+    if (pwin !== w) { return !failed; }
+    if (failed) { ui.sayError(w.msg, failed); } else { ui.say(w.msg, done, 'ok'); }
+    // In the middle of the window: at its lower edge the Done bar would cover it.
+    w.msg.scrollIntoView({ block: 'center' });
+    return !failed;
+  }
+
+  function fact(list, label, value) {
+    var li = ui.el('li');
+    li.appendChild(ui.el('span', null, label));
+    li.appendChild(ui.el('strong', null, value));
+    list.appendChild(li);
+  }
+
+  function field(box, label, id, value, max) {
+    var l = ui.el('label', 'hub-field', label);
+    var i = ui.el('input', 'dame-input');
+    i.type = 'text';
+    i.id = id;
+    i.maxLength = max;
+    i.autocomplete = 'off';
+    i.spellcheck = false;
+    i.value = value || '';
+    l.appendChild(i);
+    box.appendChild(l);
+    return i;
+  }
+
+  // u: the line from the people list. card: the full account (null until db/core/010 is run).
+  function drawPerson(u, card) {
+    var w = pwin;
+    var body = ui.clear(w.body);
+    var c = card || u;
+    var title = ui.el('h2', null, c.name + (u.is_me ? ' (you) ' : ' '));
+    pills(title, c);
+    body.appendChild(title);
+    body.appendChild(ui.el('p', 'dame-muted', 'Signs in with ' + (c.username ? 'the username ' + c.username : shown(u.email)) + '.'));
+
+    if (card) {
+      var facts = ui.el('ul', 'hub-list hub-facts');
+      fact(facts, 'Account since', ui.when(card.created_at));
+      fact(facts, 'Last sign-in', card.sign_ins && card.sign_ins.length ? ui.when(card.sign_ins[0]) : 'Never');
+      fact(facts, 'Password last chosen', card.must_change ? 'Not yet: a temporary password is in place' + (card.temp_set_at ? ' since ' + ui.when(card.temp_set_at).toLowerCase() : '')
+        : card.pw_changed_at ? ui.when(card.pw_changed_at) : 'When the account was made');
+      fact(facts, 'Access', (card.spaces.length === 1 ? '1 space, ' : card.spaces.length + ' spaces, ') + (card.tools.length === 1 ? '1 tool' : card.tools.length + ' tools'));
+      body.appendChild(facts);
+      if (card.spaces.length) {
+        body.appendChild(ui.el('p', 'dame-hint', 'Spaces: ' + card.spaces.map(function (s) { return s.name + (s.role === 'admin' ? ' (admin)' : ''); }).join(', ') + '.'));
+      }
+
+      // -- details
+      body.appendChild(ui.el('p', 'hub-sub', 'Details'));
+      var form = ui.el('form');
+      form.method = 'post';
+      form.noValidate = true;
+      var two = ui.el('div', 'hub-two');
+      var name = field(two, 'Name', 'pu-name', card.name, 80);
+      var staff = field(two, 'Staff number', 'pu-staff', card.staff_no, 30);
+      var job = field(two, 'Job title', 'pu-title', card.job_title, 80);
+      var dept = field(two, 'Department', 'pu-dept', card.department, 80);
+      var office = field(two, 'Office or site', 'pu-office', card.office, 80);
+      var phone = field(two, 'Work phone', 'pu-phone', card.phone, 30);
+      form.appendChild(two);
+      var save = ui.el('button', 'dame-btn dame-btn-primary hub-small', 'Save details');
+      save.type = 'submit';
+      save.id = 'pu-save';
+      form.appendChild(save);
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        save.disabled = true;
+        inPerson('dame_user_details_set', { p_user: u.id, p_name: name.value, p_job_title: job.value, p_department: dept.value,
+          p_office: office.value, p_phone: phone.value, p_staff_no: staff.value }, 'The details are saved.').then(function () { save.disabled = false; });
+      });
+      body.appendChild(form);
+
+      // -- password
+      body.appendChild(ui.el('p', 'hub-sub', 'Reset password'));
+      if (u.is_me) {
+        body.appendChild(ui.el('p', 'dame-hint', 'Your own password: change it on "My account" (the round button, top right). Forgot it? Another IT admin resets it.'));
+      } else if (c.status !== 'active') {
+        body.appendChild(ui.el('p', 'dame-hint', 'This account is ' + (c.status === 'pending' ? 'waiting for approval' : 'switched off') + '. A password can be reset only for an active account.'));
+      } else {
+        body.appendChild(ui.el('p', 'dame-hint', 'For a forgotten password, or when someone else may know it. You give a temporary password; the person is signed out everywhere, signs in with it and must choose a new one. It counts for 7 days. Be sure who is asking: call the person back.'));
+        var row = ui.el('div', 'hub-temp');
+        var temp = ui.el('input', 'dame-input');
+        temp.type = 'text';
+        temp.id = 'pu-temp';
+        temp.maxLength = 72;
+        temp.autocomplete = 'off';
+        temp.spellcheck = false;
+        temp.placeholder = 'Temporary password';
+        temp.setAttribute('aria-label', 'Temporary password');
+        temp.value = w.temp || '';
+        temp.addEventListener('input', function () { w.temp = temp.value; });
+        var gen = ui.el('button', 'dame-btn hub-small', 'Generate');
+        gen.type = 'button';
+        gen.addEventListener('click', function () { temp.value = generate(); w.temp = temp.value; temp.focus(); temp.select(); });
+        row.appendChild(temp);
+        row.appendChild(gen);
+        body.appendChild(row);
+        var reset = ui.confirmButton('Reset password', '', function () {
+          if (!temp.value) { ui.say(w.msg, 'Press Generate, or type a temporary password.', 'warn'); w.msg.scrollIntoView({ block: 'center' }); reset.disabled = false; return; }
+          inPerson('dame_user_password_reset', { p_user: u.id, p_temp_password: temp.value },
+            'The password of ' + c.name + ' is reset. Tell the person the temporary password above by voice, not in writing. It is not shown again after you close this window.');
+        });
+        reset.id = 'pu-reset';
+        body.appendChild(reset);
+      }
     } else {
-      change = buttons([ui.confirmButton('Switch on', '', status(u, 'active', u.name + ' is switched on again.'))]);
+      body.appendChild(ui.el('p', 'dame-hint', 'Details and password reset are not switched on yet: the owner pastes db/core/010_accounts.sql into the database first.'));
     }
-    ui.addRow(body, [u.name + (u.is_me ? ' (you)' : ''), shown(u.email), state, change]);
+
+    // -- the account itself
+    body.appendChild(ui.el('p', 'hub-sub', 'Account'));
+    if (u.is_me) {
+      body.appendChild(ui.el('p', 'dame-hint', 'Another IT admin changes your account: nobody switches himself off or changes his own role.'));
+    } else if (c.status === 'active') {
+      body.appendChild(ui.el('p', 'dame-hint', 'Switch off a leaver: he loses everything at his next click. Nothing of his is deleted.'));
+      body.appendChild(buttons([
+        ui.confirmButton('Switch off', '', function () { inPerson('dame_user_set_status', { p_user: u.id, p_status: 'disabled' }, c.name + ' is switched off.'); }),
+        c.is_it ? ui.confirmButton('Remove IT admin', '', function () { inPerson('dame_user_set_it', { p_user: u.id, p_is_it: false }, c.name + ' is no longer an IT admin.'); })
+          : ui.confirmButton('Make IT admin', '', function () { inPerson('dame_user_set_it', { p_user: u.id, p_is_it: true }, c.name + ' is now an IT admin.'); })]));
+    } else {
+      body.appendChild(ui.el('p', 'dame-hint', 'This account is switched off. Switched on, the person has again what he had.'));
+      body.appendChild(buttons([ui.confirmButton('Switch on', '', function () { inPerson('dame_user_set_status', { p_user: u.id, p_status: 'active' }, c.name + ' is switched on again.'); })]));
+    }
+  }
+
+  // Reads the person again and draws the window from what the database holds now.
+  async function showPerson() {
+    var w = pwin;
+    var u = users.filter(function (x) { return x.id === w.id; })[0];
+    if (!u) { closePerson(); return; }
+    var card = null;
+    try {
+      card = await api.rpc('dame_user_get', { p_user: w.id });
+    } catch (err) {
+      if (!(err && err.code === 'server')) { if (pwin === w) { ui.sayError(w.msg, err); } }
+    }
+    if (pwin === w) { drawPerson(u, card); }
+  }
+
+  function openPerson(id) {
+    var u = users.filter(function (x) { return x.id === id; })[0];
+    if (!u) { return; }
+    var back = ui.el('div', 'hub-focus-back');
+    var box = ui.el('section', 'hub-focus');
+    box.id = 'person-win';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', 'Account of ' + u.name);
+    var body = ui.el('div');
+    body.appendChild(ui.el('p', 'dame-muted', 'One moment.'));
+    var msg = ui.el('p', 'hub-msg');
+    msg.id = 'person-win-msg';
+    msg.hidden = true;
+    msg.setAttribute('role', 'alert');
+    var foot = ui.el('div', 'dame-row hub-focus-foot');
+    var close = ui.el('button', 'dame-btn dame-btn-primary', 'Done');
+    close.type = 'button';
+    close.id = 'person-win-close';
+    close.addEventListener('click', closePerson);
+    back.addEventListener('mousedown', function (ev) { if (ev.target === back) { closePerson(); } });
+    foot.appendChild(close);
+    box.appendChild(body);
+    box.appendChild(msg);
+    box.appendChild(foot);
+    back.appendChild(box);
+    pwin = { id: id, back: back, body: body, msg: msg, temp: '', onKey: function (ev) { if (ev.key === 'Escape') { closePerson(); } } };
+    document.addEventListener('keydown', pwin.onKey);
+    document.body.appendChild(back);
+    close.focus();
+    showPerson();
   }
 
   // A space is one tile: name, what it holds, and "Switched off" when it is. Pressing it opens its window.
@@ -297,7 +497,7 @@
     var audit = loadAudit();
     audit.catch(function () {});
     var got = await Promise.all(asked);
-    var users = got[0] || [];
+    users = got[0] || [];
     var waiting = ui.clear($('waiting'));
     var people = ui.clear($('people'));
     var nWaiting = 0;
@@ -322,6 +522,9 @@
       var open = spaces.filter(function (x) { return x.id === win.id; })[0];
       if (open) { drawSpace(open); } else { closeSpace(); }
     }
+
+    // An open person window is read again; a person who is gone closes it.
+    if (pwin) { await showPerson(); }
 
     var settings = got[2] || {};
     if (document.activeElement !== $('domains')) { $('domains').value = String(settings.signup_domains || '').split(',').join(', '); }

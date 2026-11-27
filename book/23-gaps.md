@@ -3,6 +3,8 @@
 Everything that is weaker than a production system, in one place, with what closes it.
 
 ## Closed during the build
+- A forgotten password blocked a username account > IT resets it with a temporary password.
+- A leftover sign-in could have finished a password change in the person's place > the temporary password is asked again at the end.
 - Anyone could ask for access > email domains set by IT.
 - Sign-ins were not audited > they are.
 - A tool could start any download > saving goes through the shell with a list of file kinds.
@@ -16,8 +18,10 @@ Everything that is weaker than a production system, in one place, with what clos
 | Email or username with password; no company sign-in, no second factor | A guessed or shared password | Company sign-in |
 | Password strength is the sign-in service's setting | Weak passwords if left at the default | One setting in Supabase now (12 characters); company sign-in later |
 | Accounts made by IT: IT knows the temporary password until first sign-in | Misuse in that window | Forced change is enforced; company directory later |
-| `dame_user_create` writes into the sign-in service's tables | May break when Supabase changes them | Not part of the target |
-| Username accounts have no email, and IT has no reset button yet | A forgotten password blocks the person | A reset function (small) or company sign-in |
+| `dame_user_create` and `dame_user_password_reset` write into the sign-in service's tables | May break when Supabase changes them | Not part of the target |
+| A forgotten password always needs IT; no reset by email | IT must be reachable, and must be sure who is asking | Company sign-in |
+| An IT admin can reset another IT admin's password | One IT admin could take over another's account; it is in the audit and the person is told | Company sign-in |
+| The rule for a person's own password is checked by the page and the sign-in service, not the database | A person who goes around the page gets only the service's minimum length | One setting in Supabase now (12 characters); company sign-in later |
 | "Add by email" and the domain rule trust the address | Only as strong as email confirmation, which must stay on | Company sign-in |
 
 ## Open: publishing

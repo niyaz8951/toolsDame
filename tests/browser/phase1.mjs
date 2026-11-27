@@ -158,7 +158,10 @@ async function run(width, height, label) {
     await owner.waitForSelector('#msg.hub-ok');
     check(/Bea Member is approved/.test(await owner.textContent('#msg')), T + 'approve works and says so');
     check((await owner.locator('#people tr:has-text("Bea Member")').count()) === 1, T + 'approved person moves to People');
-    check((await owner.locator('#people tr:has-text("(you)") button').count()) === 0, T + 'IT admin has no buttons on his own row');
+    await owner.click('#people tr:has-text("(you)") button:text-is("Open")');
+    await owner.waitForSelector('#person-win h2');
+    check((await owner.locator('#person-win button:has-text("Switch off"), #person-win button:has-text("IT admin"), #person-win #pu-reset').count()) === 0, T + 'IT admin has no buttons to switch himself off, change his own role or reset his own password');
+    await owner.click('#person-win-close');
     await twice(owner, '#waiting tr:has-text("evil@test.dame") button:has-text("Refuse"), #waiting tr:has-text("evil@test.dame") button:has-text("Press again")');
     await owner.waitForSelector('#msg.hub-ok:has-text("refused")');
     check((await owner.locator('#waiting tr').count()) === 0, T + 'refuse needs two presses and empties the waiting list');
@@ -197,11 +200,14 @@ async function run(width, height, label) {
     // --- switched off: loses everything at the next click
     await owner.goto(SITE + 'admin/it.html');
     await owner.waitForSelector('#body:not([hidden])');
-    const off = '#people tr:has-text("Bea Member") button:has-text("Switch off"), #people tr:has-text("Bea Member") button:has-text("Press again")';
+    await owner.click('#people tr:has-text("Bea Member") button:text-is("Open")');
+    await owner.waitForSelector('#person-win h2');
+    const off = '#person-win button:has-text("Switch off"), #person-win button:has-text("Press again")';
     await owner.click(off);
     check((await owner.locator('#people tr:has-text("Bea Member") .hub-pill-ok').count()) === 1, T + 'one press on Switch off changes nothing');
     await owner.click(off);
-    await owner.waitForSelector('#msg.hub-ok:has-text("switched off")');
+    await owner.waitForSelector('#person-win-msg.hub-ok:has-text("switched off")');
+    await owner.click('#person-win-close');
     await bea.goto(SITE + 'hub.html');
     await bea.waitForURL(SITE + 'index.html');
     await bea.waitForSelector('#panel-signin:not([hidden])');

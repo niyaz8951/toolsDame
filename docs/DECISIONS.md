@@ -122,6 +122,17 @@
 - The look and feel is judged as a careful phone user would: one-line bar, finger-sized targets, notch-safe, calm movement. These live in `kit/v1/shell.css` only; contract 4 (`dame.css`, `dame.js`) is not touched by look-and-feel work on hub pages.
 - Admin pages show one part at a time (tabs), the open part kept in the address; a tool's managers and delete field are folded in the space admin (owner's go, same day). Showing only: contract 3 stands, the database enforces.
 
+## Owner, 2026-11-27 (accounts)
+- Every person has an account page; IT can reset a password with a temporary one. Health comes after this.
+- **Who changes what.** The person: job title, department, office, work phone, and his password. IT only: name, username (never changed), staff number. Reason: name and staff number say who someone is to the admins who give access; a person renaming himself "IT admin" must not be possible.
+- **Reset is IT's, by voice.** No "forgot password" email: accounts with a username have no email, the owner keeps the sign-in emails at their default, and company sign-in replaces all of it. IT must be sure who is asking (call back).
+- **Nobody resets his own password** (he changes it on My account) and nobody resets a waiting or switched-off account.
+- **An IT admin can reset another IT admin.** Accepted for the demo: it is in the audit with both names, and the person is told at his next sign-in who did it. The target has no such path (company sign-in).
+- **A temporary password counts 7 days** and must be typed again to finish (the page keeps it in memory from the sign-in, never in storage). Reason: after a reset because "someone may know my password", that someone may still hold a sign-in for up to an hour; without this he could set a password himself and get in.
+- **The person's own password rule** (12 characters, mixed) is checked by the page and by the sign-in service's own minimum length; the database never sees a password. The password he has now is checked by a real sign-in that is closed at once.
+- **People on the IT page follow the same design language as spaces and tools:** one line, one button, changes only in the window.
+- Not done: a person changing his own name; password history; forced change every N days (current guidance is against it without a sign of leakage); lock-out after wrong tries (the sign-in service limits tries by itself).
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

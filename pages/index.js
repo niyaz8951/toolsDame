@@ -31,10 +31,11 @@
     show('panel-busy');
     var res = await api.rpc('dame_request_access');
     if (res && res.status === 'active' && res.must_change) {
-      // An account made by IT: the temporary password must be replaced before anything opens.
-      show('panel-newpw');
+      // A temporary password from IT (new account or reset) must be replaced before anything opens.
+      askNewPassword(res);
       return;
     }
+    temp = '';
     if (res && res.status === 'active') {
       location.replace(api.href('hub.html'));
       return;
@@ -47,6 +48,27 @@
     $('wait-check').hidden = off;
     ui.say($('wait-msg'), '');
     show('panel-wait');
+  }
+
+  // The temporary password the person just signed in with. Kept in this page's memory only,
+  // never stored: after a reload the page asks for it again.
+  var temp = '';
+
+  function askNewPassword(res) {
+    var reset = res.temp_kind === 'reset';
+    var by = res.temp_by ? ' (' + res.temp_by + ')' : '';
+    var old = !!res.temp_expired;
+    $('np-text').textContent = old
+      ? 'Your temporary password is older than 7 days and no longer counts. Ask an IT admin for a new one, then sign in with it.'
+      : reset ? 'An IT admin' + by + ' reset your password' + (res.temp_at ? ' ' + ui.when(res.temp_at).toLowerCase() : '') +
+          '. Choose a new password only you know. Nothing opens before that. If you did not ask for a reset, tell IT.'
+        : 'You signed in with a temporary password from IT' + by + '. Choose a password only you know. Nothing opens before that.';
+    Array.prototype.forEach.call($('form-newpw').querySelectorAll('.hub-field'), function (f) { f.hidden = old; });
+    $('np-save').hidden = old;
+    $('np-temp-field').hidden = old || !!temp;
+    ui.say($('np-msg'), '');
+    show('panel-newpw');
+    if (old) { $('np-out').focus(); }
   }
 
   async function start() {
@@ -102,25 +124,50 @@
     ev.preventDefault();
     var form = ev.currentTarget;
     var pw = $('np-password').value;
-    var problem = pw !== $('np-password2').value ? 'The two passwords differ. Type the same password twice.'
-      : !/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{10,72}$/.test(pw) ? 'Use at least 10 characters, with a small letter, a capital letter and a digit.' : '';
-    if (problem) { ui.say($('np-msg'), problem, 'warn'); return; }
+    var given = temp || $('np-temp').value;
+    var problem = !given ? 'Type the temporary password you got from IT.'
+      : pw !== $('np-password2').value ? 'The two passwords differ. Type the same password twice.'
+      : !/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{12,72}$/.test(pw) ? 'Use at least 12 characters, with a small letter, a capital letter and a digit.'
+      : pw === given ? 'The new password must differ from the temporary one.' : '';
+    if (problem) {
+      if (!given) { $('np-temp-field').hidden = false; }
+      ui.say($('np-msg'), problem, 'warn');
+      return;
+    }
     busy(form, true);
     ui.say($('np-msg'), '');
     try {
-      await api.setPassword(pw);
-      await api.rpc('dame_password_done');
+      try {
+        await api.setPassword(pw);
+      } catch (first) {
+        // Saved in the sign-in service a moment ago, but the last step failed: only that step is left.
+        if (!(first && first.code === 'same_password' && form.dataset.saved === '1')) { throw first; }
+      }
+      form.dataset.saved = '1';
+      try {
+        await api.rpc('dame_password_done', { p_temp_password: given });
+      } catch (err) {
+        // A database that has not had db/core/010 yet knows this step without the temporary password.
+        if (!(err && err.code === 'server')) { throw err; }
+        await api.rpc('dame_password_done');
+      }
+      temp = '';
+      form.dataset.saved = '';
+      $('np-temp').value = '';
       $('np-password').value = '';
       $('np-password2').value = '';
       await next();
     } catch (err) {
+      if (err && (err.code === 'temp_needed' || err.code === 'temp_wrong')) { temp = ''; $('np-temp').value = ''; $('np-temp-field').hidden = false; }
       ui.sayError($('np-msg'), err);
       show('panel-newpw');
+      if (err && err.code === 'temp_expired') { askNewPassword({ temp_expired: true }); }
     } finally {
       busy(form, false);
     }
   });
   $('np-out').addEventListener('click', async function () {
+    temp = '';
     await api.signOut();
     show('panel-signin');
   });
@@ -138,6 +185,7 @@
     ui.say($('si-msg'), '');
     try {
       await api.signIn(email, password);
+      temp = password;   // only used if the database says this was a temporary password
       $('si-password').value = '';
       ui.say($('notice'), '');
       await next();

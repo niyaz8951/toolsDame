@@ -47,7 +47,7 @@ Result: 103 checks, all passed. Together with the other tests: five SQL test fil
 ## Open, accepted for the first demo (sample data only)
 | Gap | Why it can wait | Closed by |
 |---|---|---|
-| Accounts made by IT with a temporary password: IT knows it until the first sign-in; the function writes into Supabase Auth's own tables; no email means no self-service reset | Owner's decision for the demo; forced change is enforced by the database | Company sign-in on the target |
+| Accounts made by IT with a temporary password: IT knows it until the first sign-in; the function writes into Supabase Auth's own tables; no email means no self-service reset (IT resets with a temporary password, file 010) | Owner's decision for the demo; forced change is enforced by the database | Company sign-in on the target |
 | Adding a person and the domain rule trust the email address: they are only as strong as the confirmation email | Supabase confirms email by default; the owner keeps it on | IT's sign-in on the target |
 | Email + password, no company sign-in, no MFA | Stand-in by design | IT's sign-in on the target |
 | Password strength is whatever the Supabase project is set to | One dashboard setting (owner step) | Owner now; IT's sign-in later |

@@ -114,7 +114,9 @@ begin
     perform dame_test.expect('saying "done" while the temporary password is still in place is refused', 'bad_request', dame_test.run(cw, 'select public.dame_password_done()'));
     perform dame_test.expect('still refused everywhere', 'must_change', dame_test.run(cw, 'select public.dame_me()'));
     update auth.users set encrypted_password = extensions.crypt('My-Own-Pass-777', extensions.gen_salt('bf')) where id = w;  -- what the sign-in service does when he chooses
-    perform dame_test.expect('after he chose his own password, "done" is accepted', 'ok', dame_test.run(cw, 'select public.dame_password_done()'));
+    -- From db/core/010 on, "done" also asks for the temporary password; before 010 it takes nothing.
+    perform dame_test.expect('after he chose his own password, "done" is accepted', 'ok', dame_test.run(cw,
+      case when to_regprocedure('public.dame_password_done(text)') is not null then $q$select public.dame_password_done('Temp-Pass-12345')$q$ else 'select public.dame_password_done()' end));
     perform dame_test.expect('now he is in', 'Zz Sara', dame_test.val(cw, $q$select public.dame_me() ->> 'name'$q$));
     perform dame_test.expect('the start page no longer asks', 'active|false',
       dame_test.val(cw, $q$select (r ->> 'status') || '|' || (r ->> 'must_change') from public.dame_request_access() r$q$));

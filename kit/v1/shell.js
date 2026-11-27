@@ -268,7 +268,7 @@
     document.body.insertBefore(header, document.body.firstChild);
   }
 
-  // The account button: the person's initials; a press opens his name and "Sign out".
+  // The account button: the person's initials; a press opens his name, "My account" and "Sign out".
   // One round button keeps the bar on one line at any width.
   function initials(name) {
     var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
@@ -289,14 +289,20 @@
     btn.setAttribute('aria-expanded', 'false');
     menu.hidden = true;
     menu.appendChild(el('p', 'hub-menu-name hub-user-name', me.name));
-    if (me.email) { menu.appendChild(el('p', 'hub-menu-sub', me.email)); }
+    // An account made by IT is shown by its username, not by its inner address.
+    var inner = String(me.email || '').slice(-api.userDomain.length) === api.userDomain;
+    var who = me.username || (inner ? String(me.email).slice(0, -api.userDomain.length) : me.email);
+    if (who) { menu.appendChild(el('p', 'hub-menu-sub', who)); }
     menu.appendChild(el('p', 'hub-menu-sub', 'Demo site'));
+    var mine = el('a', 'dame-btn hub-small hub-myaccount', 'My account');
+    mine.href = api.href('account.html');
+    menu.appendChild(mine);
     out.type = 'button';
     function shut() { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
     btn.addEventListener('click', function () {
       menu.hidden = !menu.hidden;
       btn.setAttribute('aria-expanded', String(!menu.hidden));
-      if (!menu.hidden) { out.focus(); }
+      if (!menu.hidden) { mine.focus(); }
     });
     document.addEventListener('click', function (ev) { if (!userBox.contains(ev.target)) { shut(); } });
     document.addEventListener('keydown', function (ev) {
@@ -520,7 +526,8 @@
     'tool.deleted': 'deleted the tool', 'tool.manager_added': 'named manager', 'tool.manager_removed': 'removed manager',
     'tool.access_set': 'gave access', 'tool.access_removed': 'took access away',
     'table.created': 'made a table', 'table.column_added': 'added a column', 'table.deleted': 'deleted a table',
-    'tool.help_set': 'wrote the usage guide', 'user.created': 'made an account', 'user.password_chosen': 'chose his own password', 'user.added': 'added a person', 'user.add_removed': 'took an added person back', 'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back'
+    'tool.help_set': 'wrote the usage guide', 'user.created': 'made an account', 'user.password_chosen': 'chose his own password', 'user.password_changed': 'changed his password', 'user.password_reset': 'reset the password of',
+    'user.details_changed': 'changed his work details', 'user.details_set': 'corrected the account of', 'user.status_changed': 'let in', 'user.added': 'added a person', 'user.add_removed': 'took an added person back', 'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back'
   };
 
   // Fills an audit table page by page. fetchPage(beforeId) returns the rows.

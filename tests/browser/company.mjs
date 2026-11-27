@@ -521,6 +521,8 @@ try {
   await om.goto(SITE + 'hub.html');
   await om.waitForSelector('#panel-newpw:not([hidden])');
   check(new URL(om.url()).pathname.endsWith('/index.html') || new URL(om.url()).pathname.endsWith('/toolsDame/'), 'opening the hub by its address sends him back to choose a password');
+  check(await om.locator('#np-temp').isVisible(), 'after a reload the page no longer holds the temporary password and asks for it again');
+  await om.fill('#np-temp', temp);
   await om.fill('#np-password', temp);
   await om.fill('#np-password2', temp);
   await om.click('#form-newpw button[type=submit]');

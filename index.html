@@ -49,6 +49,7 @@
         <button class="dame-btn dame-btn-primary" type="submit">Sign in</button>
         <button class="dame-btn" type="button" id="to-request">No account? Request access</button>
       </div>
+      <p class="dame-hint">Forgot your password? Ask an IT admin. He gives you a temporary one, and you choose a new password at the next sign-in.</p>
     </form>
   </section>
 
@@ -78,9 +79,12 @@
 
   <section class="dame-card" id="panel-newpw" hidden>
     <h2>Choose your own password</h2>
-    <p class="dame-muted">You signed in with a temporary password from IT. Choose a password only you know. Nothing opens before that.</p>
+    <p class="dame-muted" id="np-text">You signed in with a temporary password from IT. Choose a password only you know. Nothing opens before that.</p>
     <form id="form-newpw" method="post" novalidate>
-      <label class="hub-field">New password (at least 10 characters, with a small letter, a capital letter and a digit)
+      <label class="hub-field" id="np-temp-field" hidden>The temporary password from IT
+        <input class="dame-input" id="np-temp" type="password" autocomplete="off" maxlength="72">
+      </label>
+      <label class="hub-field">New password (at least 12 characters, with a small letter, a capital letter and a digit)
         <input class="dame-input" id="np-password" type="password" autocomplete="new-password" required maxlength="72">
       </label>
       <label class="hub-field">The same password again
@@ -88,7 +92,7 @@
       </label>
       <p class="hub-msg" id="np-msg" role="alert" hidden></p>
       <div class="dame-row">
-        <button class="dame-btn dame-btn-primary" type="submit">Save my password</button>
+        <button class="dame-btn dame-btn-primary" type="submit" id="np-save">Save my password</button>
         <button class="dame-btn" type="button" id="np-out">Sign out</button>
       </div>
     </form>

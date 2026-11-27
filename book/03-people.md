@@ -9,6 +9,17 @@ One person is one account. Tools have no logins of their own.
 
 => Account exists | First sign-in | Own password chosen | Hub opens
 
+## Your account
+- The round button at the top right opens **My account**: your details, your password, what you can open, your last sign-ins.
+- You keep your job title, department, office and work phone up to date. Your name, sign-in and staff number are changed by IT only.
+- You change your password there, with the password you have now.
+
+## Forgot your password
+- Ask an IT admin. He gives you a **temporary password** by voice and you are signed out everywhere.
+- Sign in with it and choose a new password. Nothing opens before that. A temporary password counts for 7 days.
+
+=> Ask IT | Temporary password by voice | Sign in | New password | Hub opens
+
 ## Who may ask
 - IT sets the **work email domains**. An address outside them gets no request at all and leaves no trace.
 - A new account is **pending** until approved. Pending means: every function refuses.

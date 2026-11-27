@@ -2,6 +2,21 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - Accounts: My account, password change, reset by IT
+Added (owner: "user accounts with profiles, basic username, password and a few more things as in a company; IT resets a password with a temporary one; this makes it a fully working site before health")
+- **My account** (`account.html`, from the round account button): my name, sign-in, staff number and role (read only), my work details to keep up to date (job title, department, office, work phone), changing my password, everything I can open with my level, and my last ten sign-ins.
+- **Changing the password:** the password I have now, then the new one twice (12 characters or more, small letter, capital, digit). The person stays signed in. The database looks itself whether the stored password changed before it writes the date and the audit line.
+- **IT admin, People:** one line per person with one button, Open. The window shows last sign-in, password state and access, and holds everything that changes an account: correct name, staff number and work details; **Reset password** (Generate, press twice); switch off or on; IT admin on or off. Nothing on the page itself changes an account any more.
+- **Reset:** the person is signed out everywhere at once, signs in with the temporary password, and must choose a new one before anything opens. The start page says who reset it and when.
+- **Tighter than before, for new accounts too:** a temporary password counts for 7 days, and finishing needs the temporary password itself (the page remembers it from the sign-in; after a reload it asks again). Someone who still holds an old sign-in of that person, or changes the password behind IT's back, cannot finish in his place.
+- The account menu shows an account made by IT by its username, not by its inner address. The start page says what to do about a forgotten password.
+- New functions: `dame_account_get`, `dame_account_set`, `dame_password_changed`, `dame_user_get`, `dame_user_details_set`, `dame_user_password_reset`. Changed, additions only in what they answer: `dame_me` (+ username), `dame_users_list`, `dame_request_access`, `dame_user_create`. `dame_password_done` now takes the temporary password.
+- Until `010_accounts.sql` is run the site works as before: My account and the two new parts of the person window say that they are not switched on yet.
+- Tests: `tests/sql/010_accounts_test.sql` (85 cases), `tests/browser/accounts.mjs` (51 checks at each width). All ten SQL test files, seven browser tests and the hostile-tool test pass locally.
+
+Files: `db/core/010_accounts.sql`, `account.html`, `pages/account.js`, `help/account.md`, `pages/admin-it.js`, `admin/it.html`, `pages/index.js`, `index.html`, `kit/v1/api.js`, `kit/v1/shell.js`, `kit/v1/shell.css`, the tests, docs, the site book.
+SQL to paste: `db/core/010_accounts.sql` (after 009), then `tests/sql/010_accounts_test.sql`.
+
 ## 2026-11-27 - Tool page: "Tool admin" at the right edge
 Changed (owner: "more natural on the right side")
 - On a tool's page the "Tool admin" button now sits at the right end of the strip under the bar; Hub / space / tool stay on the left. Look only.

@@ -36,7 +36,7 @@ grant usage on schema storage to anon, authenticated;
 grant all on storage.objects to anon, authenticated;
 grant select on storage.buckets to anon, authenticated;
 
--- Supabase Auth's own tables, as far as db/core/009 writes to them, and the two
+-- Supabase Auth's own tables, as far as db/core/009 and 010 write to them, and the two
 -- password functions of the pgcrypto extension (here a plain stand-in: the real
 -- ones make a bcrypt hash; the tests only need "same password, same salt -> same hash").
 create table auth.users (
@@ -47,6 +47,7 @@ create table auth.users (
 create table auth.identities (
   id uuid primary key, user_id uuid references auth.users (id) on delete cascade, identity_data jsonb, provider text, provider_id text,
   last_sign_in_at timestamptz, created_at timestamptz, updated_at timestamptz);
+create table auth.sessions (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users (id) on delete cascade, created_at timestamptz default now());
 create schema extensions;
 create function extensions.gen_salt(text) returns text language sql volatile as $$
   select '$stub$' || substr(md5(random()::text), 1, 16) || '$';
