@@ -10,7 +10,7 @@ What is in this folder, and who uses it. Contract 4: v1 only gets additions.
 | `pack.js` | `pack.html`, the hidden helper of the tool admin page | reads the chosen files or zip, packs each page into one file, checks it |
 | `config.js` | hub pages | Supabase URL and publishable key only |
 | `api.js` | hub pages | base path, config check, sign-in, session, `DameApi.rpc('dame_...')` |
-| `shell.js`, `shell.css` | hub pages | the platform bar, the page guard, small helpers; `hub-*` classes are not for tools |
+| `shell.js`, `shell.css` | hub pages | the platform bar, the page guard, and the shared parts every page builds from (`dialog`, `tile`, `textField`, `fact`, `slug`, the pickers, the audit list); `hub-*` classes are not for tools |
 | `icon.svg` | hub pages | tab icon |
 | `theme.js` | hub pages, before they are drawn | sets day or night from the person's choice |
 | `icons/` | `shell.css` | the mark, sun, moon, arrow |

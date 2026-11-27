@@ -57,16 +57,13 @@
 
   // A tool is one tile, in its own colour. Pressing it opens its window.
   function toolTile(t) {
-    var b = ui.el('button', 'hub-tile' + (t.active ? '' : ' hub-tile-off'));
-    b.type = 'button';
-    b.setAttribute('data-tool', t.id);
-    if (/^#[0-9a-f]{6}$/.test(t.colour || '')) { b.style.setProperty('--dame-accent', t.colour); }
-    b.appendChild(ui.icon(ui.el('span', 'hub-tile-icon'), t.icon, (t.name.trim().charAt(0) || 'T').toUpperCase()));
-    b.appendChild(ui.el('span', 'hub-tile-name', t.name));
-    b.appendChild(ui.el('span', 'hub-tile-text', t.open_to_space ? 'Open to the space' : (t.people + (t.people === 1 ? ' person' : ' people') + ' named')));
-    if (!t.active) { b.appendChild(ui.el('span', 'hub-pill', 'Switched off')); }
-    b.addEventListener('click', function () { openTool(t.id); });
-    return b;
+    return ui.tile({
+      name: t.name, icon: t.icon, letter: (t.name.trim().charAt(0) || 'T').toUpperCase(), colour: t.colour,
+      off: !t.active, data: { tool: t.id },
+      text: t.open_to_space ? 'Open to the space' : (t.people + (t.people === 1 ? ' person' : ' people') + ' named'),
+      pills: [!t.active && 'Switched off'],
+      onClick: function () { openTool(t.id); }
+    });
   }
 
   // The window of one tool. Everything that changes a tool is here and nowhere else on the page.
@@ -74,11 +71,8 @@
   function closeTool() {
     if (!win) { return; }
     var id = win.id;
-    win.back.remove();
-    document.removeEventListener('keydown', win.onKey);
+    win.drop('#tools [data-tool="' + id + '"]');
     win = null;
-    var tile = document.querySelector('#tools [data-tool="' + id + '"]');
-    if (tile) { tile.focus(); }
   }
 
   async function inTool(name, args, done) {
@@ -185,37 +179,14 @@
   function openTool(id, said) {
     var t = tools.filter(function (x) { return x.id === id; })[0];
     if (!t) { return; }
-    var back = ui.el('div', 'hub-focus-back');
-    var box = ui.el('section', 'hub-focus hub-focus-small');
-    box.id = 'tool-win';
-    box.setAttribute('role', 'dialog');
-    box.setAttribute('aria-modal', 'true');
-    box.setAttribute('aria-label', 'Tool ' + t.name);
-    var body = ui.el('div');
-    var msg = ui.el('p', 'hub-msg');
-    msg.id = 'tool-win-msg';
-    msg.hidden = true;
-    msg.setAttribute('role', 'alert');
-    var foot = ui.el('div', 'dame-row hub-focus-foot');
-    var link = ui.el('a', 'dame-btn dame-btn-primary', 'Build and access');
-    link.id = 'tool-win-build';
-    var close = ui.el('button', 'dame-btn', 'Done');
-    close.type = 'button';
-    close.id = 'tool-win-close';
-    close.addEventListener('click', closeTool);
-    back.addEventListener('mousedown', function (ev) { if (ev.target === back) { closeTool(); } });
-    foot.appendChild(link);
-    foot.appendChild(close);
-    box.appendChild(body);
-    box.appendChild(msg);
-    box.appendChild(foot);
-    back.appendChild(box);
-    win = { id: id, back: back, body: body, msg: msg, link: link, onKey: function (ev) { if (ev.key === 'Escape') { closeTool(); } } };
-    document.addEventListener('keydown', win.onKey);
+    win = ui.dialog({ id: 'tool-win', label: 'Tool ' + t.name, small: true, closeText: 'Done', onClose: closeTool });
+    win.id = id;
+    win.link = ui.el('a', 'dame-btn dame-btn-primary', 'Build and access');
+    win.link.id = 'tool-win-build';
+    win.foot.insertBefore(win.link, win.close);
     drawTool(t);
-    document.body.appendChild(back);
-    if (said) { ui.say(msg, said, 'ok'); }
-    link.focus();
+    if (said) { ui.say(win.msg, said, 'ok'); }
+    win.link.focus();
   }
 
   // The "Add a tool" window.
@@ -354,11 +325,8 @@
     $('q-answers-block').hidden = !(q.answers && q.answers.length);
   }
 
-  function slug(text) {
-    var id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
-    // An id needs three characters: a short name like "DX" or "QA" gets a plain ending.
-    return id && id.length < 3 ? id + '-tool' : id;
-  }
+  // An id needs three characters: a short name like "DX" or "QA" gets a plain ending.
+  function slug(text) { return ui.slug(text, 'tool'); }
 
   async function start() {
     await ui.guard();

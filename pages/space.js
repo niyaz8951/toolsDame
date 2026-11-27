@@ -19,16 +19,13 @@
   function $(id) { return document.getElementById(id); }
 
   function tile(space, t) {
-    var a = ui.el('a', 'hub-tile' + (t.active ? '' : ' hub-tile-off'));
-    a.href = api.href('tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(t.id);
-    if (/^#[0-9a-f]{6}$/.test(t.colour)) { a.style.setProperty('--dame-accent', t.colour); }
-    a.appendChild(ui.icon(ui.el('span', 'hub-tile-icon'), t.icon, (t.name.trim().charAt(0) || 'T').toUpperCase()));
-    a.appendChild(ui.el('span', 'hub-tile-name', t.name));
-    a.appendChild(ui.el('span', 'hub-tile-text', t.description));
-    var pills = ui.el('span');
-    pills.appendChild(ui.el('span', 'hub-pill', t.is_manager ? 'You manage it' : (LEVEL[t.level] || '')));
-    if (!t.active) { pills.appendChild(ui.el('span', 'hub-pill', 'Switched off')); }
-    a.appendChild(pills);
+    var a = ui.tile({
+      href: api.href('tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(t.id),
+      name: t.name, icon: t.icon, letter: (t.name.trim().charAt(0) || 'T').toUpperCase(), colour: t.colour, off: !t.active,
+      text: t.description || '',
+      pillBox: true,
+      pills: [t.is_manager ? 'You manage it' : (LEVEL[t.level] || ''), !t.active && 'Switched off']
+    });
     // The tile and, under it, the button that puts the tool on the person's hub.
     var wrap = ui.el('div', 'hub-tile-wrap');
     var pin = ui.el('button', 'dame-btn hub-small hub-pin');

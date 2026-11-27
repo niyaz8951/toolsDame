@@ -60,6 +60,8 @@ The running log of the site. Newest first. Every change to the site adds a line 
 
 - The database for IT (2026-11-27): the whole database in one clean set of files, `db/` (nine files by subject, `install.sql`, and `check.sql`, which says whether a database is the final version). Every function once in its final version, the columns added later folded into their tables. Proved identical to the twelve step files that had built the demo, which were then removed (owner: "dont keep db twice, lets streamline for single files"); they stay in the repository's history. The SQL tests are named by subject. The pages lost the "not switched on yet" branches for a half-built database. All 1,253 SQL cases and every browser test pass. The ten places that use Supabase's sign-in or file store are marked `SUPABASE:`.
 
+- Clean-up (2026-11-27): one set of shared parts in `kit/v1/shell.js` (the window, the tile, the text field, the fact line, the id from a name) that every page builds from; the Data part of the tool admin page in its own file; the database address written only in `config.js`. Owner: "keep modular and clean implementation". Nothing on screen changed; no SQL; every test passes as before.
+
 ## Ideas noted, not decided
 - Tell the people of a space when a new tool goes live.
 - Show the table list in the review window in even plainer words.

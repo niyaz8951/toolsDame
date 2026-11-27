@@ -31,14 +31,19 @@
 - **The site book (2026-11-27):** shown to IT admins only (hub card and book page); stays in `book/`. In pictures: a 5-minute chapter of eleven slides, seven kinds of picture drawn from text (`:::kind` blocks), topic nodes, laser, spotlight and pen while presenting. Reread against the repo: 28 chapters in four parts, with a new part "What a reviewer asks" (threats, sharing of rights, data handling, running it). No SQL.
 - **One database, final version (2026-11-27): `db/`.** Nine files by subject plus `install.sql` (one transaction) and `check.sql` (is a database this version? yes or no). Every function once, every table in its final form, the ten Supabase stand-ins marked `SUPABASE:`. Proved identical to the twelve step files that built the demo before they were removed (they are in the repository's history). The pages lost the "not switched on yet" branches that only served a half-built database. Read `db/README.md`.
 - **The Data page as a sheet (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** Each table drawn like a spreadsheet with made-up example rows (saved rows are never shown), "+ Column" at the end, an x on each column to remove it after typing its name (new `dame_table_drop_column`), the five site columns on request, a new table drawn as it is typed, and a request for the AI after each change.
-- **Relay (2026-11-27): built and tested locally. Needs `db/upgrade-relay.sql` on the live project.** Work passed from team to team along the value chain: IT sets up flows (stages in order, a space for each, a checklist before each hand-over), people pick up, pass on, answer back, send back, close. A card on the hub, `relay.html`, four Daikin-style examples. Reads spaces; changes nothing else. Read `book/28-relay.md`.
+- **Relay (2026-11-27): built and tested locally. Its upgrade file ran on the live project and was removed after (2026-11-27).** Work passed from team to team along the value chain: IT sets up flows (stages in order, a space for each, a checklist before each hand-over), people pick up, pass on, answer back, send back, close. A card on the hub, `relay.html`, four Daikin-style examples. Reads spaces; changes nothing else. Read `book/28-relay.md`.
 - **The hub as home (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** The hub opens on My work and the chain (each team with the number of items it holds), then My shortcuts (tools pinned from their space, at most 12), then Spaces. A Relay stage names up to 6 tools of its team's space. The Demo tag is gone from every page. Plan: `docs/ROADMAP.md`.
 - **Need to know, pull, the flag (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** A team sees only the items it holds or has held, and of each only the hand-overs it gave or received; other teams' numbers, notes, checklists and tools are not given to it; IT sees all and each look is audited. A stage may have a limit of items at once: a full team takes no more. The person holding an item can raise a flag, "I am blocked". Pages carry a delivery stamp so browsers fetch new files without Ctrl+F5 (`node tools/stamp.mjs` before each delivery).
+- **Clean-up (2026-11-27): tested locally; nothing on screen changes, no SQL.** Windows, tiles, text fields, fact lines and ids from names come from the shared parts of `kit/v1/shell.js`; the Data part of the tool admin page is `pages/admin-tool-sheet.js`; the database address is written only in `kit/v1/config.js` and `node tools/stamp.mjs` puts it into the pages' policies.
 - Tests, all passing locally: fifteen SQL test files by subject (1,574 cases) on the database built from `db/`, nine browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
 ## The owner does now, in this order
+**Before any new feature:** prove what is built on the real project: N1 to N4, then steps 1 to 10 (step 6 is the first real upload to the file store). New work waits until these pass.
+
+Clean-up (2026-11-27): nothing to paste. On the site, open IT admin > Spaces and press a tile, open a tool's admin page > Data, and open Relay: each should look and work as before.
+
 Need to know, pull and the flag (new, 2026-11-27):
 - N1. **SQL editor:** paste all of `db/upgrade.sql`, Run. The security check must show no rows and the last result must say `yes`. One file: it also adds shortcuts and tools on the chain if the upgrade before was not run.
 - N2. **SQL editor:** paste `tests/sql/relay_test.sql`, Run: first row "... passed, 0 failed".
@@ -61,7 +66,7 @@ Need to know, pull and the flag (new, 2026-11-27):
 If a step fails, send the exact message on screen.
 
 ## With every delivery
-A change to the database: change the file of its subject in `db/`, put the new fingerprint in `db/check.sql`, and bring `db/upgrade.sql` (only the change) for the live project; `node tests/sql/run-local.mjs` must pass. The next delivery after it ran removes `db/upgrade.sql`. 
+Run `node tools/stamp.mjs` (stamp and database address). A change to the database: change the file of its subject in `db/`, put the new fingerprint in `db/check.sql`, and bring `db/upgrade.sql` (only the change) for the live project; `node tests/sql/run-local.mjs` must pass. The next delivery after it ran removes `db/upgrade.sql`. 
 
 Besides this file and the changelog: update the chapter of the site book the change touches (`book/*.md`) and add a line to `book/10-notes.md`.
 

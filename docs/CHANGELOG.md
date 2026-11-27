@@ -2,6 +2,19 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - Clean-up: one set of shared parts, one place for the address
+Changed (owner: "keep modular and clean implementation"). Nothing a person sees or does changes; no right, no SQL.
+- **Shared parts in `kit/v1/shell.js`:** `dialog` (the window over a page), `tile`, `textField`, `fact`, `slug`. The seven windows that were built by hand (a person, a space, a quota, "New user" on IT admin; a tool on space admin; the review window of a tool's tables; Relay's three windows) and the six kinds of tile (hub, space, IT spaces, IT quotas, space admin tools, Relay flows) now come from them. The pages lost about 230 lines of repeated code and `shell.js` gained the 110 they now share; every window closes the same way (Escape, Close, a press outside where nothing typed can be lost) and gives the focus back to the tile it came from.
+- **`pages/admin-tool.js` split:** the Data part (each table drawn as a sheet, columns added and removed, the new-table form) is its own file, `pages/admin-tool-sheet.js`. The tool admin page went from 1,259 to about 940 lines.
+- **The database address in one place:** `kit/v1/config.js`. `node tools/stamp.mjs` now also writes that address into each page's security policy and its connection hint (a policy cannot read a file). Moving the site to IT's database is one line and one command; `tests/phase0.mjs` fails if a page names another address.
+- Small differences, on purpose: the review window of a tool's tables now also closes with Escape, as every other window (it already did through a page-wide key; a press outside still does not close it); "New user" gives the focus back to its button; an empty level pill on a tool tile is no longer drawn.
+- `PROJECT-INSTRUCTIONS.md`, "Rules of work": build windows, tiles and fields from the shared parts; a part used by two pages moves into `shell.js`; a page script past about 900 lines is split; the address is written only in `config.js`. Paste this file into the claude.ai project instructions again: the copy there still names `db/core/` and the demo.
+- Docs: `docs/STATUS.md` no longer asks for `db/upgrade-relay.sql` (it ran and was removed); `tests/phase0.mjs` also opens `relay.html` and checks the Relay and sheet files.
+- Tests: all 15 SQL files pass twice (no SQL changed); phase0 passes; the eight browser tests give 1,055 checks passed, the same number as before the change (one slip, the sheet's "copy for the AI" button, was caught by `phase4.mjs` and fixed); screenshots of the IT, space admin and space pages at desktop and 390 px match the ones before.
+
+Files: `kit/v1/shell.js`, `kit/v1/config.js` (comment), `kit/v1/README.md`, `pages/admin-it.js`, `pages/admin-space.js`, `pages/admin-tool.js`, `pages/admin-tool-sheet.js` (new), `pages/relay.js`, `pages/hub.js`, `pages/space.js`, `pages/account.js`, `admin/tool.html`, `tools/stamp.mjs`, `tests/phase0.mjs`, `PROJECT-INSTRUCTIONS.md`, `docs/STATUS.md`, the site book (`11`, `10-notes`).
+SQL to paste: none.
+
 ## 2026-11-27 - Relay: need to know, pull, and the flag
 Changed (owner: "making everyone look at everything can cause confidentiality issues and inter-department competition; users see only what they are passed; the factory might give a date commitment but application may add a week before giving the commitment to sales")
 - **Each team sees only its own hand-overs.** An item is visible to a team once it holds it. The first hand-over (project, details, needed by) is for the first team and the team it passed to. From the second team on, passing needs a message, because the next team sees only the title and that message. The history shows a team what it did and what was handed to or from it; notes are for the writer's own team. Where the item is: only as far as your neighbour ("With Application"). Other teams' numbers, checklists, tools and limits are not shown. The database cuts all of it.

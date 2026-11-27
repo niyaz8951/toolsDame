@@ -1,5 +1,7 @@
 /*
- * kit/v1/config.js - the only place the demo's server address is written.
+ * kit/v1/config.js - the only place the site's database address is written.
+ * The pages' security policies carry it too, but they are written from here:
+ * after changing it, run  node tools/stamp.mjs  (tests/phase0.mjs fails until then).
  * Serves: SECURITY "Public and not". Both values are public by design.
  * Must not change: ONLY the Supabase project URL and the PUBLISHABLE key go here.
  * Never the secret key, the service role key or the database password.

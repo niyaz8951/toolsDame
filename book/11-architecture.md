@@ -17,6 +17,8 @@ This part of the book is for IT. Every chapter says how a thing is done, why it 
 - Plain HTML, CSS and JavaScript. No framework, no build step, no package, no CDN, no outside font. A page is the file you read in the repository.
 - The first element of every page is its security policy. It allows scripts and styles from the site only, and network calls to the site and to one named database address.
 - Every page loads `kit/v1/config.js` (the database address and the publishable key), `kit/v1/api.js` (sign-in, calls), `kit/v1/shell.js` (the bar, helpers), then its own script in `pages/`.
+- One design language, built once: the window over a page, the tile, the text field, the fact line and the id made from a name are shared parts of `kit/v1/shell.js` (`dialog`, `tile`, `textField`, `fact`, `slug`). Every page builds from them, so a change to the look or to how a window closes is made in one place.
+- The database address is written in `kit/v1/config.js` only. Each page's security policy must name it too (a policy cannot read a file), so `node tools/stamp.mjs` writes it there at each delivery, and `tests/phase0.mjs` fails if a page names any other address. Moving the site to IT's database is one line in `config.js` and one command.
 - Text is always written with `textContent`. No page builds HTML from data.
 
 ## One click, start to end: a person adds a row in a tool

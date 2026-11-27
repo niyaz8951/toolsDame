@@ -47,6 +47,113 @@
     location.replace(api.href('index.html'));
   }
 
+  // ---- the shared parts every page builds from: a window, a tile, a field, a fact, an id from a name.
+  // One design language: "Add" on top, a tile per item, and the item's window opened from its tile.
+  // Change these here and every page follows.
+
+  // A window over the page: o.id, o.label (read out by screen readers), o.onClose (required),
+  // o.small (the narrow window), o.cls (one more class), o.form (the window is a <form>),
+  // o.closeText ('Close'), o.closeId (o.id + '-close'), o.primary (the close button is the main one),
+  // o.outside (false: a press outside does not close it), o.escape (false: Escape does not close it).
+  // Escape, the close button and a press outside call o.onClose; the page decides what closing means
+  // and then calls w.drop(focusBack), focusBack being a CSS selector or a node to give the focus back to.
+  // Returns { back, box, body, msg, foot, close, drop }.
+  function dialog(o) {
+    var back = el('div', 'hub-focus-back');
+    var box = el(o.form ? 'form' : 'section', 'hub-focus' + (o.small ? ' hub-focus-small' : '') + (o.cls ? ' ' + o.cls : ''));
+    if (o.id) { box.id = o.id; }
+    if (o.form) { box.method = 'post'; box.noValidate = true; }
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', o.label || '');
+    var body = el('div');
+    var msg = el('p', 'hub-msg');
+    if (o.id) { msg.id = o.id + '-msg'; }
+    msg.hidden = true;
+    msg.setAttribute('role', 'alert');
+    var foot = el('div', 'dame-row hub-focus-foot');
+    var close = el('button', 'dame-btn' + (o.primary ? ' dame-btn-primary' : ''), o.closeText || 'Close');
+    close.type = 'button';
+    if (o.closeId || o.id) { close.id = o.closeId || (o.id + '-close'); }
+    foot.appendChild(close);
+    box.appendChild(body);
+    box.appendChild(msg);
+    box.appendChild(foot);
+    back.appendChild(box);
+    function shut() { o.onClose(); }
+    function onKey(ev) { if (ev.key === 'Escape') { shut(); } }
+    close.addEventListener('click', shut);
+    if (o.outside !== false) { back.addEventListener('mousedown', function (ev) { if (ev.target === back) { shut(); } }); }
+    if (o.escape !== false) { document.addEventListener('keydown', onKey); }
+    var w = { back: back, box: box, body: body, msg: msg, foot: foot, close: close };
+    w.drop = function (focusBack) {
+      back.remove();
+      document.removeEventListener('keydown', onKey);
+      var to = typeof focusBack === 'string' ? document.querySelector(focusBack) : focusBack;
+      if (to && to.focus) { to.focus(); }
+    };
+    document.body.appendChild(back);
+    return w;
+  }
+
+  // A tile: o.name, o.text (left out when null or undefined), o.href (a link) or o.onClick (a button),
+  // o.icon (a picked icon or letters; leave it out for the plain first letter), o.letter (the fallback),
+  // o.colour ('#rrggbb'), o.off (switched off), o.data ({ key: value } as data-key attributes),
+  // o.pills (texts, or [text, class]; empty ones are skipped), o.pillBox (the pills sit in one span).
+  function tile(o) {
+    var t = el(o.href ? 'a' : 'button', 'hub-tile' + (o.off ? ' hub-tile-off' : ''));
+    if (o.href) { t.href = o.href; } else { t.type = 'button'; }
+    Object.keys(o.data || {}).forEach(function (k) { t.setAttribute('data-' + k, o.data[k]); });
+    if (/^#[0-9a-f]{6}$/.test(o.colour || '')) { t.style.setProperty('--dame-accent', o.colour); }
+    var letter = o.letter || (String(o.name || '').trim().charAt(0) || '?').toUpperCase();
+    var ic = el('span', 'hub-tile-icon');
+    if ('icon' in o) { icon(ic, o.icon, letter); } else { ic.textContent = letter; }
+    t.appendChild(ic);
+    t.appendChild(el('span', 'hub-tile-name', o.name));
+    if (o.text !== undefined && o.text !== null) { t.appendChild(el('span', 'hub-tile-text', o.text)); }
+    var pills = (o.pills || []).filter(Boolean);
+    var holder = o.pillBox ? el('span') : t;
+    pills.forEach(function (p) {
+      holder.appendChild(el('span', 'hub-pill' + (Array.isArray(p) && p[1] ? ' ' + p[1] : ''), Array.isArray(p) ? p[0] : p));
+    });
+    if (o.pillBox) { t.appendChild(holder); }
+    if (o.onClick) { t.addEventListener('click', o.onClick); }
+    return t;
+  }
+
+  // A labelled one-line text field, put at the end of box. Returns the input.
+  // o: id, value, max, hint (a line under the field).
+  function textField(box, label, o) {
+    o = o || {};
+    var l = el('label', 'hub-field', label);
+    var i = el('input', 'dame-input');
+    i.type = 'text';
+    if (o.id) { i.id = o.id; }
+    if (o.max) { i.maxLength = o.max; }
+    i.autocomplete = 'off';
+    i.spellcheck = false;
+    i.value = o.value || '';
+    l.appendChild(i);
+    box.appendChild(l);
+    if (o.hint) { box.appendChild(el('p', 'dame-hint', o.hint)); }
+    return i;
+  }
+
+  // One line of a fact list: "Label  value".
+  function fact(list, label, value) {
+    var li = el('li');
+    li.appendChild(el('span', null, label));
+    li.appendChild(el('strong', null, value));
+    list.appendChild(li);
+  }
+
+  // An id made from a name, by the id rule (small letters, digits, single dashes, at most 30).
+  // ending: added after a dash when the name gives fewer than 3 characters ("DX" gives "dx-team").
+  function slug(text, ending) {
+    var id = String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
+    return id && ending && id.length < 3 ? id + '-' + ending : id;
+  }
+
   // ---- day and night. The choice is one word kept in this browser; kit/v1/theme.js applies it before the page is drawn.
   var root = document.documentElement;
   function isNight() {
@@ -921,6 +1028,7 @@
     showUser: showUser, confirmButton: confirmButton, when: when,
     param: param, runner: runner, addRow: addRow, picker: picker, people: people,
     typedDelete: typedDelete, audit: audit, info: info, openInfo: openInfo, rich: rich, toolGuide: toolGuide,
-    icon: icon, titled: titled, iconPicker: iconPicker, cameFrom: cameFrom
+    icon: icon, titled: titled, iconPicker: iconPicker, cameFrom: cameFrom,
+    dialog: dialog, tile: tile, textField: textField, fact: fact, slug: slug
   });
 })();

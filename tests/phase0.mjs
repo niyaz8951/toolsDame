@@ -15,7 +15,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8137;
 const SITE = 'http://127.0.0.1:' + PORT + '/toolsDame/';
 const PAGES = ['', 'index.html', 'hub.html', 'space.html', 'tool.html', 'frame.html', 'pack.html', 'blocks.html', 'book.html', 'account.html',
-  'admin/it.html', 'admin/space.html', 'admin/tool.html'];
+  'admin/it.html', 'admin/space.html', 'admin/tool.html', 'relay.html'];
 const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1/shell.js',
   'kit/v1/api.js', 'kit/v1/config.js', 'pages/index.js', 'pages/hub.js', 'pages/admin-it.js', 'pages/space.js', 'pages/admin-space.js', 'pages/admin-tool.js', 'pages/tool.js', 'pages/blocks.js', 'kit/v1/pack.js', 'kit/v1/lib/index.json', 'kit/v1/lib/exceljs.js', 'kit/starter/index.html', 'kit/starter/tracker.html', 'examples/converter/index.html',
   'examples/parts-extractor/index.html',
@@ -26,7 +26,8 @@ const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1
   'book/06-security.md', 'book/07-it.md', 'book/08-every-page.md', 'book/09-status.md', 'book/10-notes.md',
   'book/11-architecture.md', 'book/12-identity.md', 'book/13-access.md', 'book/14-database.md', 'book/15-frame.md', 'book/16-releases.md',
   'book/17-data.md', 'book/18-builder.md', 'book/19-audit.md', 'book/20-tests.md', 'book/21-decisions.md', 'book/22-questions.md', 'book/23-gaps.md',
-  'book/24-threats.md', 'book/25-sharing.md', 'book/26-data-handling.md', 'book/27-operations.md'];
+  'book/24-threats.md', 'book/25-sharing.md', 'book/26-data-handling.md', 'book/27-operations.md',
+  'pages/relay.js', 'pages/admin-tool-sheet.js', 'help/relay.md', 'book/28-relay.md'];
 
 let failed = 0;
 function check(ok, what) {

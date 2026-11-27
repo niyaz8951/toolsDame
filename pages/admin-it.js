@@ -83,11 +83,8 @@
   function closePerson() {
     if (!pwin) { return; }
     var id = pwin.id;
-    pwin.back.remove();
-    document.removeEventListener('keydown', pwin.onKey);
+    pwin.drop('#people [data-user="' + id + '"]');
     pwin = null;
-    var btn = document.querySelector('#people [data-user="' + id + '"]');
-    if (btn) { btn.focus(); }
   }
 
   // One action inside the window: do it, read the lists and the person again, say what happened.
@@ -104,25 +101,10 @@
     return !failed;
   }
 
-  function fact(list, label, value) {
-    var li = ui.el('li');
-    li.appendChild(ui.el('span', null, label));
-    li.appendChild(ui.el('strong', null, value));
-    list.appendChild(li);
-  }
+  var fact = ui.fact;
 
   function field(box, label, id, value, max) {
-    var l = ui.el('label', 'hub-field', label);
-    var i = ui.el('input', 'dame-input');
-    i.type = 'text';
-    i.id = id;
-    i.maxLength = max;
-    i.autocomplete = 'off';
-    i.spellcheck = false;
-    i.value = value || '';
-    l.appendChild(i);
-    box.appendChild(l);
-    return i;
+    return ui.textField(box, label, { id: id, value: value, max: max });
   }
 
   // u: the line from the people list. card: the full account, or null when it could not be read.
@@ -242,47 +224,22 @@
   function openPerson(id) {
     var u = users.filter(function (x) { return x.id === id; })[0];
     if (!u) { return; }
-    var back = ui.el('div', 'hub-focus-back');
-    var box = ui.el('section', 'hub-focus');
-    box.id = 'person-win';
-    box.setAttribute('role', 'dialog');
-    box.setAttribute('aria-modal', 'true');
-    box.setAttribute('aria-label', 'Account of ' + u.name);
-    var body = ui.el('div');
-    body.appendChild(ui.el('p', 'dame-muted', 'One moment.'));
-    var msg = ui.el('p', 'hub-msg');
-    msg.id = 'person-win-msg';
-    msg.hidden = true;
-    msg.setAttribute('role', 'alert');
-    var foot = ui.el('div', 'dame-row hub-focus-foot');
-    var close = ui.el('button', 'dame-btn dame-btn-primary', 'Done');
-    close.type = 'button';
-    close.id = 'person-win-close';
-    close.addEventListener('click', closePerson);
-    back.addEventListener('mousedown', function (ev) { if (ev.target === back) { closePerson(); } });
-    foot.appendChild(close);
-    box.appendChild(body);
-    box.appendChild(msg);
-    box.appendChild(foot);
-    back.appendChild(box);
-    pwin = { id: id, back: back, body: body, msg: msg, temp: '', onKey: function (ev) { if (ev.key === 'Escape') { closePerson(); } } };
-    document.addEventListener('keydown', pwin.onKey);
-    document.body.appendChild(back);
-    close.focus();
+    pwin = ui.dialog({ id: 'person-win', label: 'Account of ' + u.name, closeText: 'Done', primary: true, onClose: closePerson });
+    pwin.id = id;
+    pwin.temp = '';
+    pwin.body.appendChild(ui.el('p', 'dame-muted', 'One moment.'));
+    pwin.close.focus();
     showPerson();
   }
 
   // A space is one tile: name, what it holds, and "Switched off" when it is. Pressing it opens its window.
   function spaceTile(s) {
-    var t = ui.el('button', 'hub-tile' + (s.active ? '' : ' hub-tile-off'));
-    t.type = 'button';
-    t.setAttribute('data-space', s.id);
-    t.appendChild(ui.el('span', 'hub-tile-icon', (s.name.trim().charAt(0) || 'S').toUpperCase()));
-    t.appendChild(ui.el('span', 'hub-tile-name', s.name));
-    t.appendChild(ui.el('span', 'hub-tile-text', s.tools + (s.tools === 1 ? ' tool, ' : ' tools, ') + s.members + (s.members === 1 ? ' member' : ' members')));
-    if (!s.active) { t.appendChild(ui.el('span', 'hub-pill', 'Switched off')); }
-    t.addEventListener('click', function () { openSpace(s.id); });
-    return t;
+    return ui.tile({
+      name: s.name, letter: (s.name.trim().charAt(0) || 'S').toUpperCase(), off: !s.active, data: { space: s.id },
+      text: s.tools + (s.tools === 1 ? ' tool, ' : ' tools, ') + s.members + (s.members === 1 ? ' member' : ' members'),
+      pills: [!s.active && 'Switched off'],
+      onClick: function () { openSpace(s.id); }
+    });
   }
 
   // The window of one space. Everything that changes a space is here and nowhere else on the page.
@@ -290,11 +247,8 @@
   function closeSpace() {
     if (!win) { return; }
     var id = win.id;
-    win.back.remove();
-    document.removeEventListener('keydown', win.onKey);
+    win.drop('#spaces [data-space="' + id + '"]');
     win = null;
-    var tile = document.querySelector('#spaces [data-space="' + id + '"]');
-    if (tile) { tile.focus(); }
   }
 
   async function inSpace(name, args, done) {
@@ -354,29 +308,19 @@
 
   // A space's quota is one tile: its name, what it uses, and what needs IT's eye.
   function quotaTile(q) {
-    var t = ui.el('button', 'hub-tile' + (q.active ? '' : ' hub-tile-off'));
-    t.type = 'button';
-    t.setAttribute('data-quota', q.space);
-    t.appendChild(ui.el('span', 'hub-tile-icon', (q.name.trim().charAt(0) || 'S').toUpperCase()));
-    t.appendChild(ui.el('span', 'hub-tile-name', q.name));
-    t.appendChild(ui.el('span', 'hub-tile-text', num(q.rows_used) + ' of ' + num(q.max_rows) + ' rows used' +
-      ', ' + num(q.tools_used) + ' of ' + num(q.max_tools) + ' tools'));
-    if (q.request) { t.appendChild(ui.el('span', 'hub-pill', 'Request waiting')); }
-    if (isFull(q)) { t.appendChild(ui.el('span', 'hub-pill', 'Full')); }
-    else if (isNear(q)) { t.appendChild(ui.el('span', 'hub-pill', 'Nearly full')); }
-    if (q.own) { t.appendChild(ui.el('span', 'hub-pill hub-pill-ok', 'Own limits')); }
-    t.addEventListener('click', function () { openQuota(q.space); });
-    return t;
+    return ui.tile({
+      name: q.name, letter: (q.name.trim().charAt(0) || 'S').toUpperCase(), off: !q.active, data: { quota: q.space },
+      text: num(q.rows_used) + ' of ' + num(q.max_rows) + ' rows used' + ', ' + num(q.tools_used) + ' of ' + num(q.max_tools) + ' tools',
+      pills: [q.request && 'Request waiting', isFull(q) ? 'Full' : (isNear(q) && 'Nearly full'), q.own && ['Own limits', 'hub-pill-ok']],
+      onClick: function () { openQuota(q.space); }
+    });
   }
 
   function closeQuota() {
     if (!qwin) { return; }
     var id = qwin.id;
-    qwin.back.remove();
-    document.removeEventListener('keydown', qwin.onKey);
+    qwin.drop('#q-tiles [data-quota="' + id + '"]');
     qwin = null;
-    var tile = document.querySelector('#q-tiles [data-quota="' + id + '"]');
-    if (tile) { tile.focus(); }
   }
 
   // One action inside the window: do it, read everything again, draw the window again, say what happened.
@@ -486,33 +430,10 @@
   function openQuota(id) {
     var q = quotaOf(id);
     if (!q) { return; }
-    var back = ui.el('div', 'hub-focus-back');
-    var box = ui.el('section', 'hub-focus hub-focus-small');
-    box.id = 'quota-win';
-    box.setAttribute('role', 'dialog');
-    box.setAttribute('aria-modal', 'true');
-    box.setAttribute('aria-label', 'Database quota of ' + q.name);
-    var body = ui.el('div');
-    var msg = ui.el('p', 'hub-msg');
-    msg.id = 'quota-win-msg';
-    msg.hidden = true;
-    msg.setAttribute('role', 'alert');
-    var foot = ui.el('div', 'dame-row hub-focus-foot');
-    var close = ui.el('button', 'dame-btn dame-btn-primary', 'Done');
-    close.type = 'button';
-    close.id = 'quota-win-close';
-    close.addEventListener('click', closeQuota);
-    back.addEventListener('mousedown', function (ev) { if (ev.target === back) { closeQuota(); } });
-    foot.appendChild(close);
-    box.appendChild(body);
-    box.appendChild(msg);
-    box.appendChild(foot);
-    back.appendChild(box);
-    qwin = { id: id, back: back, body: body, msg: msg, onKey: function (ev) { if (ev.key === 'Escape') { closeQuota(); } } };
-    document.addEventListener('keydown', qwin.onKey);
+    qwin = ui.dialog({ id: 'quota-win', label: 'Database quota of ' + q.name, small: true, closeText: 'Done', primary: true, onClose: closeQuota });
+    qwin.id = id;
     drawQuota(q);
-    document.body.appendChild(back);
-    close.focus();
+    qwin.close.focus();
   }
 
   function drawQuotas() {
@@ -601,35 +522,12 @@
   function openSpace(id) {
     var s = spaces.filter(function (x) { return x.id === id; })[0];
     if (!s) { return; }
-    var back = ui.el('div', 'hub-focus-back');
-    var box = ui.el('section', 'hub-focus hub-focus-small');
-    box.id = 'space-win';
-    box.setAttribute('role', 'dialog');
-    box.setAttribute('aria-modal', 'true');
-    box.setAttribute('aria-label', 'Space ' + s.name);
-    var body = ui.el('div');
-    var msg = ui.el('p', 'hub-msg');
-    msg.id = 'space-win-msg';
-    msg.hidden = true;
-    msg.setAttribute('role', 'alert');
-    var foot = ui.el('div', 'dame-row hub-focus-foot');
-    var close = ui.el('button', 'dame-btn dame-btn-primary', 'Done');
-    close.type = 'button';
-    close.id = 'space-win-close';
-    var link = ui.el('a', 'dame-btn', 'Open its admin page');
-    close.addEventListener('click', closeSpace);
-    back.addEventListener('mousedown', function (ev) { if (ev.target === back) { closeSpace(); } });
-    foot.appendChild(close);
-    foot.appendChild(link);
-    box.appendChild(body);
-    box.appendChild(msg);
-    box.appendChild(foot);
-    back.appendChild(box);
-    win = { id: id, back: back, body: body, msg: msg, link: link, onKey: function (ev) { if (ev.key === 'Escape') { closeSpace(); } } };
-    document.addEventListener('keydown', win.onKey);
+    win = ui.dialog({ id: 'space-win', label: 'Space ' + s.name, small: true, closeText: 'Done', primary: true, onClose: closeSpace });
+    win.id = id;
+    win.link = ui.el('a', 'dame-btn', 'Open its admin page');
+    win.foot.appendChild(win.link);
     drawSpace(s);
-    document.body.appendChild(back);
-    close.focus();
+    win.close.focus();
   }
 
   // The "Add a space" window.
@@ -652,56 +550,24 @@
 
   // The "New user" window: username, display name, temporary password.
   function newUser() {
-    var back = ui.el('div', 'hub-focus-back');
-    var box = ui.el('form', 'hub-focus hub-focus-small');
-    box.method = 'post';
-    box.noValidate = true;
-    box.setAttribute('role', 'dialog');
-    box.setAttribute('aria-modal', 'true');
-    box.id = 'user-new';
-    box.setAttribute('aria-label', 'New user');
+    var w = ui.dialog({ id: 'user-new', form: true, small: true, label: 'New user', closeText: 'Cancel', outside: false, onClose: close });
+    var box = w.body;
+    var msg = w.msg;
     box.appendChild(ui.el('h2', null, 'New user'));
     box.appendChild(ui.el('p', 'dame-muted', 'The person signs in with this username and the temporary password, and must choose a new password at the first sign-in. No email is needed.'));
-    function field(label, id, hint) {
-      var l = ui.el('label', 'hub-field', label);
-      var i = ui.el('input', 'dame-input');
-      i.type = 'text';
-      i.id = id;
-      i.autocomplete = 'off';
-      i.spellcheck = false;
-      l.appendChild(i);
-      box.appendChild(l);
-      if (hint) { box.appendChild(ui.el('p', 'dame-hint', hint)); }
-      return i;
-    }
-    var user = field('Username', 'nu-username', '3 to 30 characters: small letters, digits, dot, dash, underscore.');
-    user.maxLength = 30;
-    var name = field('Display name', 'nu-name', '');
-    name.maxLength = 80;
-    var pass = field('Temporary password', 'nu-password', 'At least 10 characters with a small letter, a capital letter and a digit. Tell it to the person by voice, not in writing.');
-    pass.maxLength = 72;
+    var user = ui.textField(box, 'Username', { id: 'nu-username', max: 30, hint: '3 to 30 characters: small letters, digits, dot, dash, underscore.' });
+    var name = ui.textField(box, 'Display name', { id: 'nu-name', max: 80 });
+    var pass = ui.textField(box, 'Temporary password', { id: 'nu-password', max: 72, hint: 'At least 10 characters with a small letter, a capital letter and a digit. Tell it to the person by voice, not in writing.' });
     var gen = ui.el('button', 'dame-btn hub-small', 'Generate');
     gen.type = 'button';
     gen.addEventListener('click', function () { pass.value = generate(); pass.focus(); pass.select(); });
     box.appendChild(gen);
-    var msg = ui.el('p', 'hub-msg');
-    msg.hidden = true;
-    msg.setAttribute('role', 'alert');
-    box.appendChild(msg);
-    var foot = ui.el('div', 'dame-row hub-focus-foot');
     var create = ui.el('button', 'dame-btn dame-btn-primary', 'Create');
     create.type = 'submit';
     create.id = 'nu-create';
-    var cancel = ui.el('button', 'dame-btn', 'Cancel');
-    cancel.type = 'button';
-    function close() { back.remove(); document.removeEventListener('keydown', onKey); }
-    function onKey(ev) { if (ev.key === 'Escape') { close(); } }
-    cancel.addEventListener('click', close);
-    document.addEventListener('keydown', onKey);
-    foot.appendChild(create);
-    foot.appendChild(cancel);
-    box.appendChild(foot);
-    box.addEventListener('submit', async function (ev) {
+    w.foot.insertBefore(create, w.close);
+    function close() { w.drop('#new-user'); }
+    w.box.addEventListener('submit', async function (ev) {
       ev.preventDefault();
       create.disabled = true;
       ui.say(msg, '');
@@ -716,8 +582,6 @@
         create.disabled = false;
       }
     });
-    back.appendChild(box);
-    document.body.appendChild(back);
     user.focus();
   }
 
@@ -786,11 +650,8 @@
     await audit;
   }
 
-  function slug(text) {
-    var id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
-    // An id needs three characters: a short name like "DX" or "QA" gets a plain ending.
-    return id && id.length < 3 ? id + '-team' : id;
-  }
+  // An id needs three characters: a short name like "DX" or "QA" gets a plain ending.
+  function slug(text) { return ui.slug(text, 'team'); }
 
   async function start() {
     me = await ui.guard();

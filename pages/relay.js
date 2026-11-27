@@ -87,39 +87,11 @@
 
   // A window over the page, the same as the admin pages use. Escape or a press outside closes it.
   function makeWindow(id, label, onClose) {
-    var back = el('div', 'hub-focus-back');
-    var box = el('section', 'hub-focus relay-win');
-    box.id = id;
-    box.setAttribute('role', 'dialog');
-    box.setAttribute('aria-modal', 'true');
-    box.setAttribute('aria-label', label);
-    var body = el('div');
-    var msg = el('p', 'hub-msg');
-    msg.id = id + '-msg';
-    msg.hidden = true;
-    msg.setAttribute('role', 'alert');
-    var foot = el('div', 'dame-row hub-focus-foot');
-    var close = el('button', 'dame-btn', 'Close');
-    close.type = 'button';
-    close.id = id + '-close';
-    foot.appendChild(close);
-    box.appendChild(body);
-    box.appendChild(msg);
-    box.appendChild(foot);
-    back.appendChild(box);
-    var w = { back: back, box: box, body: body, msg: msg, foot: foot, close: close };
-    w.onKey = function (ev) { if (ev.key === 'Escape') { onClose(); } };
-    close.addEventListener('click', onClose);
-    back.addEventListener('mousedown', function (ev) { if (ev.target === back) { onClose(); } });
-    document.addEventListener('keydown', w.onKey);
-    document.body.appendChild(back);
-    return w;
+    return ui.dialog({ id: id, label: label, cls: 'relay-win', onClose: onClose });
   }
 
   function dropWindow(w) {
-    if (!w) { return; }
-    w.back.remove();
-    document.removeEventListener('keydown', w.onKey);
+    if (w) { w.drop(); }
   }
 
   function setAddress(key, value) {
@@ -739,26 +711,19 @@
     });
     var tiles = ui.clear($('flow-tiles'));
     flowsAll.forEach(function (f) {
-      var t = el('button', 'hub-tile' + (f.active ? '' : ' hub-tile-off'));
-      t.type = 'button';
-      t.setAttribute('data-setup', f.id);
-      t.appendChild(el('span', 'hub-tile-icon', f.prefix.slice(0, 3)));
-      t.appendChild(el('span', 'hub-tile-name', f.name));
-      t.appendChild(el('span', 'hub-tile-text', f.stages.map(function (s) { return s.space_name; }).join(' > ')));
-      var pills = el('span');
-      pills.appendChild(el('span', 'hub-pill', f.open + ' open, ' + f.items + ' in all'));
-      if (!f.active) { pills.appendChild(el('span', 'hub-pill', 'Switched off')); }
-      if (f.stages.some(function (s) { return !s.team_ok; })) { pills.appendChild(el('span', 'hub-pill relay-pill-late', 'A team is off or deleted')); }
-      t.appendChild(pills);
-      t.addEventListener('click', function () { openFlow(f, null); });
-      tiles.appendChild(t);
+      tiles.appendChild(ui.tile({
+        name: f.name, letter: f.prefix.slice(0, 3), off: !f.active, data: { setup: f.id },
+        text: f.stages.map(function (s) { return s.space_name; }).join(' > '),
+        pillBox: true,
+        pills: [f.open + ' open, ' + f.items + ' in all', !f.active && 'Switched off',
+          f.stages.some(function (s) { return !s.team_ok; }) && ['A team is off or deleted', 'relay-pill-late']],
+        onClick: function () { openFlow(f, null); }
+      }));
     });
     $('flow-tiles-empty').hidden = flowsAll.length > 0;
   }
 
-  function slug(text) {
-    return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/g, '');
-  }
+  function slug(text) { return ui.slug(text); }
 
   function closeFlow() {
     if (!fwin) { return; }

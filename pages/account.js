@@ -20,12 +20,7 @@
 
   function $(id) { return document.getElementById(id); }
 
-  function fact(list, label, value) {
-    var li = ui.el('li');
-    li.appendChild(ui.el('span', null, label));
-    li.appendChild(ui.el('strong', null, value));
-    list.appendChild(li);
-  }
+  var fact = ui.fact;
 
   function line(list, name, text, pills, href, go) {
     var li = ui.el('li', 'hub-person');

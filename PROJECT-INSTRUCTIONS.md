@@ -69,6 +69,8 @@ Every source file starts with a short note: what it is for, which contract it se
 - Every function has an allowed test and refused tests (signed out, pending, disabled, wrong space, wrong tool, level too low, other user's row).
 - `core.security_check()` returns nothing and the Supabase Security Advisor shows no errors after every SQL file.
 - Plain wording on every screen, for people who are not developers.
+- Keep it modular. A window, a tile, a text field, a fact line and an id from a name are built with the shared parts of `kit/v1/shell.js` (`dialog`, `tile`, `textField`, `fact`, `slug`), never by hand in a page. A part used by two pages moves into `shell.js`. A page script that grows past about 900 lines is split by part (as `pages/admin-tool-sheet.js`). A clean-up changes no behaviour and is proved by the existing tests.
+- The database address is written only in `kit/v1/config.js`; `node tools/stamp.mjs` writes it into the pages' policies.
 - Delivery: push to the repo + the SQL files to paste in order + any manual dashboard step; update `docs/STATUS.md` and `docs/CHANGELOG.md`; say what was decided and what the owner must do next.
 - With the owner: short, plain, no filler. Show a result rather than a list of questions; ask only when a wrong guess is costly. Check the engineering and logic, even in what the owner supplies.
 

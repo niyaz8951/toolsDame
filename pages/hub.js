@@ -15,15 +15,12 @@
   function $(id) { return document.getElementById(id); }
 
   function tile(space) {
-    var a = ui.el('a', 'hub-tile');
-    a.href = api.href('space.html') + '?space=' + encodeURIComponent(space.id);
-    if (/^#[0-9a-f]{6}$/.test(space.colour || '')) { a.style.setProperty('--dame-accent', space.colour); }
-    a.appendChild(ui.icon(ui.el('span', 'hub-tile-icon'), space.icon, (space.name.trim().charAt(0) || 'S').toUpperCase()));
-    a.appendChild(ui.el('span', 'hub-tile-name', space.name));
-    if (space.description) { a.appendChild(ui.el('span', 'hub-tile-text', space.description)); }
-    if (space.is_admin) { a.appendChild(ui.el('span', 'hub-pill', 'You are admin')); }
-    if (!space.active) { a.appendChild(ui.el('span', 'hub-pill', 'Switched off')); }
-    return a;
+    return ui.tile({
+      href: api.href('space.html') + '?space=' + encodeURIComponent(space.id),
+      name: space.name, icon: space.icon, letter: (space.name.trim().charAt(0) || 'S').toUpperCase(), colour: space.colour,
+      text: space.description || null,
+      pills: [space.is_admin && 'You are admin', !space.active && 'Switched off']
+    });
   }
 
   function hoursText(h) {
