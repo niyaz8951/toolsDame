@@ -1,38 +1,196 @@
 {
- "note": "The site book. Written for IT; the hub and the book page show it to IT admins only. One entry per chapter, in reading order, grouped in parts. Every delivery that changes the site also changes the chapter it touches and adds a line to 10-notes.md.",
+ "note": "The site book. Written for IT; the hub and the book page show it to IT admins only. One entry per chapter, in reading order, grouped in parts. Every delivery that changes the site also changes the chapter it touches and adds a line to 10-notes.md. A chapter marked pitch is the 5-minute presentation. Pictures are written as :::kind blocks (stats, cards, chain, tree, walls, lanes, compare), drawn by DameShell.rich.",
  "parts": [
-  { "title": "The overview", "text": "Ten minutes, to read or to present.", "present": true },
-  { "title": "In detail", "text": "How each thing is done, why, what was left out, and its limits.", "present": false },
-  { "title": "What a reviewer asks", "text": "Threats, sharing of rights, data handling, running it, decisions, questions, gaps.", "present": false },
-  { "title": "The log", "text": "What changed and what was decided.", "present": false }
+  {
+   "title": "The overview",
+   "text": "Ten minutes, to read or to present.",
+   "present": true
+  },
+  {
+   "title": "In detail",
+   "text": "How each thing is done, why, what was left out, and its limits.",
+   "present": false
+  },
+  {
+   "title": "What a reviewer asks",
+   "text": "Threats, sharing of rights, data handling, running it, decisions, questions, gaps.",
+   "present": false
+  },
+  {
+   "title": "The log",
+   "text": "What changed and what was decided.",
+   "present": false
+  }
  ],
  "chapters": [
-  { "part": 0, "file": "01-what.md", "title": "What DAME is", "text": "One site for the tools of every department, and why it exists." },
-  { "part": 0, "file": "02-structure.md", "title": "How the site is organised", "text": "Hub, spaces, tools, and who may do what." },
-  { "part": 0, "file": "03-people.md", "title": "People and sign-in", "text": "How a person gets in, and how a leaver gets out." },
-  { "part": 0, "file": "04-building.md", "title": "Building a tool", "text": "From an idea to a live tool, one step at a time." },
-  { "part": 0, "file": "05-data.md", "title": "Tools that save data", "text": "The database, tables made by the site, who sees which rows." },
-  { "part": 0, "file": "06-security.md", "title": "Security", "text": "Why code from many teams cannot harm the site or each other." },
-  { "part": 0, "file": "07-it.md", "title": "Demo and target", "text": "What the demo runs on and what IT would run." },
-  { "part": 0, "file": "08-every-page.md", "title": "On every page", "text": "The look, day and night, the information button, speed." },
-  { "part": 0, "file": "09-status.md", "title": "Where we are", "text": "What is built, what is proven, what comes next." },
-  { "part": 1, "file": "11-architecture.md", "title": "The pieces, and one click end to end", "text": "What runs where, and the path of one request." },
-  { "part": 1, "file": "12-identity.md", "title": "Identity and sessions", "text": "Accounts, the three ways in, passwords, resets, one session." },
-  { "part": 1, "file": "13-access.md", "title": "The access model", "text": "The tables, how a level is worked out, every check, every function." },
-  { "part": 1, "file": "14-database.md", "title": "The database", "text": "What is exposed, the rules of every function, how it is changed." },
-  { "part": 1, "file": "15-frame.md", "title": "The sealed frame", "text": "The three layers, the policy, the private line, known limits." },
-  { "part": 1, "file": "16-releases.md", "title": "Uploads and versions", "text": "Announce, send, close, preview, live; the file store's rule." },
-  { "part": 1, "file": "17-data.md", "title": "Tables and rows", "text": "How a table is made, the row service, the three sharing rules." },
-  { "part": 1, "file": "18-builder.md", "title": "The builder and the AI", "text": "What goes out, what comes back, what the check stops." },
-  { "part": 1, "file": "19-audit.md", "title": "The audit", "text": "What is written, what is not, why it cannot be altered." },
-  { "part": 1, "file": "20-tests.md", "title": "How it is tested", "text": "The layers, the stand-in, control runs, what is not tested." },
-  { "part": 2, "file": "24-threats.md", "title": "Threats, one by one", "text": "Who could try what, what stops him, what is left over." },
-  { "part": 2, "file": "25-sharing.md", "title": "Who can give what to whom", "text": "Handing rights on, taking them back, joiners, movers, leavers." },
-  { "part": 2, "file": "26-data-handling.md", "title": "Where data lives, and what happens to it", "text": "Every store, every way out, deletes, backups, retention, limits." },
-  { "part": 2, "file": "27-operations.md", "title": "Running it", "text": "Who changes the site, keys, watching, and each kind of incident." },
-  { "part": 2, "file": "21-decisions.md", "title": "The decisions, one by one", "text": "Each question, what was chosen, and why." },
-  { "part": 2, "file": "22-questions.md", "title": "Questions IT will ask", "text": "Short answers, each pointing to the detail." },
-  { "part": 2, "file": "23-gaps.md", "title": "Open gaps and hand-over", "text": "Everything weaker than production, and what moves to IT." },
-  { "part": 3, "file": "10-notes.md", "title": "Notes and changes", "text": "The running log, newest first." }
+  {
+   "part": 0,
+   "pitch": true,
+   "file": "00-pitch.md",
+   "title": "DAME in five minutes",
+   "text": "The whole case on ten slides, in pictures."
+  },
+  {
+   "part": 0,
+   "file": "01-what.md",
+   "title": "What DAME is",
+   "text": "One site for the tools of every department, and why it exists."
+  },
+  {
+   "part": 0,
+   "file": "02-structure.md",
+   "title": "How the site is organised",
+   "text": "Hub, spaces, tools, and who may do what."
+  },
+  {
+   "part": 0,
+   "file": "03-people.md",
+   "title": "People and sign-in",
+   "text": "How a person gets in, and how a leaver gets out."
+  },
+  {
+   "part": 0,
+   "file": "04-building.md",
+   "title": "Building a tool",
+   "text": "From an idea to a live tool, one step at a time."
+  },
+  {
+   "part": 0,
+   "file": "05-data.md",
+   "title": "Tools that save data",
+   "text": "The database, tables made by the site, who sees which rows."
+  },
+  {
+   "part": 0,
+   "file": "06-security.md",
+   "title": "Security",
+   "text": "Why code from many teams cannot harm the site or each other."
+  },
+  {
+   "part": 0,
+   "file": "07-it.md",
+   "title": "Demo and target",
+   "text": "What the demo runs on and what IT would run."
+  },
+  {
+   "part": 0,
+   "file": "08-every-page.md",
+   "title": "On every page",
+   "text": "The look, day and night, the information button, speed."
+  },
+  {
+   "part": 0,
+   "file": "09-status.md",
+   "title": "Where we are",
+   "text": "What is built, what is proven, what comes next."
+  },
+  {
+   "part": 1,
+   "file": "11-architecture.md",
+   "title": "The pieces, and one click end to end",
+   "text": "What runs where, and the path of one request."
+  },
+  {
+   "part": 1,
+   "file": "12-identity.md",
+   "title": "Identity and sessions",
+   "text": "Accounts, the three ways in, passwords, resets, one session."
+  },
+  {
+   "part": 1,
+   "file": "13-access.md",
+   "title": "The access model",
+   "text": "The tables, how a level is worked out, every check, every function."
+  },
+  {
+   "part": 1,
+   "file": "14-database.md",
+   "title": "The database",
+   "text": "What is exposed, the rules of every function, how it is changed."
+  },
+  {
+   "part": 1,
+   "file": "15-frame.md",
+   "title": "The sealed frame",
+   "text": "The three layers, the policy, the private line, known limits."
+  },
+  {
+   "part": 1,
+   "file": "16-releases.md",
+   "title": "Uploads and versions",
+   "text": "Announce, send, close, preview, live; the file store's rule."
+  },
+  {
+   "part": 1,
+   "file": "17-data.md",
+   "title": "Tables and rows",
+   "text": "How a table is made, the row service, the three sharing rules."
+  },
+  {
+   "part": 1,
+   "file": "18-builder.md",
+   "title": "The builder and the AI",
+   "text": "What goes out, what comes back, what the check stops."
+  },
+  {
+   "part": 1,
+   "file": "19-audit.md",
+   "title": "The audit",
+   "text": "What is written, what is not, why it cannot be altered."
+  },
+  {
+   "part": 1,
+   "file": "20-tests.md",
+   "title": "How it is tested",
+   "text": "The layers, the stand-in, control runs, what is not tested."
+  },
+  {
+   "part": 2,
+   "file": "24-threats.md",
+   "title": "Threats, one by one",
+   "text": "Who could try what, what stops him, what is left over."
+  },
+  {
+   "part": 2,
+   "file": "25-sharing.md",
+   "title": "Who can give what to whom",
+   "text": "Handing rights on, taking them back, joiners, movers, leavers."
+  },
+  {
+   "part": 2,
+   "file": "26-data-handling.md",
+   "title": "Where data lives, and what happens to it",
+   "text": "Every store, every way out, deletes, backups, retention, limits."
+  },
+  {
+   "part": 2,
+   "file": "27-operations.md",
+   "title": "Running it",
+   "text": "Who changes the site, keys, watching, and each kind of incident."
+  },
+  {
+   "part": 2,
+   "file": "21-decisions.md",
+   "title": "The decisions, one by one",
+   "text": "Each question, what was chosen, and why."
+  },
+  {
+   "part": 2,
+   "file": "22-questions.md",
+   "title": "Questions IT will ask",
+   "text": "Short answers, each pointing to the detail."
+  },
+  {
+   "part": 2,
+   "file": "23-gaps.md",
+   "title": "Open gaps and hand-over",
+   "text": "Everything weaker than production, and what moves to IT."
+  },
+  {
+   "part": 3,
+   "file": "10-notes.md",
+   "title": "Notes and changes",
+   "text": "The running log, newest first."
+  }
  ]
 }

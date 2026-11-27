@@ -4,6 +4,12 @@ Every uploaded tool is treated as hostile. This chapter says exactly what contai
 
 => tool.html (the shell) | frame.html (no script) | the tool, sandboxed
 
+:::walls
+`tool.html`, the shell | A platform page. Holds the session, draws the bar, talks to the database
+`frame.html`, the host | No script at all, the strictest policy. The tool's frame inherits it
+The tool's frame | Sandboxed, no origin, no network. One private line to the shell
+:::
+
 ## Three layers
 1. **`tool.html`, the shell.** It is a platform page. It holds the session, draws the bar, and talks to the database.
 2. **`frame.html`, the host.** A page with no script at all and the strictest policy. It exists so that the tool's frame inherits that policy from its parent.

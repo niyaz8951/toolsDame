@@ -287,16 +287,16 @@ try {
   const reader = it.page;
   await reader.goto(SITE + 'hub.html');
   await reader.waitForSelector('#book-chapters a');
-  check((await reader.locator('#book-chapters a').count()) === 9, 'IT: the hub offers the site book with the nine chapters of its overview');
+  check((await reader.locator('#book-chapters a').count()) === 10, 'IT: the hub offers the site book with the ten chapters of its overview');
   await reader.click('a:has-text("Read the site book")');
   await reader.waitForSelector('#chapters button');
-  check(/What DAME is/.test(await reader.textContent('#page')) && (await reader.locator('#page script, #page img, #page a').count()) === 0, 'the book opens on its first chapter, written to the page as text');
-  check((await reader.locator('#chapters .hub-book-link').count()) === 27 && (await reader.locator('#chapters .hub-book-part').count()) === 4, 'the book has 27 chapters in four parts: the overview, the detail, what a reviewer asks, the log');
-  await reader.click('#chapters .hub-book-link >> nth=5');
+  check(/DAME in five minutes/.test(await reader.textContent('#page')) && (await reader.locator('#page .hub-dg').count()) >= 9 && (await reader.locator('#page script, #page img, #page a').count()) === 0, 'the book opens on its first chapter, written to the page as text');
+  check((await reader.locator('#chapters .hub-book-link').count()) === 28 && (await reader.locator('#chapters .hub-book-part').count()) === 4, 'the book has 28 chapters in four parts: the overview, the detail, what a reviewer asks, the log');
+  await reader.click('#chapters .hub-book-link >> nth=6');
   check(/sealed frame/.test(await reader.textContent('#page')) && (await reader.locator('#page table').count()) === 1 && (await reader.locator('#page .hub-flow span').count()) === 4, 'a chapter shows its steps, lists and tables (Security)');
   await reader.click('#present-one');
   await reader.waitForSelector('.hub-present');
-  check(/Chapter 6/.test(await reader.textContent('.hub-slide')) && /^1 of \d+$/.test(await reader.textContent('.hub-present-count')), 'a chapter can be shown as a presentation, starting with its title slide');
+  check(/Chapter 7/.test(await reader.textContent('.hub-slide')) && /^1 of \d+$/.test(await reader.textContent('.hub-present-count')), 'a chapter can be shown as a presentation, starting with its title slide');
   await reader.keyboard.press('ArrowRight');
   check(/The sealed frame/.test(await reader.textContent('.hub-slide h2')) && /^2 of/.test(await reader.textContent('.hub-present-count')), 'the arrow key goes to the next slide');
   await reader.keyboard.press('Escape');
@@ -305,7 +305,7 @@ try {
   await reader.waitForSelector('.hub-present');
   check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 45, 'the overview as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
   await reader.keyboard.press('Escape');
-  await reader.click('#chapters .hub-book-link >> nth=12');
+  await reader.click('#chapters .hub-book-link >> nth=13');
   const detailText = await reader.textContent('#page');
   check(/What can be reached from outside/.test(detailText) && /Considered and not done/.test(detailText) && /Why this way/.test(detailText) && (await reader.locator('#page code').count()) > 5,
     'a chapter for IT says how it is done, why, and what was considered and not done (The database)');
@@ -314,8 +314,47 @@ try {
   check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 90, 'the detail as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
   await reader.keyboard.press('Escape');
 
-  await reader.click('#chapters .hub-book-link >> nth=19');
+  await reader.click('#chapters .hub-book-link >> nth=20');
   check(/A stranger on the internet/.test(await reader.textContent('#page')) && (await reader.locator('#page table').count()) >= 6, 'the part "What a reviewer asks" opens with the threats, one table per kind of person');
+
+  // The presentation: pictures, topics to jump to, tools for pointing, a red Close.
+  await reader.click('#present-pitch');
+  await reader.waitForSelector('.hub-present .hub-dg-chain');
+  check((await reader.textContent('.hub-present-count')) === '1 of 11' && (await reader.locator('.hub-slide .hub-dg-link').count()) === 5, 'the 5-minute presentation has 11 slides and opens with a picture');
+  const seen = new Set();
+  for (let i = 0; i < 11; i += 1) {
+    for (const k of await reader.locator('.hub-slide .hub-dg').evaluateAll((list) => list.map((d) => d.className.split(' ')[1]))) { seen.add(k); }
+    if (i < 10) { await reader.keyboard.press('ArrowRight'); }
+  }
+  check(['hub-dg-chain', 'hub-dg-cards', 'hub-dg-tree', 'hub-dg-walls', 'hub-dg-stats', 'hub-dg-compare'].every((k) => seen.has(k)) && (await reader.locator('.hub-slide script, .hub-slide img, .hub-slide a').count()) === 0, 'its slides are drawn as pictures (chain, cards, tree, walls, numbers, compare), made of text only');
+  await reader.keyboard.press('Escape');
+  await reader.click('#present-all');
+  await reader.waitForSelector('.hub-rail-node');
+  check((await reader.locator('.hub-rail-node').count()) === 10 && (await reader.locator('.hub-rail-node[aria-current=true]').count()) === 1, 'the overview shows one topic node per chapter on the left, the open one marked');
+  await reader.hover('.hub-rail-node >> nth=6');
+  check(await reader.locator('.hub-rail-node >> nth=6').locator('.hub-rail-tip').isVisible() && /7\. Security/.test(await reader.locator('.hub-rail-node >> nth=6').textContent()), 'hovering a node shows the name of its chapter');
+  await reader.click('.hub-rail-node >> nth=6');
+  check(/Chapter 7/.test(await reader.textContent('.hub-slide')) && /Security/.test(await reader.textContent('.hub-slide h1')) && (await reader.locator('.hub-rail-node >> nth=6').getAttribute('aria-current')) === 'true', 'pressing a node jumps to the first slide of that chapter');
+  await reader.click('.hub-dots button >> nth=2');
+  check(/^7\. /.test(await reader.textContent('.hub-slide .hub-kicker')) && (await reader.locator('.hub-dots button >> nth=2').getAttribute('aria-current')) === 'true', 'the marks under the slide jump inside the chapter');
+  await reader.keyboard.press('ArrowDown');
+  check(/Chapter 8/.test(await reader.textContent('.hub-slide')), 'arrow down goes to the next chapter');
+  await reader.keyboard.press('l');
+  await reader.mouse.move(600, 300);
+  check(await reader.locator('.hub-laser').isVisible() && (await reader.locator('.hub-tools button[aria-pressed=true]').textContent()).startsWith('Laser'), 'L switches the laser pointer on; it follows the mouse');
+  await reader.keyboard.press('s');
+  check(await reader.locator('.hub-spot').isVisible() && await reader.locator('.hub-laser').isHidden(), 'S switches to the spotlight');
+  await reader.keyboard.press('p');
+  await reader.mouse.move(500, 300); await reader.mouse.down(); await reader.mouse.move(700, 380, { steps: 5 }); await reader.mouse.up();
+  const inked = () => reader.evaluate(() => { const c = document.querySelector('.hub-ink'); return Array.prototype.some.call(c.getContext('2d').getImageData(0, 0, c.width, c.height).data, (v) => v !== 0); });
+  check(await inked(), 'P is the pen: the presenter draws on the slide');
+  await reader.keyboard.press('ArrowRight');
+  check(!(await inked()), 'the drawing is gone on the next slide');
+  await reader.keyboard.press('Escape');
+  check((await reader.locator('.hub-present').count()) === 1 && (await reader.locator('.hub-tools button[aria-pressed=true]').count()) === 0, 'Esc first puts the tool away');
+  check((await reader.locator('.hub-present-close').evaluate((b) => getComputedStyle(b).backgroundColor)) === 'rgb(200, 55, 45)', 'the Close button is red');
+  await reader.click('.hub-present-close');
+  check((await reader.locator('.hub-present').count()) === 0, 'Close ends the presentation');
 
   // Everyone else: the card is not shown, and the book page says who the book is for and loads no chapter.
   const other = DEPTS[0].user.page;

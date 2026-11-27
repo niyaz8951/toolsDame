@@ -72,7 +72,7 @@ Short answers. Each names the chapter with the detail. Where the honest answer i
 - **What if the provider changes something?** Two functions reach into the sign-in service's own tables (new user, reset). They are the fragile part and are not in the target. *(Running it)*
 
 ## Proof
-- **How do we know it holds?** 1,024 database cases over ten files, seven browser tests, a hostile tool with 33 attacks, a rehearsal of seven departments with 131 checks, and control runs showing the tests fail when the wall is loosened. All in the repository, all re-runnable. *(Tests)*
+- **How do we know it holds?** 1,024 database cases over ten files, seven browser tests, a hostile tool with 33 attacks, a rehearsal of seven departments with 145 checks, and control runs showing the tests fail when the wall is loosened. All in the repository, all re-runnable. *(Tests)*
 - **Was it tested on the real project?** Sign-in, spaces, tools, a real upload and a tool that saves rows: yes, by the owner. The newest SQL files: as they are pasted. *(Where we are)*
 - **What was not tested?** Load, browsers other than Chrome, screen readers, the sign-in service's own limits and emails. *(Tests)*
 

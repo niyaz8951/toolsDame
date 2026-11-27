@@ -2,7 +2,14 @@
 
 Who could try what, what stops him, and what is left over. Ordered by how much the person already holds: a stranger first, the owner of the two accounts behind the site last. Every "stops him" names a mechanism of this book; every "left over" is also in "Open gaps and hand-over".
 
-=> Stranger | Signed-in person | Department admin | Tool builder | IT admin | Account owner
+:::chain
+Stranger | Meets a closed door: one harmless function answers
+Signed-in person | Gets only what he was given, checked on every request
+Admin or manager | Acts only inside his own space or tool
+A tool's code | Sealed: no network, no session
+IT admin | Runs the site. Gets no data by that
+Account owner | Above the rules: sign-in with second factor, then IT's pipeline
+:::
 
 ## A stranger on the internet
 | He tries | What stops him | Left over |

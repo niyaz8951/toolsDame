@@ -2,7 +2,12 @@
 
 How rights are handed on, taken back and looked at. Every line here is a database function; the pages only offer the buttons.
 
-=> IT admin | Space admin | Tool manager | Member
+:::chain
+IT admin | Approves people. Makes spaces. Names space admins
+Space admin | Makes tools. Adds members. Names managers
+Tool manager | Gives his tool to people by name, at a level
+Member | Uses what he was given. Gives nothing on
+:::
 
 ## The chain, in one table
 | Right | Who gives it | Who takes it back | To whom it can go | In the audit |

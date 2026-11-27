@@ -26,7 +26,7 @@
 - Space admin, Tools: the same way ("Add a tool", a tile per tool, a window per tool). Icons picked from 90 pictures. Back buttons lead to the page the person came from. No SQL.
 - **Accounts (2026-11-27): built and tested locally. Needs `010_accounts.sql` on the real project.** My account (details, password, access, sign-ins); IT's person window (correct, reset password, switch off, role); a temporary password counts 7 days and must be shown again to finish.
 - The fix request for a refused page is one complete text (points, rules, database rules, the page); a design of its own and data outside the tables stop the upload. No SQL.
-- **The site book (2026-11-27):** shown to IT admins only (hub card and book page); stays in `book/`. Reread against the repo: 27 chapters in four parts, with a new part "What a reviewer asks" (threats, sharing of rights, data handling, running it). No SQL.
+- **The site book (2026-11-27):** shown to IT admins only (hub card and book page); stays in `book/`. In pictures: a 5-minute chapter of eleven slides, seven kinds of picture drawn from text (`:::kind` blocks), topic nodes, laser, spotlight and pen while presenting. Reread against the repo: 28 chapters in four parts, with a new part "What a reviewer asks" (threats, sharing of rights, data handling, running it). No SQL.
 - Tests, all passing locally: ten SQL test files (1,024 cases), seven browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.

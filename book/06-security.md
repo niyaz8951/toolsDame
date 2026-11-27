@@ -4,6 +4,13 @@ The site assumes that every uploaded tool might be hostile, by mistake or on pur
 
 => Uploaded code | Sealed frame, no network | Asks the site | Database decides
 
+:::walls
+The sealed frame | The tool runs here: no network, no session, no storage, no way to another tool
+The site's shell | Takes a short list of requests and adds the person's session itself
+The database functions | Each one first checks who asks and what he may do
+The data | One schema per tool. No table is reachable from outside
+:::
+
 ## The sealed frame
 - A tool runs in a sealed frame under the site's bar. It has **no network at all**: it can load nothing and call nothing.
 - It never sees the person's session. It cannot read the site's storage, the bar, or another tool.
@@ -21,6 +28,12 @@ The site assumes that every uploaded tool might be hostile, by mistake or on pur
 - Sign-ins, approvals, accounts, spaces, tools, access, tables, uploads, go-lives, usage guides.
 
 ## How it was tested
+:::stats
+33 | attacks from inside a tool, all blocked
+1,260 | cross-department attempts, all refused
+1,024 | database cases over ten files
+:::
+
 | Test | What it shows |
 |---|---|
 | The hostile tool | 33 attack attempts from inside a tool: session, storage, network, other frames, file drops, flooding. All blocked. Control runs prove the test notices a leak. |

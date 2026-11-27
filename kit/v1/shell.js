@@ -108,6 +108,84 @@
   var infoBtn = null;
   var sheetBack = null;
 
+  // A picture drawn from a few lines of text, for the site book and the help texts. Every word is
+  // put in as text. Each line is "a | b | c". The kinds:
+  //   stats    number | what it counts                       big numbers side by side
+  //   cards    title | text | tag                            a grid of cards; tag "ok", "warn" or a word
+  //   chain    title | text                                  boxes in a row with arrows between them
+  //   tree     depth title | text                            a tree; depth is 0, 1, 2
+  //   walls    title | text                                  boxes inside boxes, the outermost first
+  //   lanes    who | what he does                            numbered steps, each with who acts
+  //   compare  (first line: left head | right head) then  what | left | right
+  function picture(kind, rows, inline) {
+    var fig = el('div', 'hub-dg hub-dg-' + kind + ' hub-dg-c' + Math.min(rows.length, 9));
+    fig.setAttribute('role', 'group');
+    function part(tag, cls, text) { return inline(el(tag, cls), text || ''); }
+    if (kind === 'stats') {
+      rows.forEach(function (r) {
+        var b = el('div', 'hub-dg-stat');
+        b.appendChild(part('strong', null, r[0]));
+        b.appendChild(part('span', null, r[1]));
+        fig.appendChild(b);
+      });
+    } else if (kind === 'cards') {
+      rows.forEach(function (r) {
+        var b = el('div', 'hub-dg-card' + (r[2] === 'ok' || r[2] === 'warn' ? ' hub-dg-' + r[2] : ''));
+        if (r[2] && r[2] !== 'ok' && r[2] !== 'warn') { b.appendChild(part('em', 'hub-dg-tag', r[2])); }
+        b.appendChild(part('strong', null, r[0]));
+        if (r[1]) { b.appendChild(part('span', null, r[1])); }
+        fig.appendChild(b);
+      });
+    } else if (kind === 'chain') {
+      rows.forEach(function (r, i) {
+        var b = el('div', 'hub-dg-link');
+        b.appendChild(el('i', 'hub-dg-n', String(i + 1)));
+        b.appendChild(part('strong', null, r[0]));
+        if (r[1]) { b.appendChild(part('span', null, r[1])); }
+        fig.appendChild(b);
+      });
+    } else if (kind === 'tree') {
+      rows.forEach(function (r) {
+        var m = /^([0-3])\s+(.*)$/.exec(r[0]) || [null, '0', r[0]];
+        var b = el('div', 'hub-dg-node hub-dg-d' + m[1]);
+        b.appendChild(part('strong', null, m[2]));
+        if (r[1]) { b.appendChild(part('span', null, r[1])); }
+        fig.appendChild(b);
+      });
+    } else if (kind === 'walls') {
+      var into = fig;
+      rows.forEach(function (r, i) {
+        var b = el('div', 'hub-dg-wall' + (i === rows.length - 1 ? ' hub-dg-core' : ''));
+        var head = el('div', 'hub-dg-wall-head');
+        head.appendChild(part('strong', null, r[0]));
+        if (r[1]) { head.appendChild(part('span', null, r[1])); }
+        b.appendChild(head);
+        into.appendChild(b);
+        into = b;
+      });
+    } else if (kind === 'lanes') {
+      rows.forEach(function (r, i) {
+        var b = el('div', 'hub-dg-step');
+        b.appendChild(el('i', 'hub-dg-n', String(i + 1)));
+        b.appendChild(part('em', 'hub-dg-who', r[0]));
+        b.appendChild(part('span', null, r[1]));
+        fig.appendChild(b);
+      });
+    } else if (kind === 'compare') {
+      rows.forEach(function (r, i) {
+        var b = el('div', 'hub-dg-row' + (i === 0 ? ' hub-dg-heads' : ''));
+        if (i === 0) { r = [''].concat(r); }
+        b.appendChild(part('strong', null, r[0]));
+        b.appendChild(part('span', 'hub-dg-left', r[1]));
+        b.appendChild(part('span', 'hub-dg-right', r[2]));
+        fig.appendChild(b);
+      });
+    } else {
+      rows.forEach(function (r) { fig.appendChild(part('p', null, r.join(' | '))); });
+    }
+    return fig;
+  }
+
   // Writes a small text format as page elements: "# title", "## title", "- item", "1. item",
   // empty line = new paragraph, **bold**. Everything is put in as text, never as HTML.
   function rich(text) {
@@ -123,9 +201,17 @@
       return node;
     }
     var table = null;
+    var block = null;   // a picture being read: { kind, rows }, between ":::kind" and ":::"
     String(text || '').split('\n').forEach(function (raw) {
       var line = raw.trim();
       var m;
+      // ":::kind" ... ":::" is a picture made of the lines between them (see picture()).
+      if (block) {
+        if (line === ':::') { box.appendChild(picture(block.kind, block.rows, inline)); block = null; }
+        else if (line) { block.rows.push(line.split(' | ').map(function (c) { return c.trim(); })); }
+        return;
+      }
+      if ((m = /^:::([a-z]+)$/.exec(line))) { list = null; table = null; block = { kind: m[1], rows: [] }; return; }
       if (!/^\|.*\|$/.test(line)) { table = null; }
       if (!line) { list = null; return; }
       // "=> a | b | c": steps in a row with arrows between them.

@@ -20,14 +20,16 @@ This part of the book is for IT. Every chapter says how a thing is done, why it 
 - Text is always written with `textContent`. No page builds HTML from data.
 
 ## One click, start to end: a person adds a row in a tool
-1. The tool's code calls `Dame.table('requests').add({...})`. The tool runs in a sealed frame and cannot call anything itself.
-2. `dame.js` (the kit, inside the frame) sends a message over its private line to the shell: action `table.add`, table name, the row.
-3. The shell (`pages/tool.js`) checks the message: a known action, a well-formed table name, a size limit, and not more than 300 requests in 10 seconds.
-4. The shell calls the database function `dame_rows_add(space, tool, table, row, preview)` with **the person's own session token**. Space and tool are the ones the shell opened: the tool cannot name another.
-5. In the database, `core.rows_gate` runs `core.require_tool(space, tool, 'read')`: signed in, newest session, not older than 12 hours, approved, not switched off, has this tool.
-6. The function looks the table up in `core.tool_tables`. A table that is not listed there does not exist for the service.
-7. It applies the table's sharing rule and the person's level, cleans the row against the column list (unknown columns and wrong kinds are refused), and sets `owner`, `created_at`, `updated_at`, `updated_by` itself.
-8. The new row goes back to the shell, and over the line to the tool.
+:::lanes
+The tool | Calls `Dame.table('requests').add({...})`. It runs in a sealed frame and cannot call anything itself
+The kit | `dame.js`, inside the frame, sends a message over its private line: action `table.add`, table name, the row
+The shell | `pages/tool.js` checks the message: a known action, a well-formed table name, a size limit, at most 300 requests in 10 seconds
+The shell | Calls `dame_rows_add(space, tool, table, row, preview)` with **the person's own session**. Space and tool are the ones it opened: the tool cannot name another
+The database | `core.rows_gate` runs `core.require_tool(space, tool, 'read')`: signed in, newest session, not older than 12 hours, approved, not switched off, has this tool
+The database | Looks the table up in `core.tool_tables`. A table not listed there does not exist for the service
+The database | Applies the sharing rule and the person's level, cleans the row against the column list, and sets `owner`, `created_at`, `updated_at`, `updated_by` itself
+The shell | Passes the new row back over the line to the tool
+:::
 
 ## Why it is cut this way
 - **The browser is never trusted.** Pages show and hide; the database decides. A person who edits the page in his browser gains nothing.

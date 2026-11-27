@@ -14,11 +14,13 @@ Some tools only calculate. Others must keep what people enter. Those save it in 
 Nobody types SQL. The site writes it, from a fixed list of column kinds, after checking every name.
 
 ## Who sees which rows
-| Sharing | Meaning |
-|---|---|
-| Team | Everyone with the tool sees all rows |
-| Private | Each person sees only his own rows, not even the admin sees them |
-| Reference | Everyone reads, only the tool's managers change |
+:::cards
+Team | Everyone with the tool sees all rows. Who may change them depends on his level | shared
+Private | Each person sees only his own rows. Not even the admin sees them | personal
+Reference | Everyone reads. Only the tool's managers change | look-up
+:::
+
+One of the three is chosen per table, when the table is made.
 
 ## What every row carries by itself
 - Who added it and when, who changed it last and when.

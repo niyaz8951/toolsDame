@@ -2,7 +2,14 @@
 
 A tool is one page. The site gives it the look, the bar, the sign-in, the people and the database. The builder brings only what the tool does.
 
-=> Describe | Give the kit to the AI | Paste the answer | Check | Preview | Make live
+:::chain
+Describe | What the tool should do, in his own words
+Starter kit | One text for the approved AI
+Paste the answer | The site only reads it
+Check | Plain words, and a complete fix request
+Preview | Only managers see it
+Make live | Two presses
+:::
 
 ## Step by step
 1. The space admin creates the tile: a name, an id, a colour, who gets it.

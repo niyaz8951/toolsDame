@@ -3,11 +3,15 @@
 One person is one account. Tools have no logins of their own.
 
 ## Three ways in
-1. **New user** (IT admin page): IT makes the account with a username and a temporary password and tells them to the person by voice. At the first sign-in the site asks for a new password. Nothing opens before that. No email is needed.
-2. **Add by work email**: IT approves an email address in advance. The person signs up himself with that address, chooses a password, and is in at once.
-3. **Request access**: a person signs up on the start page and waits. An IT admin approves or refuses.
+:::cards
+New user | IT makes the account with a username and a temporary password and tells them by voice. At the first sign-in the site asks for a new password. No email is needed | by IT
+Add by work email | IT approves an email address in advance. The person signs up with it, chooses a password and is in at once | by IT
+Request access | A person signs up on the start page and waits. An IT admin approves or refuses | by the person
+:::
 
 => Account exists | First sign-in | Own password chosen | Hub opens
+
+Nothing opens before the person has chosen his own password.
 
 ## Your account
 - The round button at the top right opens **My account**: your details, your password, what you can open, your last sign-ins.

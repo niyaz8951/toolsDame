@@ -2,6 +2,18 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - The site book in pictures; presenting with topic nodes, pointer tools, a red Close
+Changed (owner: "bad presentation and bad read, no clear diagrams, no pointer options; people who see this have limited time and attention; visuals in notes and presentation; topic nodes to jump, name on hover; close button must be red")
+- **"DAME in five minutes"**: a new first chapter, eleven slides, almost all pictures: the problem, the three levels, who decides what, idea to live tool, why uploaded code cannot do harm, the numbers, what IT keeps, demo and target, what is open, what we ask. Button **Present in 5 minutes** on the book page and on the hub card.
+- **Pictures** in the book and in help texts, written as a few lines between `:::kind` and `:::` and drawn by `DameShell.rich` as text only: `stats`, `cards`, `chain`, `tree`, `walls`, `lanes`, `compare`. Put into the chapters What DAME is, How the site is organised, People, Building, Data, Security, Demo and target, The pieces (one click end to end), The sealed frame, Threats, Who can give what.
+- **Presenting:** topic nodes on the left, one per chapter (hover shows the name and the number of slides, a press jumps there; a bar separates the parts); marks under the slide for the slides of the open chapter; arrow up and down for the chapter before and after; a progress line.
+- **Pointer tools:** laser (L), spotlight (S), pen (P), wipe (C). Only on the presenter's screen; a drawing goes with the slide. Esc first puts the tool away, then closes.
+- **Close is red.** Full screen on F.
+- **Fixed:** code, tables and notes on a dark title slide were not readable (light on light).
+- Tests: 14 new checks in the rehearsal (145 in all). No SQL.
+
+Files: `book/00-pitch.md` (new), 12 chapters, `book/index.json`, `kit/v1/shell.js`, `kit/v1/shell.css`, `pages/book.js`, `book.html`, `hub.html`, `help/book.md`, tests, docs.
+SQL to paste: none.
 ## 2026-11-27 - The site book: shown to IT admins only, reread against the repo, what a reviewer asks
 Changed (owner: "update the site book as per the current repo and ensure it is only available to the IT admins; rethink all scenarios an IT manager would be interested in"; then: "keep it in the repo; the whole design assumes IT moves the site to their servers and domains; accordingly ensure database usage")
 - **Hub:** the Site book card is shown to IT admins only, under the IT admin card.
@@ -9,7 +21,7 @@ Changed (owner: "update the site book as per the current repo and ensure it is o
 - **Said plainly:** this is show and hide. The book stays a set of files in `book/`; on the public demo a chapter can be fetched by its address, like any page. It holds no key and no data. On IT's servers the web server closes `book/`. The rule behind it is now written in DECISIONS, SECURITY and STATUS: the database is for what people enter and what must be checked per person; what the site is made of stays a file.
 - **The book, reread against the repo:** 27 chapters in four parts. 64 functions (was 58), ten SQL files, 1,024 database cases, the account functions and every audit action listed; a rendering slip in "The database" fixed. New part **"What a reviewer asks"**: Threats, one by one (stranger, signed-in person, department admin, a tool's own code, an IT admin, the two accounts behind the site); Who can give what to whom (the chain, joiner, mover, leaver, contractor, sharing across departments, where to see who has what); Where data lives and what happens to it (every store, the browser, personal data, ways out, what a delete does, backups, retention, limits); Running it (who changes the site, keys, watching, each kind of incident, third-party code). "Questions IT will ask" rewritten in nine groups; decisions and gaps extended. "Present the detail" now covers both detail parts.
 - **Limits written down for the first time** (book, DECISIONS, IT-REVIEW): a tool's manager decides the code that acts as each user, so "private" rows do not hold against him; a manager may give his tool to anyone on the site; removing a member leaves access given by name; a delete is final; nothing has a retention period; a push is live with no review; a tool's request limit sits in the shell; an IT admin who resets a password could sign in as that person.
-- Tests: the book part of `tests/browser/company.mjs` rewritten (131 checks in all); 4 new checks in phase 0. All ten SQL test files, seven browser tests and the hostile-tool test pass locally.
+- Tests: the book part of `tests/browser/company.mjs` rewritten (145 checks in all); 4 new checks in phase 0. All ten SQL test files, seven browser tests and the hostile-tool test pass locally.
 
 Files: `book/` (15 chapters changed, 4 new, `index.json`), `book.html`, `pages/book.js`, `hub.html`, `pages/hub.js`, `help/book.md`, `help/hub.md`, `tests/phase0.mjs`, `tests/browser/company.mjs`, docs.
 SQL to paste: none.

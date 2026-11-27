@@ -577,3 +577,133 @@ button.hub-tile { font: inherit; text-align: left; cursor: pointer; width: 100%;
 .hub-temp { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
 .hub-temp .dame-input { flex: 1 1 220px; width: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; }
 .hub-row-sub { display: block; color: var(--dame-muted); font-size: .85rem; }
+
+/* ---- Pictures in the site book and help texts (DameShell.rich, ":::kind" blocks). Sizes in em,
+   so the same picture fits a page and a slide. */
+.hub-dg { margin: 18px 0 22px; }
+.hub-dg strong { display: block; }
+.hub-dg span { display: block; color: var(--dame-muted); font-size: .9em; line-height: 1.4; }
+.hub-dg-n { flex: none; width: 1.9em; height: 1.9em; display: grid; place-items: center; border-radius: 50%; background: var(--dame-accent); color: var(--dame-on-accent, #fff); font-style: normal; font-weight: 700; font-size: .8em; }
+.hub-dg-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5em, 1fr)); gap: .8em; }
+.hub-dg-stat { padding: 1em 1.1em; border-radius: 18px; background: var(--dame-soft); border: 1px solid var(--dame-line); }
+.hub-dg-stat strong { font-size: 2.3em; line-height: 1.05; letter-spacing: -.02em; color: var(--dame-accent); font-variant-numeric: tabular-nums; }
+.hub-dg-stat span { margin-top: .35em; color: var(--dame-text); }
+.hub-dg-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(13em, 1fr)); gap: .8em; }
+.hub-dg-card { position: relative; padding: .9em 1em 1em; border-radius: 16px; background: var(--dame-surface); border: 1px solid var(--dame-line); border-top: 4px solid var(--dame-accent); box-shadow: var(--dame-shadow, none); }
+.hub-dg-card strong { margin-bottom: .25em; }
+.hub-dg-card.hub-dg-ok { border-top-color: var(--dame-ok); }
+.hub-dg-card.hub-dg-warn { border-top-color: var(--dame-warn); }
+.hub-dg-tag { display: inline-block; margin: 0 0 .5em; padding: .1em .7em; border-radius: 999px; background: var(--dame-soft); color: var(--dame-accent) !important; font-style: normal; font-size: .75em; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.hub-dg-chain { display: flex; flex-wrap: wrap; gap: .8em 2.2em; align-items: stretch; }
+.hub-dg-link { position: relative; flex: 1 1 9em; min-width: 9em; padding: .9em 1em 1em; border-radius: 16px; background: var(--dame-surface); border: 2px solid var(--dame-accent); }
+.hub-dg-link .hub-dg-n { margin-bottom: .5em; }
+.hub-dg-link + .hub-dg-link::before { content: ""; position: absolute; left: -1.75em; top: 50%; width: 1.3em; height: 1.3em; margin-top: -.65em; background: var(--dame-accent); -webkit-mask: url("icons/arrow.svg") center / contain no-repeat; mask: url("icons/arrow.svg") center / contain no-repeat; }
+.hub-dg-tree { display: grid; gap: .5em; }
+.hub-dg-node { position: relative; padding: .6em .9em; border-radius: 14px; background: var(--dame-surface); border: 1px solid var(--dame-line); border-left: 5px solid var(--dame-accent); max-width: 30em; }
+.hub-dg-d0 { background: var(--dame-hero); border: 0; color: #fff; }
+.hub-dg-d0 span { color: rgba(255,255,255,.85); }
+.hub-dg-d1 { margin-left: 2.4em; }
+.hub-dg-d2 { margin-left: 4.8em; border-left-color: var(--dame-ok); }
+.hub-dg-d3 { margin-left: 7.2em; border-left-color: var(--dame-muted); }
+.hub-dg-d1::before, .hub-dg-d2::before, .hub-dg-d3::before { content: ""; position: absolute; left: -1.5em; top: -.55em; width: 1.1em; height: calc(50% + .55em); border-left: 2px solid var(--dame-line); border-bottom: 2px solid var(--dame-line); border-bottom-left-radius: 8px; }
+.hub-dg-walls { max-width: 46em; }
+.hub-dg-wall { padding: .7em .9em .9em; border-radius: 18px; border: 2px dashed var(--dame-accent); background: color-mix(in srgb, var(--dame-accent) 5%, transparent); }
+.hub-dg-wall .hub-dg-wall { margin-top: .7em; }
+.hub-dg-wall-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .1em .7em; }
+.hub-dg-wall-head strong { color: var(--dame-accent); }
+.hub-dg-core { border: 0; background: var(--dame-hero); }
+.hub-dg-core .hub-dg-wall-head strong { color: #fff; }
+.hub-dg-core .hub-dg-wall-head span { color: rgba(255,255,255,.85); }
+.hub-dg-lanes { display: grid; gap: .45em; position: relative; }
+.hub-dg-step { display: grid; grid-template-columns: auto minmax(6.5em, 9em) 1fr; align-items: center; gap: .8em; padding: .5em .8em; border-radius: 14px; background: var(--dame-surface); border: 1px solid var(--dame-line); }
+.hub-dg-who { justify-self: start; padding: .15em .8em; border-radius: 999px; background: var(--dame-soft); color: var(--dame-accent); font-style: normal; font-weight: 650; font-size: .85em; }
+.hub-dg-step span { color: var(--dame-text); font-size: .95em; }
+.hub-dg-compare { display: grid; gap: .4em; }
+.hub-dg-row { display: grid; grid-template-columns: minmax(6em, .7fr) 1fr 1fr; gap: .5em; align-items: stretch; }
+.hub-dg-row > * { padding: .55em .8em; border-radius: 12px; }
+.hub-dg-row strong { align-self: center; padding-left: 0; }
+.hub-dg-row .hub-dg-left { background: var(--dame-surface-2); color: var(--dame-text); }
+.hub-dg-row .hub-dg-right { background: var(--dame-soft); color: var(--dame-text); border-left: 4px solid var(--dame-accent); }
+.hub-dg-heads span { background: none !important; border: 0 !important; font-weight: 700; font-size: .8em; letter-spacing: .07em; text-transform: uppercase; color: var(--dame-muted) !important; padding-bottom: 0; }
+.hub-dg-heads .hub-dg-right { color: var(--dame-accent) !important; padding-left: calc(.8em + 4px); }
+@media (max-width: 700px) {
+  .hub-dg-chain { flex-direction: column; gap: 1.9em; }
+  .hub-dg-link + .hub-dg-link::before { left: 50%; top: -1.6em; margin: 0 0 0 -.65em; transform: rotate(90deg); }
+  .hub-dg-step { grid-template-columns: auto 1fr; }
+  .hub-dg-step span { grid-column: 1 / -1; }
+  .hub-dg-row { grid-template-columns: 1fr 1fr; }
+  .hub-dg-row strong { grid-column: 1 / -1; padding-bottom: 0; }
+  .hub-dg-heads strong { display: none; }
+  .hub-dg-d1 { margin-left: 1.6em; } .hub-dg-d2 { margin-left: 3.2em; } .hub-dg-d3 { margin-left: 4.8em; }
+}
+
+/* ---- The reading page: a chapter opens with a clear head, and its parts are easy to tell apart. */
+.hub-book-page .hub-rich > h2:first-child + p { font-size: 1.12rem; color: var(--dame-text); }
+.hub-book-page .hub-rich h3 { padding-top: 18px; border-top: 1px solid var(--dame-line); }
+
+/* ---- The presentation: topics to jump to on the left, the slide, tools for pointing. */
+.hub-present-body { position: relative; flex: 1; min-height: 0; display: flex; }
+.hub-stage { position: relative; flex: 1; min-width: 0; display: flex; }
+.hub-stage .hub-slide { flex: 1; }
+.hub-rail { position: relative; z-index: 2; flex: none; width: 46px; overflow: visible; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 0; }
+.hub-rail::before { content: ""; position: absolute; top: 18px; bottom: 18px; left: 50%; width: 2px; margin-left: -1px; background: var(--dame-line); }
+.hub-rail-node { position: relative; flex: 0 1 26px; min-height: 12px; width: 26px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.hub-rail-node::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--dame-surface); border: 2px solid var(--dame-muted); transition: transform .15s var(--dame-ease), background .15s var(--dame-ease), border-color .15s var(--dame-ease); }
+.hub-rail-node.is-done::before { background: var(--dame-muted); }
+.hub-rail-node[aria-current="true"]::before { width: 18px; height: 18px; background: var(--dame-accent); border-color: var(--dame-accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--dame-accent) 22%, transparent); }
+.hub-rail-node:hover::before, .hub-rail-node:focus-visible::before { transform: scale(1.35); border-color: var(--dame-accent); }
+.hub-rail-part { position: relative; flex: none; width: 18px; height: 3px; margin: 5px 0; border-radius: 2px; background: var(--dame-accent); }
+.hub-rail-tip { position: absolute; left: 34px; top: 50%; transform: translateY(-50%); z-index: 5; white-space: nowrap; padding: 6px 12px; border-radius: 10px; background: var(--dame-text); color: var(--dame-bg); font-size: .92rem; font-weight: 600; box-shadow: var(--dame-shadow-lg, 0 8px 30px rgba(0,0,0,.25)); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .12s var(--dame-ease); }
+.hub-rail-tip small { display: block; font-weight: 400; opacity: .8; font-size: .82rem; }
+.hub-rail-node:hover .hub-rail-tip, .hub-rail-node:focus-visible .hub-rail-tip { opacity: 1; visibility: visible; }
+.hub-dots { position: absolute; left: 0; right: 0; bottom: 6px; z-index: 2; display: flex; justify-content: center; gap: 7px; pointer-events: none; }
+.hub-dots button { pointer-events: auto; position: relative; width: 26px; height: 16px; padding: 0; border: 0; background: none; cursor: pointer; }
+.hub-dots button::before { content: ""; display: block; height: 5px; border-radius: 3px; background: var(--dame-line); transition: background .15s var(--dame-ease); }
+.hub-dots button[aria-current="true"]::before, .hub-dots button:hover::before { background: var(--dame-accent); }
+.hub-dots .hub-rail-tip { left: 50%; top: auto; bottom: 22px; transform: translateX(-50%); }
+.hub-dots button:hover .hub-rail-tip, .hub-dots button:focus-visible .hub-rail-tip { opacity: 1; visibility: visible; }
+.hub-ink { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; touch-action: none; }
+.hub-stage.is-pen .hub-ink { pointer-events: auto; cursor: crosshair; }
+.hub-laser { position: absolute; z-index: 4; left: 0; top: 0; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: #ff2d3d; box-shadow: 0 0 0 4px rgba(255,45,61,.28), 0 0 22px 8px rgba(255,45,61,.55); pointer-events: none; display: none; transform: translate(var(--px, -100px), var(--py, -100px)); }
+.hub-stage.is-laser { cursor: none; }
+.hub-stage.is-laser * { cursor: none !important; }
+.hub-stage.is-laser .hub-laser { display: block; }
+.hub-spot { position: absolute; inset: 0; z-index: 3; pointer-events: none; display: none; background: radial-gradient(circle 19vmin at var(--px, 50%) var(--py, 50%), transparent 0, transparent 96%, rgba(3,12,24,.78) 100%); }
+.hub-stage.is-spot .hub-spot { display: block; }
+.hub-tools { display: flex; align-items: center; gap: 6px; padding: 0 6px; border-left: 1px solid var(--dame-line); border-right: 1px solid var(--dame-line); }
+.hub-tools .dame-btn[aria-pressed="true"] { background: var(--dame-accent) !important; color: var(--dame-on-accent, #fff) !important; border-color: var(--dame-accent) !important; }
+.hub-present-bar .dame-btn kbd { margin-left: 6px; padding: 0 5px; border-radius: 5px; border: 1px solid currentColor; font: inherit; font-size: .72em; opacity: .65; }
+.hub-progress { position: absolute; left: 0; top: -3px; height: 3px; background: var(--dame-accent); width: var(--done, 0%); transition: width .25s var(--dame-ease); }
+
+/* On a dark title slide everything must stay readable: code, tables, notes, pictures. */
+.hub-slide-title .hub-rich { max-width: 1250px; }
+.hub-slide-title .hub-rich code, .hub-dg-d0 code, .hub-dg-core code { background: rgba(255,255,255,.18) !important; color: #fff; }
+.hub-slide-title .hub-rich em, .hub-slide-title .hub-rich strong { color: #fff; }
+.hub-slide-title .dame-table, .hub-slide-title .dame-table th, .hub-slide-title .dame-table td { color: #fff; border-color: rgba(255,255,255,.3); background: none; }
+.hub-slide-title .hub-dg-stat, .hub-slide-title .hub-dg-card, .hub-slide-title .hub-dg-link, .hub-slide-title .hub-dg-node, .hub-slide-title .hub-dg-step { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); color: #fff; box-shadow: none; }
+.hub-slide-title .hub-dg strong, .hub-slide-title .hub-dg span, .hub-slide-title .hub-dg-stat strong { color: #fff; }
+.hub-slide-title .hub-dg-n, .hub-slide-title .hub-dg-who, .hub-slide-title .hub-dg-tag { background: #fff; color: #0A4F84 !important; }
+.hub-slide-title .hub-dg-link + .hub-dg-link::before { background: #fff; }
+.hub-slide .hub-dg { font-size: .92em; }
+.hub-slide .hub-callout { font-size: .95em; }
+.hub-slide .dame-table td { font-size: .82em; }
+@media (max-width: 700px) {
+  .hub-rail { display: none; }
+  .hub-tools { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .hub-rail-node::before, .hub-progress { transition: none; } }
+.hub-present-bar .dame-btn.hub-present-close { background: #C8372D !important; border-color: #C8372D !important; color: #fff !important; font-weight: 650; }
+.hub-present-bar .dame-btn.hub-present-close:hover { background: #A82A22 !important; }
+.hub-stage .hub-slide { padding-bottom: 52px; }
+.hub-slide .hub-dg-tree { gap: .38em; }
+.hub-slide .hub-dg-node { padding: .42em .9em; max-width: 34em; }
+.hub-slide .hub-dg-node strong { display: inline; margin-right: .6em; }
+.hub-slide .hub-dg-node span { display: inline; }
+.hub-slide .hub-dg-cards { grid-template-columns: repeat(auto-fit, minmax(14em, 1fr)); }
+@media (min-width: 900px) {
+  .hub-dg-cards.hub-dg-c2, .hub-dg-stats.hub-dg-c2 { grid-template-columns: repeat(2, 1fr); }
+  .hub-dg-cards.hub-dg-c3, .hub-dg-cards.hub-dg-c6, .hub-dg-cards.hub-dg-c5, .hub-dg-cards.hub-dg-c9, .hub-dg-stats.hub-dg-c3, .hub-dg-stats.hub-dg-c6 { grid-template-columns: repeat(3, 1fr); }
+  .hub-dg-cards.hub-dg-c4, .hub-dg-cards.hub-dg-c7, .hub-dg-cards.hub-dg-c8, .hub-dg-stats.hub-dg-c4 { grid-template-columns: repeat(4, 1fr); }
+  .hub-dg-stats.hub-dg-c5 { grid-template-columns: repeat(5, 1fr); }
+  .hub-book-page .hub-dg-cards.hub-dg-c4 { grid-template-columns: repeat(2, 1fr); }
+}

@@ -153,6 +153,12 @@
 - **Withdrawn the same day:** a version that moved the book's text into the database (`011_book.sql`, two functions, a book file loaded on the page). It was built on a branch, never merged, and its SQL was never part of `main`. If it was pasted into the Supabase project by any chance, say so: a small file removes it.
 - **The book was reread against the repo** and grew a part "What a reviewer asks": threats one by one, who can give what to whom, where data lives and what happens to it, running it. Limits found while writing it and recorded as gaps: a tool's manager decides the code that acts as each user (so "private" rows do not hold against him); a manager may give his tool to anyone on the site; removing a member leaves access given by name; a delete is final; nothing has a retention period; a push is live with no review; a tool's request limit sits in the shell, not in the database; an IT admin who resets a password could sign in as that person (audited, and the person is told).
 
+## Owner, 2026-11-27 (the book must win an approval)
+- Owner: the people who see it have limited time and attention; visuals help to discuss details and create interest, in the notes and in the presentation.
+- **Rule for the book from now on:** a picture before a list. Every new mechanism gets a picture in its chapter, and the 5-minute chapter is kept true with every delivery.
+- **Pictures are text.** A few lines between `:::kind` and `:::`, drawn by the site with `textContent`: no image files, no library, no HTML from data, the same in day and night. Seven kinds; a new kind is an addition to `DameShell.rich`.
+- **Pointer tools draw only on the presenter's screen** and keep nothing.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|
