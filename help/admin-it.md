@@ -8,6 +8,7 @@
 6. **Audit.** Who did what, when. Nothing here can be changed or deleted.
 
 ## Good to know
+- A "Back to ..." button takes you to the page you came from, on the tab you left it on.
 - Being IT admin does not open a department's data. To look inside a space, name yourself its admin; that is written in the audit.
 - A person added here still has to prove the email address is his (the confirmation email), unless that was switched off in the sign-in service.
 

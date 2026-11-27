@@ -67,7 +67,7 @@
     //    the address: clear it and ask the person to sign in himself.
     var hash = location.hash;
     if (hash.length > 1) {
-      history.replaceState(null, '', location.pathname + location.search);
+      history.replaceState(history.state, '', location.pathname + location.search);
       if (/error/.test(hash)) {
         ui.say($('notice'), 'That link did not work or is too old. Sign in; if that fails, request access again.', 'warn');
       } else if (/access_token|type=signup/.test(hash)) {

@@ -23,6 +23,7 @@
 - New user with username and temporary password (`009_new_user.sql`); the site book (`book.html`).
 - The finish: one-line bar with an account button, admin pages as tabs (one part at a time, kept in the address), a tool's managers and delete folded, finger-sized targets, notch-safe pages, plain dates. No SQL.
 - IT admin, Spaces: "Add a space" on top, one tile per space, and a window per space where it is changed or deleted. No SQL.
+- Space admin, Tools: the same way ("Add a tool", a tile per tool, a window per tool). Icons picked from 90 pictures. Back buttons lead to the page the person came from. No SQL.
 - Tests, all passing locally: nine SQL test files, six browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
@@ -35,8 +36,8 @@
    After 009: IT admin > Add a person > **New user**, make a trial account, sign in with it in a private window and choose a password. If the sign-in fails, send the exact message: this file is the one most tied to Supabase itself.
 4. **On the site** (Ctrl+F5 first): IT admin > Site settings > **Who may ask for access**: type the work email domain(s), Save. Empty means anyone may ask.
 5. IT admin > Spaces > **Make a test space**, press its tile, then **Open its admin page**.
-6. On **Converter**: "Build and access", **Use a ready-made page**, **Use it**, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.
-7. On **Tracker**: **Use a ready-made page**, **Use it**, **Create the tables**, **Next: upload**, **Upload as a new version**, **Open the preview**, add a row; back on the admin page **Make live** twice. Open it from the hub and add a real row.
+6. Press the **Converter** tile, then "Build and access", **Use a ready-made page**, **Use it**, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.
+7. Press the **Tracker** tile, "Build and access", **Use a ready-made page**, **Use it**, **Create the tables**, **Next: upload**, **Upload as a new version**, **Open the preview**, add a row; back on the admin page **Make live** twice. Open it from the hub and add a real row.
 8. Optional, a real department tool: make a space, a tool, and upload any file from `examples/departments/`.
 9. **Supabase > Authentication:** set the minimum password length to 12.
 10. **Supabase > Advisors > Security:** no errors. Send any warning text.

@@ -33,41 +33,12 @@
   <div id="body" hidden>
     <section class="dame-card">
       <h2>Tools</h2>
-      <p class="dame-muted">Each tool is a tile in this space. Its id is permanent. People get a tool by name, or everyone in the space gets it when it is "open to the space".</p>
-      <div id="tools"></div>
-      <p class="dame-empty" id="tools-empty" hidden>No tools yet. Create the first one below.</p>
-      <div class="hub-block">
-        <h3>New tool</h3>
-        <form id="form-tool" method="post" novalidate>
-          <div class="hub-two">
-            <label class="hub-field">Name
-              <input class="dame-input" id="tl-name" type="text" maxlength="80" autocomplete="off" required>
-            </label>
-            <label class="hub-field">Id (permanent, never reused)
-              <input class="dame-input" id="tl-id" type="text" maxlength="30" autocomplete="off" placeholder="bid-tracker" required>
-            </label>
-            <label class="hub-field">Icon (one or two characters, optional)
-              <input class="dame-input" id="tl-icon" type="text" maxlength="8" autocomplete="off">
-            </label>
-            <label class="hub-field">Colour
-              <input class="dame-input" id="tl-colour" type="color" value="#0b63ce">
-            </label>
-          </div>
-          <label class="hub-field">What it is for (optional)
-            <input class="dame-input" id="tl-desc" type="text" maxlength="400" autocomplete="off">
-          </label>
-          <label class="hub-check"><input id="tl-open" type="checkbox"> Open to everyone in this space</label>
-          <label class="hub-field">Level for everyone in the space
-            <select class="dame-input" id="tl-level">
-              <option value="read">Read: see the rows</option>
-              <option value="contribute">Contribute: add rows, change own</option>
-              <option value="edit">Edit: change anyone's rows</option>
-              <option value="approve">Approve: also delete</option>
-            </select>
-          </label>
-          <button class="dame-btn dame-btn-primary" type="submit">Create tool</button>
-        </form>
+      <p class="dame-muted">Each tool is a tile in this space. Add a tool; then press its tile to build it, change it, name its managers, switch it off or delete it.</p>
+      <div class="dame-row">
+        <button class="dame-btn dame-btn-primary" type="button" id="tool-add">Add a tool</button>
       </div>
+      <div class="hub-tiles hub-space-tiles" id="tools"></div>
+      <p class="dame-empty" id="tools-empty" hidden>No tools yet. Press "Add a tool".</p>
     </section>
 
     <section class="dame-card" data-nav="People">
@@ -93,10 +64,11 @@
         <label class="hub-field">Description
           <input class="dame-input" id="sp-desc" type="text" maxlength="400" autocomplete="off">
         </label>
-        <div class="hub-two" id="sp-look" hidden>
-          <label class="hub-field">Icon on the tile (one or two letters, or an emoji)
+        <div id="sp-look" hidden>
+          <label class="hub-field">Icon on the tile: pick a picture, or type one or two letters
             <input class="dame-input" id="sp-icon" type="text" maxlength="8" autocomplete="off">
           </label>
+          <div id="sp-icons"></div>
           <label class="hub-field">Colour of the tile
             <input class="dame-input" id="sp-colour" type="color" value="#0078b8">
           </label>
@@ -118,5 +90,42 @@
     </section>
   </div>
 </main>
+<div class="hub-focus-back" id="tool-new" hidden>
+  <form class="hub-focus hub-focus-small" id="form-tool" method="post" novalidate role="dialog" aria-modal="true" aria-label="Add a tool">
+    <h2>Add a tool</h2>
+    <p class="dame-muted">A tool is one tile in this space. Here you only name it; you build it in the next step.</p>
+    <label class="hub-field">Name
+      <input class="dame-input" id="tl-name" type="text" maxlength="80" autocomplete="off" required>
+    </label>
+    <label class="hub-field">Id (permanent, never reused)
+      <input class="dame-input" id="tl-id" type="text" maxlength="30" autocomplete="off" placeholder="bid-tracker" required>
+    </label>
+    <label class="hub-field">What it is for (optional)
+      <input class="dame-input" id="tl-desc" type="text" maxlength="400" autocomplete="off">
+    </label>
+    <label class="hub-field">Icon on the tile: pick a picture, or type one or two letters
+      <input class="dame-input" id="tl-icon" type="text" maxlength="8" autocomplete="off">
+    </label>
+    <div id="tl-icons"></div>
+    <label class="hub-field">Colour of the tile
+      <input class="dame-input" id="tl-colour" type="color" value="#0b63ce">
+    </label>
+    <label class="hub-check"><input id="tl-open" type="checkbox"> Open to everyone in this space</label>
+    <p class="dame-hint" id="tl-named">Not ticked: only the people you name on the tool's access list get it.</p>
+    <label class="hub-field" id="tl-level-field" hidden>Level for everyone in the space
+      <select class="dame-input" id="tl-level">
+        <option value="read">Read: see the rows</option>
+        <option value="contribute">Contribute: add rows, change own</option>
+        <option value="edit">Edit: change anyone's rows</option>
+        <option value="approve">Approve: also delete</option>
+      </select>
+    </label>
+    <p class="hub-msg" id="tl-msg" role="alert" hidden></p>
+    <div class="dame-row hub-focus-foot">
+      <button class="dame-btn dame-btn-primary" type="submit" id="tl-create">Create tool</button>
+      <button class="dame-btn" type="button" id="tl-cancel">Cancel</button>
+    </div>
+  </form>
+</div>
 </body>
 </html>

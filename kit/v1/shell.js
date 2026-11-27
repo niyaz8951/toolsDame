@@ -592,7 +592,7 @@
       if (nav.scrollWidth > nav.clientWidth) { nav.scrollLeft = c.offsetLeft - (nav.clientWidth - c.offsetWidth) / 2; }
       if (byHand) {
         wanted = '';
-        history.replaceState(null, '', location.pathname + location.search + '#' + c.dataset.part);
+        history.replaceState(history.state, '', location.pathname + location.search + '#' + c.dataset.part);
         // A new part starts at its top.
         var top = host.getBoundingClientRect().top + window.scrollY - 150;
         if (window.scrollY > top) { window.scrollTo(0, Math.max(0, top)); }
@@ -658,10 +658,161 @@
   sections();
   tint();
 
+  // ---- tile icons: a picture chosen from the site's own set (kit/v1/icons/tiles, Lucide, ISC licence),
+  // or one or two letters. The database keeps one short text: "i-fan" for the picture "fan", anything
+  // else is shown as the letters it is. Only names in this list become a picture; the picture itself is
+  // a file of the site, drawn in the tile's colour. Nothing is loaded from elsewhere.
+  var ICONS = [
+    ['chart', 'Chart'], ['trend', 'Trend'], ['pie', 'Pie chart'], ['gauge', 'Gauge'],
+    ['table', 'Table'], ['sheet', 'Sheet'], ['calc', 'Calculator'], ['money', 'Money'],
+    ['coins', 'Coins'], ['wallet', 'Wallet'], ['bill', 'Bill'], ['cart', 'Cart'],
+    ['box', 'Parcel'], ['boxes', 'Stock'], ['truck', 'Truck'], ['ship', 'Ship'],
+    ['plane', 'Plane'], ['store', 'Shop'], ['tools', 'Wrench'], ['hammer', 'Hammer'],
+    ['gear', 'Gear'], ['cog', 'Cog'], ['fact', 'Factory'], ['build', 'Building'],
+    ['fan', 'Fan'], ['snow', 'Cooling'], ['flame', 'Heating'], ['temp', 'Temperature'],
+    ['wind', 'Air'], ['drop', 'Water'], ['bolt', 'Power'], ['plug', 'Plug'],
+    ['ruler', 'Ruler'], ['draft', 'Drawing'], ['layers', 'Layers'], ['puzzle', 'Part'],
+    ['users', 'People'], ['user', 'Person'], ['shake', 'Deal'], ['case', 'Briefcase'],
+    ['badge', 'Badge'], ['cap', 'Training'], ['mail', 'Mail'], ['phone', 'Phone'],
+    ['chat', 'Chat'], ['horn', 'Announce'], ['bell', 'Bell'], ['globe', 'World'],
+    ['doc', 'Document'], ['folder', 'Folder'], ['book', 'Book'], ['clip', 'Checklist'],
+    ['check', 'Done'], ['list', 'Tasks'], ['cal', 'Calendar'], ['clock', 'Clock'],
+    ['timer', 'Timer'], ['map', 'Map'], ['pin', 'Place'], ['home', 'Home'],
+    ['search', 'Search'], ['filter', 'Filter'], ['link', 'Link'], ['db', 'Database'],
+    ['server', 'Server'], ['cloud', 'Cloud'], ['code', 'Code'], ['cpu', 'Chip'],
+    ['screen', 'Screen'], ['print', 'Printer'], ['camera', 'Camera'], ['image', 'Picture'],
+    ['pen', 'Pencil'], ['brush', 'Brush'], ['bulb', 'Idea'], ['target', 'Target'],
+    ['trophy', 'Trophy'], ['rocket', 'Rocket'], ['star', 'Star'], ['heart', 'Heart'],
+    ['flag', 'Flag'], ['tag', 'Tag'], ['key', 'Key'], ['lock', 'Lock'],
+    ['shield', 'Safe'], ['alert', 'Warning'], ['help', 'Help'], ['leaf', 'Leaf'],
+    ['sun', 'Sun'], ['scale', 'Scale']
+  ];
+  var ICON_LABEL = {};
+  ICONS.forEach(function (i) { ICON_LABEL[i[0]] = i[1]; });
+
+  function iconName(value) {
+    var m = /^i-([a-z]{2,6})$/.exec(value || '');
+    return m && ICON_LABEL[m[1]] ? m[1] : '';
+  }
+
+  // Puts a tile's icon into node: the picture, or the letters, or the fallback letter.
+  function icon(node, value, fallback) {
+    var name = iconName(value);
+    if (name) {
+      var pic = el('span', 'hub-ic hub-ic-' + name);
+      pic.setAttribute('aria-hidden', 'true');
+      node.appendChild(pic);
+    } else if (value || fallback) {
+      node.appendChild(document.createTextNode(value || fallback));
+    }
+    return node;
+  }
+
+  // A heading that starts with the icon: "[fan] Tracker".
+  function titled(node, value, text) {
+    clear(node);
+    icon(node, value, '');
+    node.appendChild(document.createTextNode((value ? ' ' : '') + text));
+    return node;
+  }
+
+  // The icon chooser: a box of pictures under a short text field for letters. One of the two holds:
+  // pressing a picture empties the letters, typing letters lets the picture go.
+  // Returns { node, get(), set(value) }; put node on the page after the field.
+  function iconPicker(input) {
+    var box = el('div', 'hub-icons');
+    var chosen = '';
+    var buttons = {};
+    box.setAttribute('role', 'group');
+    box.setAttribute('aria-label', 'Pictures for the tile');
+    function show() {
+      ICONS.forEach(function (i) { buttons[i[0]].setAttribute('aria-pressed', String(i[0] === chosen)); });
+      input.placeholder = chosen ? 'Picture chosen: ' + ICON_LABEL[chosen] : 'No picture: type letters, or leave empty';
+    }
+    ICONS.forEach(function (i) {
+      var b = el('button', 'hub-icon-pick');
+      b.type = 'button';
+      b.title = i[1];
+      b.setAttribute('aria-label', i[1]);
+      b.setAttribute('data-icon', i[0]);
+      icon(b, 'i-' + i[0], '');
+      b.addEventListener('click', function () {
+        chosen = chosen === i[0] ? '' : i[0];
+        if (chosen) { input.value = ''; }
+        show();
+      });
+      buttons[i[0]] = b;
+      box.appendChild(b);
+    });
+    input.addEventListener('input', function () { if (input.value && chosen) { chosen = ''; show(); } });
+    function set(value) {
+      chosen = iconName(value);
+      input.value = chosen ? '' : (value || '');
+      show();
+    }
+    show();
+    return { node: box, get: function () { return chosen ? 'i-' + chosen : input.value; }, set: set };
+  }
+
+  // ---- going back. A "Back to ..." button names the page above this one. When that page is also the
+  // page the person just came from, the button steps back in the browser's own history instead of
+  // opening the page a second time: the tab he was on is kept, and the browser's Back button does not
+  // bounce him forward again. Where the trail does not know, the button is a plain link, as before.
+  // The browser does not reliably tell a page which page came before it, so the site keeps its own
+  // short trail for this browser tab: the addresses of its pages, in the order of the tab's history.
+  // Each history step carries its place in the trail. Only addresses are kept, never data or a key.
+  var trail = { at: -1, list: [] };
+  (function () {
+    try {
+      var saved = JSON.parse(sessionStorage.getItem('dame.trail') || 'null');
+      if (saved && Array.isArray(saved.list) && typeof saved.at === 'number') { trail = saved; }
+      var st = history.state;
+      var n = st && typeof st.dameN === 'number' && st.dameN <= trail.list.length ? st.dameN : -1;
+      if (n < 0) {
+        // A new step: it follows the step the tab was on, and what lay ahead of that is gone.
+        n = trail.at + 1;
+        trail.list = trail.list.slice(0, n);
+        history.replaceState({ dameN: n }, '', location.href);
+      }
+      trail.list[n] = location.pathname + location.search;
+      trail.at = n;
+      sessionStorage.setItem('dame.trail', JSON.stringify(trail));
+    } catch (err) { trail = { at: -1, list: [] }; }
+  })();
+
+  function before() {
+    try {
+      if (trail.at < 1 || history.length < 2 || !trail.list[trail.at - 1]) { return null; }
+      return new URL(trail.list[trail.at - 1], location.origin);
+    } catch (err) { return null; }
+  }
+
+  // True when the page the person came from is this page of the site (for example 'admin/it.html').
+  function cameFrom(page) {
+    var b = before();
+    return !!b && b.origin === location.origin && b.pathname === new URL(api.href(page), location.href).pathname;
+  }
+
+  document.addEventListener('click', function (ev) {
+    var a = ev.target && ev.target.closest ? ev.target.closest('a.hub-back') : null;
+    if (!a || ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) { return; }
+    var b = before();
+    var to = new URL(a.href, location.href);
+    if (b && b.origin === to.origin && b.pathname === to.pathname && b.search === to.search) {
+      ev.preventDefault();
+      history.back();
+    }
+  });
+
+  // A page the browser kept in memory and shows again on Back is read again from the database:
+  // it must show what is true now, and nothing at all to a person who has signed out since.
+  window.addEventListener('pageshow', function (ev) { if (ev.persisted) { location.reload(); } });
+
   window.DameShell = Object.freeze({
     el: el, clear: clear, say: say, sayError: sayError, guard: guard,
     showUser: showUser, confirmButton: confirmButton, when: when,
     param: param, runner: runner, addRow: addRow, picker: picker, people: people,
-    typedDelete: typedDelete, audit: audit, info: info, openInfo: openInfo, rich: rich, toolGuide: toolGuide
+    typedDelete: typedDelete, audit: audit, info: info, openInfo: openInfo, rich: rich, toolGuide: toolGuide,
+    icon: icon, titled: titled, iconPicker: iconPicker, cameFrom: cameFrom
   });
 })();

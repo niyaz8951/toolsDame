@@ -37,7 +37,7 @@
     $('next').hidden = at === chapters.length - 1;
     document.title = c.title + ' - Site book - DAME';
     if (!quiet) {
-      history.replaceState(null, '', '#' + c.file.replace(/\.md$/, ''));
+      history.replaceState(history.state, '', '#' + c.file.replace(/\.md$/, ''));
       $('page').scrollIntoView({ block: 'start' });
     }
   }

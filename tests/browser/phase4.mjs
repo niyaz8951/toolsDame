@@ -108,6 +108,8 @@ async function run(width, height, label) {
     await ita.page.click('#spaces [data-space="test-space"]');
     await ita.page.click('#space-win a:text-is("Open its admin page")');
     await ita.page.waitForSelector('#body:not([hidden])');
+    check((await ita.page.textContent('#back')) === 'Back to IT admin' && /admin\/it\.html#spaces$/.test(await ita.page.getAttribute('#back', 'href')), T + 'opened from IT admin, the space admin page leads back to IT admin');
+    check((await ita.page.locator('#tools [data-tool="converter"] .hub-ic-calc').count()) === 1, T + 'the test tools have picture icons');
     check((await ita.page.locator('#tools [data-tool]').count()) === 2 && /Converter/.test(await ita.page.textContent('#tools')) && /Tracker/.test(await ita.page.textContent('#tools')), T + 'it holds two empty tools: Converter and Tracker');
     for (const [who, level] of [[ray, 'read'], [cat, 'contribute'], [edi, 'edit'], [app, 'approve']]) {
       await mock.sql(`insert into core.tool_access (space, tool, user_id, level, added_by) values ('test-space', 'tracker', '${who.id}', '${level}', '${ita.id}'), ('test-space', 'converter', '${who.id}', 'read', '${ita.id}')`);
@@ -325,8 +327,9 @@ async function run(width, height, label) {
     // --- deleting the tool takes its tables with it
     await ita.page.goto(SITE + 'admin/space.html?space=test-space');
     await ita.page.waitForSelector('#body:not([hidden])');
-    await ita.page.fill('[data-tool="tracker"] .hub-delete input', 'tracker');
-    await ita.page.click('[data-tool="tracker"] .hub-delete button.hub-danger');
+    await ita.page.click('#tools [data-tool="tracker"]');
+    await ita.page.fill('#tool-win .hub-delete input', 'tracker');
+    await ita.page.click('#tool-win .hub-delete button.hub-danger');
     await said(ita.page, 'Tracker is deleted');
     const gone = await mock.sql("select to_regnamespace('t_test_space__tracker') is null and to_regnamespace('p_test_space__tracker') is null as gone");
     check(gone.rows[0].gone, T + 'deleting the tool deletes its tables and rows');

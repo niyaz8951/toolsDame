@@ -32,6 +32,7 @@ Contract 1: one person is one account id. Tools have no logins, no passwords and
 - The sign-in service puts a `session_id` in every token. `core.require_login()` writes it into `core.sessions` the first time it sees it, and that first sight is what the audit records as `user.signed_in`.
 - A session is honoured only if: it belongs to this account, it is not ended, it is the **newest** session of this account, and it was first seen less than 12 hours ago.
 - So signing in on a second device ends the first one at its next click. Sign-out and "switch off" end the session at once.
+- Beside the session, a browser tab keeps only the addresses of the site's pages it visited (`dame.trail`, gone when the tab closes), so a Back button can return to the page before.
 - The browser keeps the tokens in its storage for the site (`dame.session`) and renews the short-lived access token with the refresh token until the 12 hours are over.
 
 ## What every function asks, in order

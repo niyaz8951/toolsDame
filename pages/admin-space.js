@@ -4,6 +4,8 @@
  * Must not change: everything from the database is written with textContent;
  * each button calls one dame_* function and then reloads, so the page shows
  * what the database holds; deleting a tool needs its id typed in full.
+ * Tools: the page shows "Add a tool" and one tile per tool; a tool is
+ * changed or deleted only inside the window its tile opens.
  */
 (function () {
   'use strict';
@@ -48,46 +50,77 @@
     return s;
   }
 
-  var opened = {};
+  var tools = [];
+  var newIcon = null;     // the icon chooser of "Add a tool"
+  var spaceIcon = null;   // the icon chooser of the space's own tile
+  var win = null;   // the open tool window, or null
 
-  function toolBlock(t) {
-    var box = ui.el('div', 'hub-block');
-    box.setAttribute('data-tool', t.id);
-    var title = ui.el('h3', null, (t.icon ? t.icon + ' ' : '') + t.name + ' ');
+  // A tool is one tile, in its own colour. Pressing it opens its window.
+  function toolTile(t) {
+    var b = ui.el('button', 'hub-tile' + (t.active ? '' : ' hub-tile-off'));
+    b.type = 'button';
+    b.setAttribute('data-tool', t.id);
+    if (/^#[0-9a-f]{6}$/.test(t.colour || '')) { b.style.setProperty('--dame-accent', t.colour); }
+    b.appendChild(ui.icon(ui.el('span', 'hub-tile-icon'), t.icon, (t.name.trim().charAt(0) || 'T').toUpperCase()));
+    b.appendChild(ui.el('span', 'hub-tile-name', t.name));
+    b.appendChild(ui.el('span', 'hub-tile-text', t.open_to_space ? 'Open to the space' : (t.people + (t.people === 1 ? ' person' : ' people') + ' named')));
+    if (!t.active) { b.appendChild(ui.el('span', 'hub-pill', 'Switched off')); }
+    b.addEventListener('click', function () { openTool(t.id); });
+    return b;
+  }
+
+  // The window of one tool. Everything that changes a tool is here and nowhere else on the page.
+  // After each action the page is read again and the window is drawn again from the database.
+  function closeTool() {
+    if (!win) { return; }
+    var id = win.id;
+    win.back.remove();
+    document.removeEventListener('keydown', win.onKey);
+    win = null;
+    var tile = document.querySelector('#tools [data-tool="' + id + '"]');
+    if (tile) { tile.focus(); }
+  }
+
+  async function inTool(name, args, done) {
+    var w = win;
+    ui.say(w.msg, '');
+    try {
+      await api.rpc(name, args);
+      await load();
+      if (win === w) { ui.say(w.msg, done, 'ok'); }
+    } catch (err) {
+      await load().catch(function () {});
+      if (win === w) { ui.sayError(w.msg, err); }
+    }
+    if (win === w) { w.msg.scrollIntoView({ block: 'nearest' }); }
+  }
+
+  function drawTool(t) {
+    var body = ui.clear(win.body);
+    var title = ui.el('h2', null, t.name + ' ');
     title.appendChild(ui.el('span', 'hub-pill', t.id));
     title.appendChild(ui.el('span', 'hub-pill' + (t.active ? ' hub-pill-ok' : ''), t.active ? 'On' : 'Switched off'));
-    box.appendChild(title);
+    body.appendChild(title);
     var open = t.open_to_space ? 'Open to everyone in the space (' + t.open_level + ').' : 'Only people named on its access list.';
-    box.appendChild(ui.el('p', 'dame-muted', (t.description ? t.description + ' ' : '') + open + ' ' +
+    body.appendChild(ui.el('p', 'dame-muted', (t.description ? t.description + ' ' : '') + open + ' ' +
       t.people + (t.people === 1 ? ' person' : ' people') + ' named.'));
+    body.appendChild(ui.el('p', 'dame-hint', '"Build and access" is where you make the tool\'s page, its tables, and say who may use it.'));
 
-    var row = ui.el('div', 'dame-row');
-    var access = ui.el('a', 'dame-btn dame-btn-primary hub-small', 'Build and access');
-    access.href = api.href('admin/tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(t.id);
-    row.appendChild(access);
-    var edit = ui.el('button', 'dame-btn hub-small', 'Change name, icon or colour');
-    edit.type = 'button';
-    row.appendChild(edit);
-    row.appendChild(t.active
-      ? ui.confirmButton('Switch off', '', function () { act('dame_tool_set_active', { p_space: space, p_tool: t.id, p_active: false }, t.name + ' is switched off. Only you and its managers can open it.'); })
-      : ui.confirmButton('Switch on', '', function () { act('dame_tool_set_active', { p_space: space, p_tool: t.id, p_active: true }, t.name + ' is switched on.'); }));
-    box.appendChild(row);
-
-    // The change form, shown on demand.
+    body.appendChild(ui.el('p', 'hub-sub', 'Name and look'));
     var form = ui.el('form', 'hub-edit');
     form.method = 'post';
     form.noValidate = true;
-    form.hidden = true;
     var name = input('text', t.name, 80);
-    var icon = input('text', t.icon, 8);
+    var icon = input('text', '', 8);
+    var pick = ui.iconPicker(icon);
+    pick.set(t.icon);
     var colour = input('color', /^#[0-9a-f]{6}$/.test(t.colour) ? t.colour : '#0b63ce');
     var desc = input('text', t.description, 400);
-    var two = ui.el('div', 'hub-two');
-    two.appendChild(field('Name', name));
-    two.appendChild(field('Icon', icon));
-    two.appendChild(field('Colour', colour));
-    form.appendChild(two);
+    form.appendChild(field('Name', name));
     form.appendChild(field('What it is for', desc));
+    form.appendChild(field('Icon on the tile: pick a picture, or type one or two letters', icon));
+    form.appendChild(pick.node);
+    form.appendChild(field('Colour of the tile', colour));
     var check = ui.el('label', 'hub-check');
     var openBox = ui.el('input');
     openBox.type = 'checkbox';
@@ -96,43 +129,105 @@
     check.appendChild(document.createTextNode(' Open to everyone in this space'));
     form.appendChild(check);
     var level = levelSelect(t.open_level);
-    form.appendChild(field('Level for everyone in the space', level));
-    var save = ui.el('button', 'dame-btn', 'Save changes');
+    var levelField = field('Level for everyone in the space', level);
+    levelField.hidden = !openBox.checked;
+    openBox.addEventListener('change', function () { levelField.hidden = !openBox.checked; });
+    form.appendChild(levelField);
+    var save = ui.el('button', 'dame-btn hub-small', 'Save changes');
     save.type = 'submit';
     form.appendChild(save);
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
-      act('dame_tool_update', { p_space: space, p_tool: t.id, p_name: name.value, p_description: desc.value,
-        p_icon: icon.value, p_colour: colour.value, p_open_to_space: openBox.checked, p_open_level: level.value },
+      inTool('dame_tool_update', { p_space: space, p_tool: t.id, p_name: name.value, p_description: desc.value,
+        p_icon: pick.get(), p_colour: colour.value, p_open_to_space: openBox.checked, p_open_level: level.value },
         t.id + ' is changed.');
     });
-    edit.addEventListener('click', function () { form.hidden = !form.hidden; });
-    box.appendChild(form);
+    body.appendChild(form);
 
-    // Managers and delete are needed rarely: folded under one button, so a tool is three lines, not a screen.
-    // The page is drawn again after every action; an opened fold stays open.
-    var fold = document.createElement('details');
-    var more = ui.el('div', 'hub-more-body');
-    var sum = ui.el('summary', 'dame-btn hub-small', t.managers.length === 1 ? 'Managers (1) and delete' : 'Managers (' + t.managers.length + ') and delete');
-    fold.className = 'hub-more';
-    fold.open = opened[t.id] === true;
-    fold.addEventListener('toggle', function () { opened[t.id] = fold.open; });
-    fold.appendChild(sum);
-    more.appendChild(ui.el('p', 'hub-sub', 'Managers'));
+    body.appendChild(ui.el('p', 'hub-sub', 'Managers'));
     var list = ui.el('ul', 'hub-list');
     ui.people(list, t.managers, 'No manager yet. You look after it yourself.', 'Remove', function (person) {
-      act('dame_tool_manager_remove', { p_space: space, p_tool: t.id, p_user: person.id }, person.name + ' no longer manages ' + t.name + '.');
+      inTool('dame_tool_manager_remove', { p_space: space, p_tool: t.id, p_user: person.id }, person.name + ' no longer manages ' + t.name + '.');
     });
-    more.appendChild(list);
-    more.appendChild(ui.picker('Find a person to manage ' + t.name, 'Name as manager', function (person) {
-      act('dame_tool_manager_add', { p_space: space, p_tool: t.id, p_user: person.id }, person.name + ' now manages ' + t.name + '.');
+    body.appendChild(list);
+    body.appendChild(ui.picker('Find a person to manage ' + t.name, 'Name as manager', function (person) {
+      inTool('dame_tool_manager_add', { p_space: space, p_tool: t.id, p_user: person.id }, person.name + ' now manages ' + t.name + '.');
     }));
-    more.appendChild(ui.typedDelete(t.id, 'Delete tool', function (typed) {
-      act('dame_tool_delete', { p_space: space, p_tool: t.id, p_confirm: typed }, t.name + ' is deleted. Its id ' + t.id + ' will never be used again.');
+
+    body.appendChild(ui.el('p', 'hub-sub', t.active ? 'Switch off' : 'Switch on'));
+    body.appendChild(ui.el('p', 'dame-hint', t.active ? 'Nothing is deleted. Only you and its managers can open the tool until it is switched on again.'
+      : 'The people who have this tool can open it again.'));
+    var row = ui.el('div', 'dame-row');
+    row.appendChild(t.active
+      ? ui.confirmButton('Switch off', '', function () { inTool('dame_tool_set_active', { p_space: space, p_tool: t.id, p_active: false }, t.name + ' is switched off. Only you and its managers can open it.'); })
+      : ui.confirmButton('Switch on', '', function () { inTool('dame_tool_set_active', { p_space: space, p_tool: t.id, p_active: true }, t.name + ' is switched on.'); }));
+    body.appendChild(row);
+
+    body.appendChild(ui.el('p', 'hub-sub', 'Delete'));
+    body.appendChild(ui.el('p', 'dame-hint', 'Deletes the tool, its pages, its tables and their rows for good. The id ' + t.id + ' can never be used again.'));
+    body.appendChild(ui.typedDelete(t.id, 'Delete tool', async function (typed) {
+      var w = win;
+      try {
+        await api.rpc('dame_tool_delete', { p_space: space, p_tool: t.id, p_confirm: typed });
+        closeTool();
+        await load();
+        ui.say($('msg'), t.name + ' is deleted. Its id ' + t.id + ' will never be used again.', 'ok');
+        $('msg').scrollIntoView({ block: 'nearest' });
+      } catch (err) {
+        await load().catch(function () {});
+        if (win === w) { ui.sayError(w.msg, err); }
+      }
     }));
-    fold.appendChild(more);
-    box.appendChild(fold);
-    return box;
+
+    win.link.href = api.href('admin/tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(t.id);
+  }
+
+  function openTool(id, said) {
+    var t = tools.filter(function (x) { return x.id === id; })[0];
+    if (!t) { return; }
+    var back = ui.el('div', 'hub-focus-back');
+    var box = ui.el('section', 'hub-focus hub-focus-small');
+    box.id = 'tool-win';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', 'Tool ' + t.name);
+    var body = ui.el('div');
+    var msg = ui.el('p', 'hub-msg');
+    msg.id = 'tool-win-msg';
+    msg.hidden = true;
+    msg.setAttribute('role', 'alert');
+    var foot = ui.el('div', 'dame-row hub-focus-foot');
+    var link = ui.el('a', 'dame-btn dame-btn-primary', 'Build and access');
+    link.id = 'tool-win-build';
+    var close = ui.el('button', 'dame-btn', 'Done');
+    close.type = 'button';
+    close.id = 'tool-win-close';
+    close.addEventListener('click', closeTool);
+    back.addEventListener('mousedown', function (ev) { if (ev.target === back) { closeTool(); } });
+    foot.appendChild(link);
+    foot.appendChild(close);
+    box.appendChild(body);
+    box.appendChild(msg);
+    box.appendChild(foot);
+    back.appendChild(box);
+    win = { id: id, back: back, body: body, msg: msg, link: link, onKey: function (ev) { if (ev.key === 'Escape') { closeTool(); } } };
+    document.addEventListener('keydown', win.onKey);
+    drawTool(t);
+    document.body.appendChild(back);
+    if (said) { ui.say(msg, said, 'ok'); }
+    link.focus();
+  }
+
+  // The "Add a tool" window.
+  function showNewTool(on) {
+    $('tool-new').hidden = !on;
+    ui.say($('tl-msg'), '');
+    if (on) { $('tl-name').focus(); } else { $('tool-add').focus(); }
+  }
+
+  function showLevel() {
+    $('tl-level-field').hidden = !$('tl-open').checked;
+    $('tl-named').hidden = $('tl-open').checked;
   }
 
   async function load() {
@@ -147,14 +242,20 @@
     var look = await api.rpc('dame_space_look_get', { p_space: space }).catch(function () { return null; });
     $('sp-look').hidden = look === null;
     if (look) {
-      if (document.activeElement !== $('sp-icon')) { $('sp-icon').value = look.icon || ''; }
+      if (document.activeElement !== $('sp-icon') && !$('sp-icons').contains(document.activeElement)) { spaceIcon.set(look.icon || ''); }
       $('sp-colour').value = /^#[0-9a-f]{6}$/.test(look.colour) ? look.colour : '#0078b8';
       hadLook = true;
     }
 
+    tools = s.tools;
     var box = ui.clear($('tools'));
-    s.tools.forEach(function (t) { box.appendChild(toolBlock(t)); });
-    $('tools-empty').hidden = s.tools.length > 0;
+    tools.forEach(function (t) { box.appendChild(toolTile(t)); });
+    $('tools-empty').hidden = tools.length > 0;
+    // An open window shows what the database holds now; a tool that is gone closes its window.
+    if (win) {
+      var open = tools.filter(function (x) { return x.id === win.id; })[0];
+      if (open) { drawTool(open); } else { closeTool(); }
+    }
 
     ui.people($('members'), s.members, 'Nobody yet. Find a person below.', 'Remove', function (person) {
       act('dame_space_member_remove', { p_space: space, p_user: person.id }, person.name + ' is removed from the space.');
@@ -180,6 +281,15 @@
       return;
     }
     $('back').href = api.href('space.html') + '?space=' + encodeURIComponent(space);
+    // Opened from the IT admin page: the way back is the IT admin page.
+    if (ui.cameFrom('admin/it.html')) {
+      $('back').href = api.href('admin/it.html') + '#spaces';
+      $('back').textContent = 'Back to IT admin';
+    }
+    newIcon = ui.iconPicker($('tl-icon'));
+    $('tl-icons').appendChild(newIcon.node);
+    spaceIcon = ui.iconPicker($('sp-icon'));
+    $('sp-icons').appendChild(spaceIcon.node);
     act = ui.runner($('msg'), load);
     loadAudit = ui.audit($('audit'), $('audit-more'), function (limit, before) {
       return api.rpc('dame_audit_scope_list', { p_space: space, p_tool: null, p_limit: limit, p_before: before });
@@ -200,7 +310,7 @@
       if (!hadLook) { act('dame_space_update', { p_space: space, p_name: name, p_description: desc }, 'Saved.'); return; }
       // Name and text first, then the tile's icon and colour; the page reloads once, after both.
       api.rpc('dame_space_update', { p_space: space, p_name: name, p_description: desc }).then(function () {
-        return act('dame_space_look_set', { p_space: space, p_icon: $('sp-icon').value, p_colour: $('sp-colour').value }, 'Saved. The tile on the hub has the new look.');
+        return act('dame_space_look_set', { p_space: space, p_icon: spaceIcon.get(), p_colour: $('sp-colour').value }, 'Saved. The tile on the hub has the new look.');
       }, function (err) { ui.sayError($('msg'), err); });
     });
 
@@ -208,18 +318,35 @@
     $('tl-name').addEventListener('input', function () {
       if (!idTouched) { $('tl-id').value = slug($('tl-name').value); }
     });
+    $('tl-open').addEventListener('change', showLevel);
+    $('tool-add').addEventListener('click', function () { showNewTool(true); });
+    $('tl-cancel').addEventListener('click', function () { showNewTool(false); });
+    $('tool-new').addEventListener('mousedown', function (ev) { if (ev.target === $('tool-new')) { showNewTool(false); } });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('tool-new').hidden) { showNewTool(false); } });
     $('form-tool').addEventListener('submit', async function (ev) {
       ev.preventDefault();
       var form = ev.currentTarget;
+      var msg = $('tl-msg');
       var name = $('tl-name').value.trim();
-      var before = $('tools').children.length;
-      await act('dame_tool_create', { p_space: space, p_id: $('tl-id').value.trim(), p_name: name, p_description: $('tl-desc').value,
-        p_icon: $('tl-icon').value, p_colour: $('tl-colour').value, p_open_to_space: $('tl-open').checked, p_open_level: $('tl-level').value },
-        'Tool ' + name + ' is created. Next: press "Build and access" on it. The site guides you one step at a time; the information button (i) explains everything.');
-      if ($('tools').children.length > before) {
+      var id = $('tl-id').value.trim();
+      $('tl-create').disabled = true;
+      ui.say(msg, '');
+      try {
+        await api.rpc('dame_tool_create', { p_space: space, p_id: id, p_name: name, p_description: $('tl-desc').value,
+          p_icon: newIcon.get(), p_colour: $('tl-colour').value, p_open_to_space: $('tl-open').checked, p_open_level: $('tl-level').value });
         form.reset();
+        newIcon.set('');
         idTouched = false;
+        showLevel();
+        showNewTool(false);
+        await load();
+        // The new tool opens at once: its next step, "Build and access", is the main button of its window.
+        openTool(id, 'Tool ' + name + ' is created. Next: press "Build and access". The site guides you one step at a time; the information button (i) explains everything.');
+      } catch (err) {
+        ui.sayError(msg, err);
+        msg.scrollIntoView({ block: 'nearest' });
       }
+      $('tl-create').disabled = false;
     });
 
     await load();

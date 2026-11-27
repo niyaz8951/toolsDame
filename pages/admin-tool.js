@@ -79,7 +79,7 @@
     var got = await Promise.all(asked);
     var t = got[0];
     document.title = t.name + ' admin - DAME';
-    $('title').textContent = (t.icon ? t.icon + ' ' : '') + t.name + ': admin';
+    ui.titled($('title'), t.icon, t.name + ': admin');
     toolName = t.name;
     toolText = t.description || '';
     $('text').textContent = (t.description ? t.description.replace(/[.!?]?\s*$/, '. ') : '') + 'In ' + t.space_name + '. ' +
@@ -88,10 +88,22 @@
     $('open-text').textContent = t.open_to_space
       ? 'Everyone in the space has this tool at the level "' + t.open_level + '". People named here can have a higher level.'
       : 'Only the people named here can open this tool.';
-    $('back').href = api.href(t.is_space_admin ? 'admin/space.html' : 'space.html') + '?space=' + encodeURIComponent(space);
-    $('back').textContent = t.is_space_admin ? 'Back to the space admin page' : 'Back to the space';
-
     var state = got[1];
+    // The way back is the page the person came from. A tool's manager need not be a space admin, so the
+    // space admin page is offered only to a person who came from it. Otherwise: the tool itself, or,
+    // while it is not built yet, the space it sits in.
+    var q = '?space=' + encodeURIComponent(space);
+    if (t.is_space_admin && ui.cameFrom('admin/space.html')) {
+      $('back').href = api.href('admin/space.html') + q;
+      $('back').textContent = 'Back to the space admin page';
+    } else if (state.live !== null || ui.cameFrom('tool.html')) {
+      $('back').href = toolUrl(false);
+      $('back').textContent = 'Back to the tool';
+    } else {
+      $('back').href = api.href('space.html') + q;
+      $('back').textContent = 'Back to the space';
+    }
+
     $('ver-state').textContent = (state.live === null ? 'Not built yet: people who have this tool see "being prepared".' : 'Live: version ' + state.live + '.') +
       (state.preview === null ? '' : ' Preview: version ' + state.preview + ' (only admins and managers see it).');
     $('open-live').href = toolUrl(false);

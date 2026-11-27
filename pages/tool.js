@@ -340,7 +340,7 @@
     }
     document.title = info.name + ' - DAME';
     var title = document.querySelector('.hub-title');
-    if (title) { title.textContent = (info.icon ? info.icon + ' ' : '') + info.name; }
+    if (title) { ui.titled(title, info.icon, info.name); }
     $('back').textContent = info.space_name;
     $('crumb-tool').textContent = info.name;
     $('admin').href = adminUrl;

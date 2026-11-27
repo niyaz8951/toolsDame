@@ -3,6 +3,9 @@
 The running log of the site. Newest first. Every change to the site adds a line here and updates the chapter it touches.
 
 ## 2026-11-27
+- Space admin follows the same rule as IT admin: "Add a tool", tiles, and a window per tool. A new tool opens its window at once with "Build and access" in front.
+- Icons are picked from 90 pictures kept in the site (Lucide, ISC); the database still keeps one short text (`i-fan`), so nothing changed there.
+- Back buttons go to the page the person came from. A tool's manager is never pointed to the space admin page. The tab keeps a trail of page addresses for this, nothing else.
 - IT admin, Spaces: the page was one long list with every field of every space open at once. Now: "Add a space" on top, a tile per space, and everything that changes or deletes a space inside the window its tile opens. Rule kept for later pages: a list shows, a window changes.
 
 ## 2026-11-26

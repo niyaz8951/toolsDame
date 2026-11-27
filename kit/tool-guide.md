@@ -2,8 +2,8 @@
 
 You do not need to program. The site gives you a starter kit for the approved AI, checks what comes back and tells you what to fix. The look, the top bar, sign-in and security are already there.
 
-1. **New tool.** In your space admin page fill "New tool": a name, an icon, a colour, who may open it. The id is suggested and is permanent.
-2. **Build and access.** Press it on the new tool. The page "Build this tool" has five steps.
+1. **Add a tool.** In your space admin page press "Add a tool": a name, an icon (pick a picture, or type one or two letters), a colour, who may open it. The id is suggested and is permanent.
+2. **Build and access.** The new tool opens in a window; press "Build and access" there. Later: press the tool's tile, then "Build and access". The page "Build this tool" has five steps.
 3. **Say what the tool should do**, in your own words: who uses it, what goes in, what comes out. Tick what it needs (for example: read and write Excel files).
 4. **Copy the starter kit** and give it to the approved AI. It is one text. Put no real names, prices or customer data into the AI.
 5. **Paste the AI's answer** (one file, `index.html`) into the box and press Check the code. Nothing is uploaded yet.

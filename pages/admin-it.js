@@ -440,9 +440,9 @@
       try {
         await api.rpc('dame_space_create', { p_id: 'test-space', p_name: 'Test space', p_description: 'Two example tools to try the site.', p_admin: me.id });
         await api.rpc('dame_tool_create', { p_space: 'test-space', p_id: 'converter', p_name: 'Converter', p_description: 'Stand-alone example: it calculates and saves nothing.',
-          p_icon: 'C', p_colour: '#0a7d6c', p_open_to_space: true, p_open_level: 'read' });
+          p_icon: 'i-calc', p_colour: '#0a7d6c', p_open_to_space: true, p_open_level: 'read' });
         await api.rpc('dame_tool_create', { p_space: 'test-space', p_id: 'tracker', p_name: 'Tracker', p_description: 'Example that saves rows in a table.',
-          p_icon: 'T', p_colour: '#b45309', p_open_to_space: true, p_open_level: 'contribute' });
+          p_icon: 'i-clip', p_colour: '#b45309', p_open_to_space: true, p_open_level: 'contribute' });
         await load();
         ui.say($('msg'), 'The test space is made, with two empty tools. Press its tile, then "Open its admin page", and press "Build and access" on each tool.', 'ok');
       } catch (err) {

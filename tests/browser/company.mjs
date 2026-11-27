@@ -272,7 +272,9 @@ try {
   check((await ap.user.page.locator('#spaces a').evaluate((t) => t.style.getPropertyValue('--dame-accent') + '|' + t.querySelector('.hub-tile-icon').textContent)) === '#0e8f8a|Ap', 'Applied: its admin changes the colour and icon of the space; its user sees the new tile on the hub');
   check((await rpc(ap.user, 'dame_space_look_set', { p_space: 'applied', p_icon: 'X', p_colour: '#000000' })).code === 'not_allowed' && (await rpc(DEPTS[0].lead, 'dame_space_look_set', { p_space: 'applied', p_icon: 'X', p_colour: '#000000' })).code === 'not_allowed', 'a user, and the admin of another department, cannot change it');
   await ap.lead.page.part('#tools');
-  check(await ap.lead.page.locator('#tools button:has-text("Change name, icon or colour")').first().isVisible(), 'each tool has a "Change name, icon or colour" button');
+  await ap.lead.page.click('#tools button[data-tool] >> nth=0');
+  check(await ap.lead.page.locator('#tool-win form.hub-edit input[type=color]').isVisible(), 'each tool is a tile; its window changes its name, icon and colour');
+  await ap.lead.page.click('#tool-win-close');
 
   await DEPTS[0].user.page.goto(SITE + 'hub.html');
   await DEPTS[0].user.page.waitForSelector('#spaces a');

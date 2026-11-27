@@ -64,6 +64,8 @@
 - **Kit additions**: `Dame.drop`, `Dame.download`, `Dame.progress`, `Dame.pause`.
 - The description typed in step 1 is kept in the person's browser only (so a reload does not lose it). Keeping it in the database comes with the help text in phase 5.
 - A tile that is not built yet shows "being prepared" to people and "Build this tool" to its manager, not an error.
+- **Tile icons** (`kit/v1/icons/tiles/`): 90 pictures from Lucide (lucide-static 1.81.0, ISC licence, text in that folder), files of the site, no outside source. The database keeps the icon as one short text, as before: `i-fan` is the picture "fan", any other text is shown as letters. Only names in the list in `shell.js` become a picture. No SQL.
+- **Going back**: a "Back to ..." button names the page the person came from (IT admin, space admin, the tool) and steps back in the browser history instead of opening the page again. For that each browser tab keeps the addresses of the site's pages it visited (`dame.trail` in the tab's session storage: addresses only, gone when the tab closes). The tool admin page never points a manager to the space admin page unless he came from it.
 - `examples/parts-extractor/` is the old hub's Parts List Extractor rewritten for this site: same extraction rules, one file, building blocks, shelf library, no worker.
 
 ## Built in phase 4 (say if any should change)

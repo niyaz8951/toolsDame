@@ -225,7 +225,9 @@ async function run(width, height, label) {
     // --- sign out
     await owner2.waitForSelector('.hub-account');
     const stored = await owner2.evaluate(() => JSON.stringify(Object.keys(localStorage)) + JSON.stringify(Object.keys(sessionStorage)) + localStorage.getItem('dame.session'));
-    check(stored.startsWith('["dame.session"][]') && !stored.includes(PW), T + 'the browser keeps one session entry and no password');
+    check(stored.startsWith('["dame.session"]["dame.trail"]') && !stored.includes(PW), T + 'the browser keeps one session entry and no password');
+    const trail = await owner2.evaluate(() => JSON.parse(sessionStorage.getItem('dame.trail')));
+    check(Object.keys(trail).sort().join() === 'at,list' && trail.list.every((u) => /^\/toolsDame\/[a-z\/]*(\.html)?(\?[a-z0-9=&-]*)?$/.test(u)), T + 'beside it, for this tab only, the addresses of the pages visited (for the Back button): no data, no key');
     const before = await owner2.evaluate(() => JSON.parse(localStorage.getItem('dame.session')).access_token);
     const barLine = await owner2.evaluate(() => { const b = document.querySelector('.hub-bar'); return b.getBoundingClientRect().height <= 64 && b.scrollWidth <= b.clientWidth; });
     check(barLine, T + 'the bar stays on one line');

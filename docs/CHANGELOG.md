@@ -2,6 +2,18 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - Space admin as tiles, icons to pick, Back goes where you came from
+Changed (owner: "inside the space it doesn't keep the same design language"; "keep open source icons users can select"; "from tool admin it must go back to the tool: a tool's admin may not have space admin rights")
+- **Space admin, Tools:** "Add a tool" on top, one tile per tool in its colour, and a window per tool: "Build and access" as the main button, name and look, managers, switch off, delete. A new tool opens its window at once, so the next step is in front of the person. The level for everyone is asked only after "Open to everyone" is ticked.
+- **Icons:** 90 pictures (Lucide, ISC licence, files of the site in `kit/v1/icons/tiles/`) to pick for a tool's tile and a space's tile; one or two typed letters still work. Shown on the hub, in the space, on the admin tiles and in the page titles. The test space's two tools get pictures.
+- **Back buttons:** the button names the page you came from and returns to it on the tab you left; it steps back in the browser history, so the browser's own Back no longer bounces you forward. Space admin opened from IT admin: "Back to IT admin". Tool admin: "Back to the space admin page" only for a space admin who came from it; otherwise "Back to the tool" (or to the space while the tool is not built). A page the browser shows again from its memory is read again from the database.
+- For the Back buttons each browser tab keeps the addresses of the pages it visited (`dame.trail`, session storage, addresses only, gone with the tab). The storage test now allows this entry and checks that it holds nothing but addresses.
+- No function, no right, no SQL changed.
+- Tests: new checks for the tiles and windows, picking an icon and seeing it as a member, Back from tool admin for a space admin and for a manager, Back to IT admin, both windows on a phone. All browser tests pass.
+
+Files: `admin/space.html`, `admin/tool.html`, `pages/admin-space.js`, `pages/admin-tool.js`, `pages/admin-it.js`, `pages/hub.js`, `pages/space.js`, `pages/tool.js`, `pages/book.js`, `pages/index.js`, `kit/v1/shell.js`, `kit/v1/shell.css`, `kit/v1/icons/tiles/`, help and guide texts, `docs/DECISIONS.md`, the browser tests, the site book.
+SQL to paste: none.
+
 ## 2026-11-27 - IT admin, Spaces: add on top, a tile per space, changes in its window
 Changed (owner: "looks confusing; add space first, then tiles; editing and deleting only after I press the tile")
 - **Spaces now shows two things:** the button "Add a space" (and "Make a test space" until one exists), and one tile per space with its name, tools and members.
