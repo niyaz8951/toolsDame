@@ -233,8 +233,9 @@
 
     <section class="dame-card">
       <h2>Data</h2>
-      <p class="dame-muted">A tool keeps its rows in tables of this site. You make a table here by naming it and its columns; nobody types SQL. Every table gets five columns by itself: id, owner, created_at, updated_at, updated_by. The preview has its own empty copy of each table, so trying things there never touches real rows.</p>
+      <p class="dame-muted">A tool keeps its rows in tables of this site. Each table is drawn here like a sheet: one column per thing that is saved, and two made-up rows in grey so you see how a row looks. Saved rows are never shown on this page. Press <b>+ Column</b> to add a column, or the <b>&times;</b> next to a column's name to remove it; nobody types SQL. The site adds five columns of its own to every row (who added it and when); the button below shows them. The preview has its own empty copy of each table, so trying things there never touches real rows.</p>
       <div id="data-tables"></div>
+      <button class="dame-btn hub-small" type="button" id="grid-site" hidden>Show the five columns the site fills</button>
       <p class="dame-empty" id="data-empty" hidden>No table yet. A tool that only calculates needs none.</p>
       <div class="hub-block">
         <h3>New table</h3>
@@ -253,6 +254,7 @@
           </div>
           <p class="hub-sub">Columns</p>
           <div id="tb-columns"></div>
+          <div id="tb-grid" class="hub-grid-new"></div>
           <div class="dame-row hub-delete">
             <button class="dame-btn" type="button" id="tb-more">Add another column</button>
             <button class="dame-btn dame-btn-primary" type="submit">Create table</button>

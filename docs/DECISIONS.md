@@ -73,7 +73,7 @@
 - **A page declares its tables inside itself**, in `<script type="application/json" id="dame-tables">` (same content as `dame.json`, which still works for tools made of several files). One file per tool stays true.
 - **Levels on the three presets.** Team: read sees all; contribute adds and changes his own; edit changes anyone's; approve deletes. Private: each person only his own rows, also hidden from managers; adding, changing and deleting his own needs contribute. Reference: everyone reads; every change is for the tool's managers and the space admins only.
 - **The preview has its own rows.** Every table exists twice (live and preview copy). In the preview a manager may do everything; nothing there touches real rows.
-- **What a table can and cannot do yet.** Columns can be added. A column cannot be renamed, retyped or removed, and a table cannot change its preset: make a new table. A table is deleted only after its name is typed; its rows go with it.
+- **What a table can and cannot do yet.** Columns can be added and removed (removing: see 2026-11-27, the Data page as a sheet). A column cannot be renamed or retyped, and a table cannot change its preset: make a new table. A table is deleted only after its name is typed; its rows go with it.
 - **Limits:** tables a tool and columns a table by the space's quota since file 011 (before: fixed at 30 and 60), text 1,000 characters, long text 20,000, a list returns at most 1,000 rows, filters match exact values only. Empty values sort last.
 - **File columns are refused for now** ("not built yet"), also from a declared list. `Dame.files` still answers "not built".
 - **Rows are not written to the audit one by one.** Each row carries who added it, who changed it last and when. Making, extending and deleting tables is in the audit.
@@ -192,3 +192,11 @@
 | D8 | Server-side code in tools | Not in version 1 |
 | D9 | Quotas per space | 5 GB data, 200 MB a version, 50 tools, 10 versions |
 | D10 | Retention | Restore 35 days; audit 3 years |
+
+## 2026-11-27 - The Data page as a sheet; removing a column
+- Owner: "regular users can't visualise the existing db table; make it like Excel or a table view where they can add or remove columns easily and understand how data is being saved, without exposing data".
+- **Each table is drawn as a sheet**: column letters, row numbers, each column's name and kind in the head, two made-up example rows in grey (by kind: "Some text", 12, a date, Yes, the first choice, "You"). The grid is built from the column list only; the page never reads a saved row, so nothing is exposed, whoever looks. The five site columns are hidden and shown with one button. A new table is drawn while its columns are typed.
+- **Adding** is the "+ Column" cell at the end of the head, kept in view on a wide table; the form opens only after it is pressed.
+- **Removing** is the x next to a column's name, then typing the name, as for deleting a table. New function `dame_table_drop_column` (`db/07_data.sql`; `db/upgrade.sql` for the live project): tool managers only; never one of the five standard columns; a table keeps one column of its own; the name is used in SQL only after it is found in `core.tool_tables`; live and preview copy both; the audit keeps the kind and how many rows had a value. The book used to say removing waits for an export, because it destroys data; it is now handled like deleting a table (typed name, the loss said in plain words, audited). Export stays on the list.
+- A live page that still sends the removed column is refused on save, with a message that names the table's columns; it is not silently ignored. So after an add or a remove the table shows "Copy the request for the AI", which tells the AI exactly what changed.
+- Not done: renaming or retyping a column (needs the values copied; later).

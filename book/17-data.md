@@ -11,7 +11,9 @@ Nobody types SQL. The database holds a table maker (`db/07_data.sql`). From then
 5. It creates the table twice (live schema and preview schema), turns forced row security on, takes every right away from the site's roles, and records the definition in `core.tool_tables`.
 6. The audit gets `table.created`.
 
-Adding a column later is `dame_table_add_column`; deleting a table is `dame_table_drop`, with its name typed.
+Adding a column later is `dame_table_add_column`; removing one is `dame_table_drop_column`, with the column's name typed; deleting a table is `dame_table_drop`, with its name typed.
+
+On the Data page each table is drawn like a sheet: column letters, the name and kind of each column, two made-up example rows. The page builds it from the column list alone and never reads a saved row, so showing the structure exposes no data. **+ Column** adds, the x on a column removes.
 
 ## The fixed list of column kinds
 | Kind | Stored as | Checked on every write |
@@ -61,7 +63,7 @@ For a private table, a row that is not yours answers "not found", the same as a 
 
 ## Limits
 - Tables a tool and columns a table: the space's quota, below. By default 10 tables a tool and 60 columns a table.
-- A column cannot be renamed, retyped or removed, and a table cannot change its sharing rule: make a new table. (Removing would silently destroy data; it waits for an export.)
+- A column cannot be renamed or retyped, and a table cannot change its sharing rule: make a new table. A column can be removed: only by a tool manager, after typing its name, never one of the five standard columns or the last one; its values are gone for good, and the audit keeps how many rows had one. A page that still sends it is refused on save, so the site hands the manager a request for the AI.
 - File columns are refused for now ("not built yet").
 - **Two people changing the same row: the last save wins.** The row is locked for the instant of the write, so it never gets half of each, but the first change is overwritten without a warning. Planned: a version check.
 - Row changes are not written to the audit one by one. Each row carries who changed it last and when.

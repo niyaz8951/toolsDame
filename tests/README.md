@@ -3,6 +3,7 @@
 | File | Proves | Run |
 |---|---|---|
 | `phase0.mjs` | Every page opens; page rules hold; no key, password or account name in the repo; the sealed-frame policy; building blocks, starter kit and blocks page agree; shelf libraries are the recorded files | `node tests/phase0.mjs` |
+| `sql/columns_test.sql` | Removing a column: only a manager (signed out, pending, disabled, edit, approve, other space refused); a wrong typed name, a standard column, the last column, an unknown column and a name made to break the SQL are refused; the rows keep their other values, live and preview; a page that still sends the column is told so; the audit says what went | Paste into the SQL editor of a database built from `db/`. Leaves nothing behind. |
 | `sql/core_test.sql` | Every sign-in, people and IT admin function: allowed and refused cases (signed out, pending, disabled, no request, level too low, other session), audit append-only, security check | Paste into the SQL editor of a database built from `db/`. Leaves nothing behind. |
 | `sql/spaces_tools_test.sql` | An admin acts alone inside his space; every action outside it, and every action above a manager's or member's role, is refused; last admin; ids never reused; delete with cleanup | The same |
 | `sql/releases_test.sql` | Who may upload, what an upload may hold, the file rules for every role, preview for managers only, make live, roll back, a closed version never changes | The same |

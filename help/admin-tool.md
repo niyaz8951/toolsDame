@@ -30,7 +30,9 @@ Nobody but you (its managers and the space admins) can open it. People who have 
 - A column you add is shown by itself in a page that draws its form from its list of tables. Any other page must be told; the site writes that message for you.
 - Every table has a sharing rule: **team** (everyone with the tool sees all rows), **private** (each person sees only his own), **reference** (everyone reads, only managers change).
 - The preview has its own empty copy of each table, so trying things never touches real rows.
-- Under **Data** you see the tables, add a column, or delete a table after typing its name.
+- Under **Data** each table is drawn like a sheet: one column per thing that is saved, its kind under its name, and two made-up rows in grey. Saved rows are never shown there.
+- **+ Column** at the end of a table adds a column. The **x** next to a column's name removes it after you type its name; what was saved in that column is gone for good, the rows stay.
+- After adding or removing, press **Copy the request for the AI** and bring back the new page: a page that still uses a removed column cannot save until it is updated.
 
 ## After it is live
 - **Usage guide**: write the steps people get behind the information button in the tool.

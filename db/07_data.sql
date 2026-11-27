@@ -308,6 +308,49 @@ begin
     pg_catalog.jsonb_build_object('table', v_def.name, 'column', v_col ->> 'name', 'type', v_col ->> 'type'), p_space, p_tool);
 end $$;
 
+-- Removes one column of a table (live and preview copy) and what was saved in it,
+-- after the manager typed the column's name. Never one of the five standard
+-- columns; a table keeps at least one column of its own.
+create function public.dame_table_drop_column(p_space text, p_tool text, p_table text, p_column text, p_confirm text) returns void
+language plpgsql volatile security definer set search_path = '' as $$
+declare
+  v_uid    uuid := core.require_tool_manager(p_space, p_tool);
+  v_def    core.tool_tables;
+  v_col    jsonb;
+  v_filled bigint;
+  s        text;
+begin
+  perform 1 from core.tools t where t.space = p_space and t.id = p_tool for update;
+  v_def := core.table_def(p_space, p_tool, p_table);
+  if core.is_standard_column(p_column) then
+    perform core.fail('bad_request', 'The five columns the site fills by itself (id, owner, created_at, updated_at, updated_by) cannot be removed.', 400);
+  end if;
+  select c into v_col from pg_catalog.jsonb_array_elements(v_def.columns) c where c ->> 'name' = p_column;
+  if v_col is null then
+    perform core.fail('bad_request', 'The table ' || v_def.name || ' has no column named ' || coalesce(pg_catalog.left(p_column, 50), '(none)')
+      || '. Its columns: ' || (select pg_catalog.string_agg(c ->> 'name', ', ') from pg_catalog.jsonb_array_elements(v_def.columns) c) || '.', 400);
+  end if;
+  if pg_catalog.jsonb_array_length(v_def.columns) <= 1 then
+    perform core.fail('bad_request', 'A table keeps at least one column of its own. Add the new column first, then remove this one; or delete the whole table.', 400);
+  end if;
+  if p_confirm is distinct from (v_col ->> 'name') then
+    perform core.fail('bad_request', 'To remove the column and everything saved in it, type its name exactly: ' || (v_col ->> 'name'), 400);
+  end if;
+
+  execute pg_catalog.format('select count(*) from %I.%I where %I is not null',
+    core.tool_schema(p_space, p_tool, false), v_def.name, v_col ->> 'name') into v_filled;
+  foreach s in array array[core.tool_schema(p_space, p_tool, false), core.tool_schema(p_space, p_tool, true)] loop
+    execute pg_catalog.format('alter table %I.%I drop column %I', s, v_def.name, v_col ->> 'name');
+  end loop;
+  update core.tool_tables t
+     set columns = (select pg_catalog.jsonb_agg(x.c order by x.o)
+                      from pg_catalog.jsonb_array_elements(t.columns) with ordinality x (c, o)
+                     where x.c ->> 'name' <> (v_col ->> 'name'))
+   where t.space = p_space and t.tool = p_tool and t.name = v_def.name;
+  perform core.audit_add(v_uid, 'table.column_removed', null,
+    pg_catalog.jsonb_build_object('table', v_def.name, 'column', v_col ->> 'name', 'type', v_col ->> 'type', 'filled_rows', v_filled), p_space, p_tool);
+end $$;
+
 -- Deletes a table, after the manager typed its name. Its rows are taken off
 -- the space's count.
 create function public.dame_table_drop(p_space text, p_tool text, p_table text, p_confirm text) returns void

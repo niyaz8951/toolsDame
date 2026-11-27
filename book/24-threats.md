@@ -26,7 +26,7 @@ Account owner | Above the rules: sign-in with second factor, then IT's pipeline
 | He tries | What stops him | Left over |
 |---|---|---|
 | To open another department's tool by typing its address | `dame_tool_open` checks his level on exactly that tool. The answer is `not_allowed`, the same whether the tool exists or not | Nothing |
-| To call the functions directly with his own session, without the pages | He gets the same 71 functions and the same answers. The pages add nothing he could go around | The limit of 300 requests in 10 seconds sits in the tool's shell, not in the database. Called directly, only the provider's own limits slow him |
+| To call the functions directly with his own session, without the pages | He gets the same 72 functions and the same answers. The pages add nothing he could go around | The limit of 300 requests in 10 seconds sits in the tool's shell, not in the database. Called directly, only the provider's own limits slow him |
 | To raise his own level | Nobody changes his own account or role; levels are rows he has no function to write | Nothing |
 | To read rows of a private table that are not his | The row service answers "not found", as for a row that does not exist | See the tool builder below |
 | To fetch a stored tool file of another department by its path | The file store asks `dame_file_allowed` for every file | Nothing |

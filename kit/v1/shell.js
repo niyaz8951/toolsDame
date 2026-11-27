@@ -592,7 +592,7 @@
     var input = el('input', 'dame-input hub-grow');
     var btn = el('button', 'dame-btn hub-small hub-danger', label);
     input.type = 'text';
-    input.maxLength = 30;
+    input.maxLength = Math.max(30, String(id).length);
     input.autocomplete = 'off';
     input.placeholder = 'To delete, type ' + id;
     input.setAttribute('aria-label', 'To delete, type ' + id);

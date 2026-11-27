@@ -29,12 +29,14 @@
 - The fix request for a refused page is one complete text (points, rules, database rules, the page); a design of its own and data outside the tables stop the upload. No SQL.
 - **The site book (2026-11-27):** shown to IT admins only (hub card and book page); stays in `book/`. In pictures: a 5-minute chapter of eleven slides, seven kinds of picture drawn from text (`:::kind` blocks), topic nodes, laser, spotlight and pen while presenting. Reread against the repo: 28 chapters in four parts, with a new part "What a reviewer asks" (threats, sharing of rights, data handling, running it). No SQL.
 - **One database, final version (2026-11-27): `db/`.** Nine files by subject plus `install.sql` (one transaction) and `check.sql` (is a database this version? yes or no). Every function once, every table in its final form, the ten Supabase stand-ins marked `SUPABASE:`. Proved identical to the twelve step files that built the demo before they were removed (they are in the repository's history). The pages lost the "not switched on yet" branches that only served a half-built database. Read `db/README.md`.
-- Tests, all passing locally: twelve SQL test files by subject (1,253 cases) on the database built from `db/`, eight browser tests, the hostile-tool test (33 attempts).
+- **The Data page as a sheet (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** Each table drawn like a spreadsheet with made-up example rows (saved rows are never shown), "+ Column" at the end, an x on each column to remove it after typing its name (new `dame_table_drop_column`), the five site columns on request, a new table drawn as it is typed, and a request for the AI after each change.
+- Tests, all passing locally: thirteen SQL test files by subject (1,296 cases) on the database built from `db/`, eight browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
 ## The owner does now, in this order
-1. **SQL editor of the live Supabase project:** paste all of `db/check.sql`, Run.
+0. **SQL editor of the live Supabase project:** paste all of `db/upgrade.sql`, Run. The last result must be an empty table. (It adds removing a column; tested on the version before.) Then paste `tests/sql/columns_test.sql`, Run: first row "38 passed, 0 failed".
+1. **SQL editor:** paste all of `db/check.sql`, Run.
    - `yes`: the live database is the final version. Go on with step 2.
    - `no`: send the row. The live project missed some of the earlier step files. Either I send one `db/upgrade.sql` for exactly what it misses, or, since the demo holds sample data only, start a fresh Supabase project and run `db/01` to `db/09` there (then `select core.make_first_admin('your email');`).
 2. **SQL editor:** paste any test file of `tests/sql/` (for example `accounts_test.sql`), Run. First row: "... passed, 0 failed". The tests undo everything they do.
@@ -64,7 +66,7 @@ Besides this file and the changelog: update the chapter of the site book the cha
 ## Next
 Phase 5: on every page the info icon, pinned notes, ideas with votes, and the AI prompt setting; the tool's help text; a space admin tightening the AI setting.
 
-Later, noted (ranked in `docs/IT-REVIEW.md`): a second person approving before Make live; a quota by size and for stored files; a version check when two people save the same row; export; charts as a built-in block of the kit (no library); file columns and `Dame.files`; old `.xls` files; renaming or removing a column; two pasted code blocks merged.
+Later, noted (ranked in `docs/IT-REVIEW.md`): a second person approving before Make live; a quota by size and for stored files; a version check when two people save the same row; export; charts as a built-in block of the kit (no library); file columns and `Dame.files`; old `.xls` files; renaming or retyping a column; two pasted code blocks merged.
 
 ## Changes tools must know
 **From the quotas (2026-11-27):** `Dame.table(...).add` can fail with the code `quota_full` when the space has used its rows; the message says what to do, so a tool that shows `error.message` (as the starter kit asks) needs no change. A tool may have 10 tables by default (before: 30); existing tables stay.

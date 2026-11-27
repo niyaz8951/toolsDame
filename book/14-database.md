@@ -37,7 +37,7 @@ A space id and a tool id together may have 59 characters, because a schema name 
 - The page reads the code to decide what to do (for example: back to the start page) and shows the sentence to the person as written. No technical text reaches a person.
 
 ## How the database is changed
-- **The whole database is in one folder, `db/`, once**: the 16 tables in their final form and the 120 functions once each, sorted by subject (base, tables, access, people, spaces and tools, releases, data, quotas, rights). There is no second copy and no chain of step files.
+- **The whole database is in one folder, `db/`, once**: the 16 tables in their final form and the 121 functions once each, sorted by subject (base, tables, access, people, spaces and tools, releases, data, quotas, rights). There is no second copy and no chain of step files.
 - `install.sql` builds an empty database in one transaction: it finishes completely or changes nothing, and it refuses to run where the database already exists.
 - `check.sql` asks any database one question: is it this final version? One row, yes or no. It is how the owner checks the live demo and how IT checks its copy.
 - A change to a database in use comes as one file, `db/upgrade.sql`, holding only the change. The owner reads it, pastes it into the SQL editor and runs it; nobody else pastes SQL, ever. The next delivery removes it, so `db/` always shows the final state.

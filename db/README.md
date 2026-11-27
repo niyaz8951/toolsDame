@@ -18,7 +18,7 @@ This folder is **the whole DAME database, once**: every table in its final form 
 | `08_quotas.sql` | The four limits per space (rows, tools, tables, columns), requests and answers |
 | `09_rights.sql` | `core.make_first_admin`, `core.security_check`, and the rights: each `dame_*` function granted by name |
 
-In numbers: 16 tables, 120 functions (71 `dame_*` functions, the API; 49 `core.*` helpers), 2 storage policies, 6 settings.
+In numbers: 16 tables, 121 functions (72 `dame_*` functions, the API; 49 `core.*` helpers), 2 storage policies, 6 settings.
 
 ## How to run
 

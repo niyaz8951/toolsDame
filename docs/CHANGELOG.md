@@ -2,6 +2,21 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - The Data page as a sheet; removing a column
+New (owner: "regular users can't visualise the existing db table; make it like Excel or a table view where they can add or remove columns easily and understand how data is being saved, without exposing data")
+- **Each table is drawn like a spreadsheet** on a tool's admin page, Data: column letters A, B, C, row numbers, each column's name with its kind under it ("Number", "One of: To do, In progress, Done"), and two made-up rows in grey. The grid is built from the column list; no saved row is read, so nothing is exposed.
+- **"+ Column"** at the end of the head opens the form for a new column (it stays in view on a wide table and on a phone).
+- **The x next to a column's name** removes it after the name is typed. The panel says in plain words that the rows stay and only that column's values go, and that a page still using the column cannot save until it is updated.
+- **After an add or a remove** the table shows "Copy the request for the AI" with the exact change.
+- **"Show the five columns the site fills"**: id, owner, created_at, updated_at, updated_by, greyed, on request.
+- **The New table form draws the table as the columns are typed.**
+- Fixed: the typed-name box for deleting took 30 characters; a table name may have 41.
+- Database: new function `dame_table_drop_column` in `db/07_data.sql`; new fingerprint in `db/check.sql`; `db/upgrade.sql` brings the live project there (tested on a database of the version before: after it, `check.sql` says yes; a second run is refused).
+- Tests: `tests/sql/columns_test.sql`, 38 cases (all 13 files: 1,296); 15 new browser checks in phase 4; all eight browser tests and phase0 pass; the rehearsal tries the new function from every other department, all refused (1,260 tries).
+
+Files: `admin/tool.html`, `pages/admin-tool.js`, `kit/v1/shell.css`, `kit/v1/shell.js`, `db/07_data.sql`, `db/check.sql`, `db/upgrade.sql` (new), `tests/sql/columns_test.sql` (new), `tests/browser/phase4.mjs`, `help/admin-tool.md`, docs, the site book (`17-data`, `20-tests`, `10-notes`).
+SQL to paste: `db/upgrade.sql`, then `tests/sql/columns_test.sql` (first row "38 passed, 0 failed"), then `db/check.sql` must say yes.
+
 ## 2026-11-27 - One database folder, no second copy
 Changed (owner: "remove unwanted files and keep final version"; "dont keep db twice, lets streamline for single files")
 - **`db/` is the database, once.** The nine final files, `install.sql` and the README moved up from `db/install/`. The twelve step files `db/core/001..012` and the comparison test `tests/sql/same-schema.mjs` are removed: they had proved the final files identical and are kept in the repository's history (commit `eaada5f`).

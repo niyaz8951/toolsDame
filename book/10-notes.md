@@ -3,6 +3,7 @@
 The running log of the site. Newest first. Every change to the site adds a line here and updates the chapter it touches.
 
 ## 2026-11-27
+- **The Data page as a sheet.** Owner: regular users could not picture a table. Each table is now drawn like a spreadsheet: column letters, name and kind of each column, two made-up rows in grey; saved rows are never shown. "+ Column" adds a column; the x on a column removes it after its name is typed (new function, tool managers only, never a standard column; `db/upgrade.sql` for the live project). After a change the site writes the request for the AI.
 - Presenting: a press on the slide goes forward, a press on its left third goes back, also with the laser or spotlight on. Five steps in a row stay on one line.
 - **The book in pictures.** Owner: the people who decide have little time; the book read badly and presented badly. New first chapter "DAME in five minutes": the whole case on eleven slides, almost all pictures, with its own button. Seven kinds of picture (numbers, cards, chain, tree, walls, steps with who acts, compare) are drawn by the site from a few lines of text; they are in the key chapters too.
 - **Presenting:** topic nodes on the left (hover shows the chapter, a press jumps to it), marks under the slide for the slides of the open chapter, a laser pointer, a spotlight and a pen, a progress line, and a red Close. Code and tables on a dark title slide are readable now.
