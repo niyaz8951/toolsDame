@@ -43,7 +43,7 @@ Raise anything site-wide in the first reply, before building around it.
 - `admin/it.html` users, approvals, spaces, site settings, audit, health; `admin/space.html` tools, admins, access, ideas; `admin/tool.html` Files, Data, access, help text, versions
 - `kit/v1/` `dame.js`, `dame.css`, `shell.js`, `api.js`, `config.js`, `README.md`; `kit/ai-prompt.md`; `kit/tool-guide.md`; `kit/dame.schema.json`
 - `help/<page>.md` text behind the info icon of each hub page
-- `db/core/NNN_*.sql`; `functions/` Edge Functions (SQL console only)
+- `db/core/NNN_*.sql` (history of the demo database); `db/install/` (the same database, final version, for a new install); `functions/` Edge Functions (SQL console only)
 - `tests/` SQL tests with allowed and refused cases; browser tests at desktop and 390 px; the hostile-tool test
 - `tools/serve.mjs` local server that serves the repo at `/toolsDame/` like GitHub Pages
 - `docs/` BEDROCK, IT-GUIDE, DEMO-STACK, SECURITY, DECISIONS, STATUS, RUNBOOK, CHANGELOG

@@ -6,14 +6,14 @@ Who can change the running site, how a change gets there, what is watched, and w
 | What changes | How | Who can | Trace | Undo |
 |---|---|---|---|---|
 | Platform pages, the kit, help texts and this book | A push to the main branch of the repository; GitHub Pages serves it within minutes | Whoever has write access to the repository: the owner | The repository's history | Revert the commit and push |
-| The database's functions and core tables | The owner pastes a numbered file from `db/core/` into the Supabase SQL editor | The owner of the Supabase project | The numbered files themselves: a file that ran is never edited | A new numbered file. Each file runs completely or not at all |
+| The database's functions and core tables | The owner pastes a numbered file from `db/core/` into the Supabase SQL editor (a new database: `db/install/` in one go) | The owner of the Supabase project | The numbered files themselves: a file that ran is never edited | A new numbered file. Each file runs completely or not at all |
 | Tools, tables, people, rights, settings | On the site, by the role that holds the right | See "Who can give what to whom" | The audit | Roll back a version; switch on again; give the right again. A delete has no undo |
 
 There is no staging site: a change is tested locally (below), then it is live. On the target this is IT's pipeline: review, staging, then production.
 
 ## Before a change goes out
 1. `node tests/phase0.mjs`: page rules, no key in the repository, the shelf's fingerprints.
-2. `node tests/sql/run-local.mjs`: all SQL files in a throw-away PostgreSQL, each refused a second time, every test twice.
+2. `node tests/sql/run-local.mjs` (and with `--install`): all SQL files in a throw-away PostgreSQL, each refused a second time, every test twice; `node tests/sql/same-schema.mjs`: `db/install` and `db/core` make the same database.
 3. The eight browser tests, with the hostile tool and the company rehearsal.
 4. After a SQL file on the real project: its result must be an empty table (`core.security_check()`), then its test file, then the provider's Security Advisor with no errors.
 

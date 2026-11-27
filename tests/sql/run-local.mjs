@@ -4,9 +4,12 @@
  * Serves: "Rules of work": every function has allowed and refused tests.
  * Must not change: uses the very files the owner pastes (db/core/*.sql and
  * tests/sql/*_test.sql), unchanged. Touches no real database.
+ * With --install the same tests run on db/install (the final install for IT)
+ * in place of db/core/001..012: they must pass unchanged on both.
  *
  * Needs once:  npm install --no-save @electric-sql/pglite
- * Run:         node tests/sql/run-local.mjs      (exit code 0 = all passed)
+ * Run:         node tests/sql/run-local.mjs              (exit code 0 = all passed)
+ *              node tests/sql/run-local.mjs --install
  */
 import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -15,11 +18,29 @@ import { PGlite } from '@electric-sql/pglite';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CORE = join(HERE, '..', '..', 'db', 'core');
+const INSTALL = join(HERE, '..', '..', 'db', 'install');
 const db = new PGlite();
 let failed = 0;
 
 await db.exec(await readFile(join(HERE, 'local-shim.sql'), 'utf8'));
 
+if (process.argv.includes('--install')) {
+  // The files in the order install.sql reads them, in one transaction, as psql runs it.
+  const runner = await readFile(join(INSTALL, 'install.sql'), 'utf8');
+  const parts = [...runner.matchAll(/^\\ir\s+(\S+)/gm)].map((m) => m[1]);
+  const all = 'begin;\n' + (await Promise.all(parts.map((f) => readFile(join(INSTALL, f), 'utf8')))).join('\n') + '\ncommit;';
+  await db.exec(all);
+  const problems = (await db.query('select * from core.security_check()')).rows;
+  console.log((problems.length ? 'FAIL  ' : 'ok    ') + 'db/install (' + parts.length + ' files) runs; security check finds ' + problems.length + ' problem(s)');
+  for (const p of problems) { failed += 1; console.log('        ' + p.problem + ': ' + p.object); }
+  try {
+    await db.exec(all);
+    failed += 1; console.log('FAIL  db/install can be run twice');
+  } catch (err) {
+    await db.exec('rollback');
+    console.log('ok    db/install refuses to run twice (' + err.message + ')');
+  }
+} else {
 for (const name of (await readdir(CORE)).filter((f) => /^\d{3}_.+\.sql$/.test(f)).sort()) {
   const out = await db.exec(await readFile(join(CORE, name), 'utf8'));
   const problems = out[out.length - 1].rows;
@@ -36,6 +57,7 @@ for (const name of (await readdir(CORE)).filter((f) => /^\d{3}_.+\.sql$/.test(f)
     await db.exec('rollback');
     console.log('ok    ' + name + ' refuses to run twice (' + err.message + ')');
   }
+}
 }
 
 for (const name of (await readdir(HERE)).filter((f) => /_test\.sql$/.test(f)).sort()) {

@@ -2,6 +2,18 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - The final database for IT: `db/install/`
+New (owner: "rewrite database codes as we wrote many things on the go and may be duplicated; I need the final version on the repo so that it is easier for IT to migrate"; "ensure to test the final codes match the behaviour of the current site")
+- **`db/install/`: the whole database in one clean set of files**, for a new, empty database. `01_base`, `02_tables`, `03_access`, `04_people`, `05_spaces_tools`, `06_releases`, `07_data`, `08_quotas`, `09_rights`, and `install.sql` that runs them in one transaction. 165 KB in place of 220 KB.
+- What was tidied: the 24 functions that a later file replaced are written once, in the version the live database runs (`dame_request_access` had five versions); the columns added by later files are in their `create table`, in the same order and with the same constraint names; the rights block runs once; comments say what a function does now. Function bodies are copied character for character. One-time data fixes for rows that existed then (010, 011, 012) are left out: an empty database has none.
+- The ten places that use Supabase's own sign-in or file store are marked `SUPABASE:` and listed in `db/install/README.md`, with what a plain PostgreSQL needs first and how to move the demo's data.
+- **Proof:** `tests/sql/same-schema.mjs` (new) builds the database both ways and compares 140 columns, 181 constraints, 25 indexes, 3 triggers, 2 policies, 120 functions with their whole code and rights, row security, rights on schemas and tables, settings and the bucket: identical. `tests/sql/run-local.mjs --install` (new option) runs all twelve SQL test files on `db/install`: 1,253 passed, 0 failed, the same as on `db/core`. Checked again on a real PostgreSQL 16 server: `pg_dump --schema-only` of both is identical and the twelve test files pass on both. phase0 and all seven browser tests pass.
+- The pages and the kit were reviewed: every function the site calls exists, no function is unused, no dead code. Left as they are (DECISIONS.md).
+- `db/core/001..012` stays as the history of the live database, unchanged. From now on a database change is a new numbered file **and** the same change in `db/install/`; the comparison test fails until both agree.
+
+Files: `db/install/` (new), `tests/sql/same-schema.mjs` (new), `tests/sql/run-local.mjs`, `db/core/README.md`, `tests/README.md`, `docs/` (STATUS, RUNBOOK, DECISIONS), `PROJECT-INSTRUCTIONS.md`, the site book (`14-database`, `27-operations`, `10-notes`).
+SQL to paste: none. The live site and database are not touched.
+
 ## 2026-11-27 - Presenting: a press on the slide turns the page
 Changed (owner: "clicking, even with laser or anything apart from pen, must also change the slide: the major part of the screen forward, a small part back")
 - A press anywhere on the slide goes forward; a press on its left third goes back. It works with the laser and the spotlight on. With the pen on, a press draws. Buttons and marked text do not turn the page. The mouse pointer shows which way a press will go.

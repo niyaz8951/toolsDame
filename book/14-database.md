@@ -37,7 +37,9 @@ A space id and a tool id together may have 59 characters, because a schema name 
 - The page reads the code to decide what to do (for example: back to the start page) and shows the sentence to the person as written. No technical text reaches a person.
 
 ## How the database is changed
-- Core SQL lives in numbered files, `db/core/001_init.sql` to `012_tools_quota.sql`. The owner reads a file, pastes it into the Supabase SQL editor and runs it. Nobody else pastes SQL, ever.
+- **For a new database there is one clean set of files, `db/install/`**: the 16 tables in their final form and the 120 functions once each, sorted by subject (base, tables, access, people, spaces and tools, releases, data, quotas, rights). `install.sql` runs them in one transaction. A test builds a database both ways and compares every column, constraint, index, policy, function and right: they are identical, and all 1,253 SQL test cases pass on both.
+- The live demo was built by the numbered files `db/core/001_init.sql` to `012_tools_quota.sql`, kept as its history. The owner reads a file, pastes it into the Supabase SQL editor and runs it. Nobody else pastes SQL, ever. A change from now on is a new numbered file and the same change in `db/install/`.
+- Every function that touches the provider's sign-in or file store says so on a line starting `SUPABASE:`; those ten places are what IT replaces for company sign-in (`db/install/README.md`).
 - Each file is one transaction: it finishes completely or changes nothing.
 - Each file first checks that the file before it was run and that it was **not** already run itself, and stops with a sentence if not.
 - A file that was run is never edited. A correction is a new file. So the files in the repository are the exact history of the database.

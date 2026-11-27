@@ -169,6 +169,14 @@
 - **Pictures are text.** A few lines between `:::kind` and `:::`, drawn by the site with `textContent`: no image files, no library, no HTML from data, the same in day and night. Seven kinds; a new kind is an addition to `DameShell.rich`.
 - **Pointer tools draw only on the presenter's screen** and keep nothing.
 
+## Owner, 2026-11-27 (the final database for IT)
+- Owner: "without changing anything on the site, rewrite database codes or any other codes that needed, as we wrote many things on the go and may be duplicated; I need final version code/sql or logics on the repo so that it is easier for the IT to migrate"; then "ensure to test the final codes match the behaviour of the current site repo".
+- **`db/install/` is the final version** for a new database: one definition of everything, sorted by subject. `db/core/001..012` stays as the history of the live demo database and is never edited.
+- **Same database, proved.** `tests/sql/same-schema.mjs` compares the two builds object by object; the 12 SQL test files run on both (`run-local.mjs --install`). Also checked once on a real PostgreSQL 16 with `pg_dump`: identical.
+- **A change is written twice** from now on (a numbered file for the demo, the same change in `db/install/`); the comparison test fails until both agree.
+- **Function bodies copied character for character**, only the comments around them rewritten, so the live database and the install run the very same code.
+- **The pages and the kit were reviewed and left as they are.** Every `dame_*` function the site calls exists and every function exists for a reason (the row functions are called by name built in `pages/tool.js`; `dame_file_allowed` by the storage policies; `dame_site_info` is the one function open to a signed-out visitor). The repeats left in the pages are one- to three-line helpers inside each page; moving them into the shared kit would change every page for no gain in safety or clarity, so they stay.
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

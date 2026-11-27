@@ -20,11 +20,14 @@ node tests/phase0.mjs
 npm install --no-save @electric-sql/pglite playwright-core     (once; test tools only)
 node tests/phase0.mjs
 node tests/sql/run-local.mjs
+node tests/sql/run-local.mjs --install
+node tests/sql/same-schema.mjs
 node tests/browser/phase1.mjs
 node tests/browser/phase2.mjs
 node tests/browser/phase3.mjs     (includes the hostile-tool test)
 node tests/browser/phase4.mjs
 node tests/browser/accounts.mjs
+node tests/browser/quotas.mjs
 node tests/browser/company.mjs    (the rehearsal)
 ```
 
@@ -45,6 +48,10 @@ node tests/browser/company.mjs    (the rehearsal)
 
 ## Core SQL
 Files `db/core/NNN_*.sql` are pasted by the owner into the Supabase SQL editor, in number order, after reading them. Each file ends by showing `core.security_check()`: it must be an empty table. Then paste the matching `tests/sql/NNN_*_test.sql`: first row "N passed, 0 failed". The test undoes everything it does. Then Advisors > Security: no errors.
+
+A new database (IT, or a fresh Supabase project): not the numbered files but `db/install/`, in one go: `psql "<connection>" -f db/install/install.sql`, or paste `01` to `09` in order. It refuses to run where schema `core` exists. Read `db/install/README.md` first.
+
+A change to the database is written twice in the same delivery: a new `db/core/NNN_*.sql` for the live demo and the same change in `db/install/`. `node tests/sql/same-schema.mjs` must pass.
 
 ## First IT admin (once)
 Request access and sign in on the site, then in the SQL editor: `select core.make_first_admin('your email');`. Later IT admins are named on the IT admin page.

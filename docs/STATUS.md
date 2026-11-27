@@ -28,7 +28,8 @@
 - **Quotas (2026-11-27): built and tested locally. Needs `011_quotas.sql` on the real project.** Per space: 10,000 rows, 10 tools (file `012_tools_quota.sql`), 10 tables a tool, 60 columns a table by default. IT admin, Quotas: "Change the default", a tile per space, limits and requests in the space's window. Space admin, Quota: what is used, a warning from 80%, "Ask IT for more". Until 011 is run both parts say so and the rest works as before.
 - The fix request for a refused page is one complete text (points, rules, database rules, the page); a design of its own and data outside the tables stop the upload. No SQL.
 - **The site book (2026-11-27):** shown to IT admins only (hub card and book page); stays in `book/`. In pictures: a 5-minute chapter of eleven slides, seven kinds of picture drawn from text (`:::kind` blocks), topic nodes, laser, spotlight and pen while presenting. Reread against the repo: 28 chapters in four parts, with a new part "What a reviewer asks" (threats, sharing of rights, data handling, running it). No SQL.
-- Tests, all passing locally: twelve SQL test files (1,253 cases), eight browser tests, the hostile-tool test (33 attempts).
+- **The database for IT (2026-11-27): `db/install/`.** The same database as `db/core/001..012` in one clean set of files: nine files by subject plus `install.sql`, every function once in its final version, later columns folded into their tables, the ten Supabase stand-ins marked `SUPABASE:`. Proved identical (`tests/sql/same-schema.mjs`; also `pg_dump` on a real PostgreSQL 16); the twelve SQL test files pass on both. Read `db/install/README.md`. Nothing on the site changed; nothing to paste.
+- Tests, all passing locally: twelve SQL test files (1,253 cases) on `db/core` and on `db/install`, the comparison of the two, eight browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
@@ -52,6 +53,8 @@
 If a step fails, send the exact message on screen.
 
 ## With every delivery
+A change to the database: a new `db/core/NNN_*.sql` for the live demo **and** the same change in `db/install/`; `node tests/sql/same-schema.mjs` must pass.
+
 Besides this file and the changelog: update the chapter of the site book the change touches (`book/*.md`) and add a line to `book/10-notes.md`.
 
 **Rule for database use (owner, 2026-11-27):** the database is for what people enter and what must be checked per person. What the site is made of (pages, kit, help, the book) stays a file, because IT moves the whole site to its own servers and domains. Do not put site content into tables.
