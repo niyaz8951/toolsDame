@@ -2,6 +2,9 @@
 
 The running log of the site. Newest first. Every change to the site adds a line here and updates the chapter it touches.
 
+## 2026-11-27
+- IT admin, Spaces: the page was one long list with every field of every space open at once. Now: "Add a space" on top, a tile per space, and everything that changes or deletes a space inside the window its tile opens. Rule kept for later pages: a list shows, a window changes.
+
 ## 2026-11-26
 - **Site book, part for IT**: thirteen chapters with how each thing is done, why, what was considered and left out, and its limits; a register of decisions; the questions IT will ask; every open gap.
 - **Site book** added: this book, to read or to present.

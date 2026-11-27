@@ -4,6 +4,8 @@
  * Must not change: everything from the database is written with textContent;
  * each button calls one dame_* function and then reloads the lists, so the
  * page always shows what the database holds, not what the page assumes.
+ * Spaces: the page shows "Add a space" and one tile per space; a space is
+ * changed or deleted only inside the window its tile opens.
  */
 (function () {
   'use strict';
@@ -18,6 +20,8 @@
   var idTouched = false;
   var act = null;
   var loadAudit = null;
+  var spaces = [];
+  var win = null;   // the open space window, or null
 
   function $(id) { return document.getElementById(id); }
 
@@ -68,40 +72,133 @@
     ui.addRow(body, [u.name + (u.is_me ? ' (you)' : ''), shown(u.email), state, change]);
   }
 
-  function spaceBlock(s) {
-    var box = ui.el('div', 'hub-block');
-    box.setAttribute('data-space', s.id);
-    var title = ui.el('h3', null, s.name + ' ');
+  // A space is one tile: name, what it holds, and "Switched off" when it is. Pressing it opens its window.
+  function spaceTile(s) {
+    var t = ui.el('button', 'hub-tile' + (s.active ? '' : ' hub-tile-off'));
+    t.type = 'button';
+    t.setAttribute('data-space', s.id);
+    t.appendChild(ui.el('span', 'hub-tile-icon', (s.name.trim().charAt(0) || 'S').toUpperCase()));
+    t.appendChild(ui.el('span', 'hub-tile-name', s.name));
+    t.appendChild(ui.el('span', 'hub-tile-text', s.tools + (s.tools === 1 ? ' tool, ' : ' tools, ') + s.members + (s.members === 1 ? ' member' : ' members')));
+    if (!s.active) { t.appendChild(ui.el('span', 'hub-pill', 'Switched off')); }
+    t.addEventListener('click', function () { openSpace(s.id); });
+    return t;
+  }
+
+  // The window of one space. Everything that changes a space is here and nowhere else on the page.
+  // After each action the lists are read again and the window is drawn again from the database.
+  function closeSpace() {
+    if (!win) { return; }
+    var id = win.id;
+    win.back.remove();
+    document.removeEventListener('keydown', win.onKey);
+    win = null;
+    var tile = document.querySelector('#spaces [data-space="' + id + '"]');
+    if (tile) { tile.focus(); }
+  }
+
+  async function inSpace(name, args, done) {
+    var w = win;
+    ui.say(w.msg, '');
+    try {
+      await api.rpc(name, args);
+      await load();
+      if (win === w) { ui.say(w.msg, done, 'ok'); }
+    } catch (err) {
+      await load().catch(function () {});
+      if (win === w) { ui.sayError(w.msg, err); }
+    }
+    if (win === w) { w.msg.scrollIntoView({ block: 'nearest' }); }
+  }
+
+  function drawSpace(s) {
+    var body = ui.clear(win.body);
+    var title = ui.el('h2', null, s.name + ' ');
     title.appendChild(ui.el('span', 'hub-pill', s.id));
     title.appendChild(ui.el('span', 'hub-pill' + (s.active ? ' hub-pill-ok' : ''), s.active ? 'On' : 'Switched off'));
-    box.appendChild(title);
-    box.appendChild(ui.el('p', 'dame-muted', (s.description ? s.description + ' ' : '') +
+    body.appendChild(title);
+    body.appendChild(ui.el('p', 'dame-muted', (s.description ? s.description + ' ' : '') +
       s.tools + (s.tools === 1 ? ' tool, ' : ' tools, ') + s.members + (s.members === 1 ? ' member.' : ' members.')));
 
-    box.appendChild(ui.el('p', 'hub-sub', 'Admins'));
+    body.appendChild(ui.el('p', 'hub-sub', 'Admins'));
     var list = ui.el('ul', 'hub-list');
     ui.people(list, s.admins, 'No admin.', 'Remove', function (person) {
-      act('dame_space_admin_remove', { p_space: s.id, p_user: person.id }, person.name + ' is no longer an admin of ' + s.name + '.');
+      inSpace('dame_space_admin_remove', { p_space: s.id, p_user: person.id }, person.name + ' is no longer an admin of ' + s.name + '.');
     });
-    box.appendChild(list);
-    box.appendChild(ui.picker('Find a person to name as admin of ' + s.name, 'Name as admin', function (person) {
-      act('dame_space_admin_add', { p_space: s.id, p_user: person.id }, person.name + ' is now an admin of ' + s.name + '.');
+    body.appendChild(list);
+    body.appendChild(ui.picker('Find a person to name as admin of ' + s.name, 'Name as admin', function (person) {
+      inSpace('dame_space_admin_add', { p_space: s.id, p_user: person.id }, person.name + ' is now an admin of ' + s.name + '.');
     }));
 
-    var row = ui.el('div', 'dame-row hub-delete');
+    body.appendChild(ui.el('p', 'hub-sub', s.active ? 'Switch off' : 'Switch on'));
+    body.appendChild(ui.el('p', 'dame-hint', s.active ? 'Nothing is deleted. Only its admins can open the space until it is switched on again.'
+      : 'Its members can open the space again.'));
+    var row = ui.el('div', 'dame-row');
     row.appendChild(s.active
-      ? ui.confirmButton('Switch space off', '', function () { act('dame_space_set_active', { p_space: s.id, p_active: false }, s.name + ' is switched off. Only its admins can open it.'); })
-      : ui.confirmButton('Switch space on', '', function () { act('dame_space_set_active', { p_space: s.id, p_active: true }, s.name + ' is switched on.'); }));
-    if (s.admins.some(function (a) { return a.id === me.id; })) {
-      var link = ui.el('a', 'dame-btn hub-small', 'Open its admin page');
-      link.href = api.href('admin/space.html') + '?space=' + encodeURIComponent(s.id);
-      row.appendChild(link);
-    }
-    box.appendChild(row);
-    box.appendChild(ui.typedDelete(s.id, 'Delete space and its tools', function (typed) {
-      act('dame_space_delete', { p_space: s.id, p_confirm: typed }, s.name + ' is deleted. Its id ' + s.id + ' will never be used again.');
+      ? ui.confirmButton('Switch space off', '', function () { inSpace('dame_space_set_active', { p_space: s.id, p_active: false }, s.name + ' is switched off. Only its admins can open it.'); })
+      : ui.confirmButton('Switch space on', '', function () { inSpace('dame_space_set_active', { p_space: s.id, p_active: true }, s.name + ' is switched on.'); }));
+    body.appendChild(row);
+
+    body.appendChild(ui.el('p', 'hub-sub', 'Delete'));
+    body.appendChild(ui.el('p', 'dame-hint', 'Deletes the space, its tools and their data for good. The id ' + s.id + ' can never be used again.'));
+    body.appendChild(ui.typedDelete(s.id, 'Delete space and its tools', async function (typed) {
+      var w = win;
+      try {
+        await api.rpc('dame_space_delete', { p_space: s.id, p_confirm: typed });
+        closeSpace();
+        await load();
+        ui.say($('msg'), s.name + ' is deleted. Its id ' + s.id + ' will never be used again.', 'ok');
+        $('msg').scrollIntoView({ block: 'nearest' });
+      } catch (err) {
+        await load().catch(function () {});
+        if (win === w) { ui.sayError(w.msg, err); }
+      }
     }));
-    return box;
+
+    var mine = s.admins.some(function (a) { return a.id === me.id; });
+    win.link.hidden = !mine;
+    win.link.href = api.href('admin/space.html') + '?space=' + encodeURIComponent(s.id);
+  }
+
+  function openSpace(id) {
+    var s = spaces.filter(function (x) { return x.id === id; })[0];
+    if (!s) { return; }
+    var back = ui.el('div', 'hub-focus-back');
+    var box = ui.el('section', 'hub-focus hub-focus-small');
+    box.id = 'space-win';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', 'Space ' + s.name);
+    var body = ui.el('div');
+    var msg = ui.el('p', 'hub-msg');
+    msg.id = 'space-win-msg';
+    msg.hidden = true;
+    msg.setAttribute('role', 'alert');
+    var foot = ui.el('div', 'dame-row hub-focus-foot');
+    var close = ui.el('button', 'dame-btn dame-btn-primary', 'Done');
+    close.type = 'button';
+    close.id = 'space-win-close';
+    var link = ui.el('a', 'dame-btn', 'Open its admin page');
+    close.addEventListener('click', closeSpace);
+    back.addEventListener('mousedown', function (ev) { if (ev.target === back) { closeSpace(); } });
+    foot.appendChild(close);
+    foot.appendChild(link);
+    box.appendChild(body);
+    box.appendChild(msg);
+    box.appendChild(foot);
+    back.appendChild(box);
+    win = { id: id, back: back, body: body, msg: msg, link: link, onKey: function (ev) { if (ev.key === 'Escape') { closeSpace(); } } };
+    document.addEventListener('keydown', win.onKey);
+    drawSpace(s);
+    document.body.appendChild(back);
+    close.focus();
+  }
+
+  // The "Add a space" window.
+  function showNewSpace(on) {
+    $('space-new').hidden = !on;
+    ui.say($('sp-msg'), '');
+    if (on) { $('sp-name').focus(); } else { $('space-add').focus(); }
   }
 
   // A temporary password a person can read out: 14 characters without look-alikes (no 0 O 1 l I).
@@ -123,6 +220,7 @@
     box.noValidate = true;
     box.setAttribute('role', 'dialog');
     box.setAttribute('aria-modal', 'true');
+    box.id = 'user-new';
     box.setAttribute('aria-label', 'New user');
     box.appendChild(ui.el('h2', null, 'New user'));
     box.appendChild(ui.el('p', 'dame-muted', 'The person signs in with this username and the temporary password, and must choose a new password at the first sign-in. No email is needed.'));
@@ -212,14 +310,18 @@
     $('waiting').closest('section').dataset.badge = String(nWaiting);
     $('people-empty').hidden = nPeople > 0;
 
-    var spaces = got[1] || [];
+    spaces = got[1] || [];
     var box = ui.clear($('spaces'));
-    spaces.forEach(function (s) { box.appendChild(spaceBlock(s)); });
+    spaces.forEach(function (s) { box.appendChild(spaceTile(s)); });
     $('spaces-empty').hidden = spaces.length > 0;
     var hasTest = spaces.some(function (x) { return x.id === 'test-space'; });
     $('test-make').hidden = hasTest;
-    $('test-open').hidden = !hasTest;
-    $('test-open').href = api.href('admin/space.html') + '?space=test-space';
+    $('test-text').hidden = hasTest;
+    // An open window shows what the database holds now; a space that is gone closes its window.
+    if (win) {
+      var open = spaces.filter(function (x) { return x.id === win.id; })[0];
+      if (open) { drawSpace(open); } else { closeSpace(); }
+    }
 
     var settings = got[2] || {};
     if (document.activeElement !== $('domains')) { $('domains').value = String(settings.signup_domains || '').split(',').join(', '); }
@@ -298,24 +400,37 @@
     $('sp-name').addEventListener('input', function () {
       if (!idTouched) { $('sp-id').value = slug($('sp-name').value); }
     });
+    $('space-add').addEventListener('click', function () { showNewSpace(true); });
+    $('sp-cancel').addEventListener('click', function () { showNewSpace(false); });
+    $('space-new').addEventListener('mousedown', function (ev) { if (ev.target === $('space-new')) { showNewSpace(false); } });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('space-new').hidden) { showNewSpace(false); } });
     $('form-space').addEventListener('submit', async function (ev) {
       ev.preventDefault();
       var form = ev.currentTarget;
+      var msg = $('sp-msg');
       if (!firstAdmin) {
-        ui.say($('msg'), 'Choose the first admin of the new space.', 'warn');
-        $('msg').scrollIntoView({ block: 'nearest' });
+        ui.say(msg, 'Choose the first admin of the new space.', 'warn');
+        msg.scrollIntoView({ block: 'nearest' });
         return;
       }
       var name = $('sp-name').value.trim();
-      var before = $('spaces').children.length;
-      await act('dame_space_create', { p_id: $('sp-id').value.trim(), p_name: name, p_description: $('sp-desc').value, p_admin: firstAdmin.id },
-        'Space ' + name + ' is created. Its admin can now add tools and people.');
-      if ($('spaces').children.length > before) {
+      $('sp-create').disabled = true;
+      ui.say(msg, '');
+      try {
+        await api.rpc('dame_space_create', { p_id: $('sp-id').value.trim(), p_name: name, p_description: $('sp-desc').value, p_admin: firstAdmin.id });
         form.reset();
         firstAdmin = null;
         idTouched = false;
         showFirstAdmin();
+        showNewSpace(false);
+        await load();
+        ui.say($('msg'), 'Space ' + name + ' is created. Its admin can now add tools and people. Press its tile to change it.', 'ok');
+        $('msg').scrollIntoView({ block: 'nearest' });
+      } catch (err) {
+        ui.sayError(msg, err);
+        msg.scrollIntoView({ block: 'nearest' });
       }
+      $('sp-create').disabled = false;
     });
 
     // The test space: the same three calls a person makes by hand, in one press.
@@ -329,11 +444,11 @@
         await api.rpc('dame_tool_create', { p_space: 'test-space', p_id: 'tracker', p_name: 'Tracker', p_description: 'Example that saves rows in a table.',
           p_icon: 'T', p_colour: '#b45309', p_open_to_space: true, p_open_level: 'contribute' });
         await load();
-        ui.say($('msg'), 'The test space is made, with two empty tools. Open its admin page and press "Build and access" on each tool.', 'ok');
+        ui.say($('msg'), 'The test space is made, with two empty tools. Press its tile, then "Open its admin page", and press "Build and access" on each tool.', 'ok');
       } catch (err) {
         await load().catch(function () {});
         ui.say($('msg'), (err && err.code === 'bad_request')
-          ? 'The test space exists already, or was deleted before (an id is never used twice). Open it below, or make a space by hand under "New space".'
+          ? 'The test space exists already, or was deleted before (an id is never used twice). Press its tile, or make a space by hand with "Add a space".'
           : ((err && err.message) || 'That did not work. Try again.'), 'warn');
       }
       $('test-make').disabled = false;

@@ -149,6 +149,7 @@ try {
   check((await rpc(it, 'dame_setting_set', { p_key: 'signup_domains', p_value: 'test.dame' })).ok, 'IT: only the work domain may ask for access');
   await it.page.goto(SITE + 'admin/it.html');
   await it.page.waitForSelector('#body:not([hidden])');
+  await it.page.click('#space-add');
   await it.page.fill('#sp-name', 'DX');
   check((await it.page.inputValue('#sp-id')) === 'dx-team', 'IT: a two-letter name like DX gets an id that is long enough (dx-team)');
   check((await rpc(it, 'dame_space_create', { p_id: 'dx', p_name: 'DX', p_description: '', p_admin: it.id })).code === 'bad_request', 'IT: an id of two characters is refused by the database');
@@ -490,14 +491,14 @@ try {
 
   // ------------------------------------------------------------------ IT makes an account: username and temporary password
   await it.page.click('#new-user');
-  await it.page.waitForSelector('.hub-focus-small');
+  await it.page.waitForSelector('#user-new');
   await it.page.fill('#nu-username', 'Omar.Factory');
   await it.page.fill('#nu-name', 'Omar Factory');
   await it.page.fill('#nu-password', 'weak');
   await it.page.click('#nu-create');
-  await it.page.waitForSelector('.hub-focus-small .hub-msg:not([hidden])');
-  check(/at least 10 characters/.test(await it.page.textContent('.hub-focus-small .hub-msg')), 'IT: a weak temporary password is refused by the database, in words');
-  await it.page.click('.hub-focus-small button:text-is("Generate")');
+  await it.page.waitForSelector('#user-new .hub-msg:not([hidden])');
+  check(/at least 10 characters/.test(await it.page.textContent('#user-new .hub-msg')), 'IT: a weak temporary password is refused by the database, in words');
+  await it.page.click('#user-new button:text-is("Generate")');
   const temp = await it.page.inputValue('#nu-password');
   check(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{14,}$/.test(temp), 'IT: Generate writes a temporary password that can be read out');
   await it.page.click('#nu-create');

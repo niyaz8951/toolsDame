@@ -2,6 +2,17 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - IT admin, Spaces: add on top, a tile per space, changes in its window
+Changed (owner: "looks confusing; add space first, then tiles; editing and deleting only after I press the tile")
+- **Spaces now shows two things:** the button "Add a space" (and "Make a test space" until one exists), and one tile per space with its name, tools and members.
+- **"Add a space" opens a window** with name, id, description and first admin. A refusal (no admin chosen, id used before) is said inside the window.
+- **Pressing a tile opens that space's window:** its admins, switch off or on, delete by typing the id, and "Open its admin page" when you are one of its admins. Nothing on the page itself can change or delete a space any more. The window stays open and shows the new state after each action; Done, Escape or a press outside closes it.
+- Only how the page is shown changed: the same `dame_space_*` functions, the same press-twice and typed-id confirmations, the same audit. No right, no SQL.
+- Tests: phase 2, phase 4 and the rehearsal follow the new way; new checks: no form until asked, a tile holds nothing to change, the window keeps up with the database, both windows fit a phone. All browser tests pass.
+
+Files: `admin/it.html`, `pages/admin-it.js`, `kit/v1/shell.css`, `help/admin-it.md`, the browser tests, `book/02-structure.md`, `book/10-notes.md`.
+SQL to paste: none.
+
 ## 2026-11-26 - Admin pages: one part at a time, and folded tool details
 Changed (owner's go on the two ideas noted at the finish)
 - **The admin pages are tabs.** IT admin, space admin and tool admin show one part on screen at a time; the strip under the bar is the row of tabs. On a phone each page is now about one screen instead of 3,500 to 5,000 px.

@@ -104,8 +104,9 @@ async function run(width, height, label) {
     await ita.page.waitForSelector('#body:not([hidden])');
     await ita.page.click('#test-make');
     await said(ita.page, 'The test space is made');
-    check(await ita.page.locator('#test-open').isVisible() && !(await ita.page.locator('#test-make').isVisible()), T + 'the test space is made once, then offered to open');
-    await ita.page.click('#test-open');
+    check((await ita.page.locator('#spaces [data-space="test-space"]').count()) === 1 && !(await ita.page.locator('#test-make').isVisible()), T + 'the test space is made once, then it is a tile');
+    await ita.page.click('#spaces [data-space="test-space"]');
+    await ita.page.click('#space-win a:text-is("Open its admin page")');
     await ita.page.waitForSelector('#body:not([hidden])');
     check((await ita.page.locator('#tools [data-tool]').count()) === 2 && /Converter/.test(await ita.page.textContent('#tools')) && /Tracker/.test(await ita.page.textContent('#tools')), T + 'it holds two empty tools: Converter and Tracker');
     for (const [who, level] of [[ray, 'read'], [cat, 'contribute'], [edi, 'edit'], [app, 'approve']]) {

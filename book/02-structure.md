@@ -13,7 +13,7 @@ Three levels, always: the hub, a space, a tool.
 ## Four roles
 | Role | What it does |
 |---|---|
-| IT admin | Lets people in, makes spaces, names their admins, sets the site rules, reads the audit |
+| IT admin | Lets people in, makes spaces, names their admins, sets the site rules, reads the audit. On the IT admin page a space is a tile; it is changed or deleted only in the window the tile opens |
 | Space admin | Makes the tools of the space, names their managers, adds people, gives access |
 | Tool manager | Builds and looks after one tool: its page, its tables, its usage guide, its access |
 | Member | Uses the tools he was given |
