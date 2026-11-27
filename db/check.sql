@@ -8,8 +8,8 @@
 --
 -- How to run: paste into the SQL editor (or psql -f db/check.sql) and press Run.
 
-select case when t.fingerprint = '5876558b2a0c79dc2c25945201fbe339' then 'yes' else 'no' end as final_version,
-       t.fingerprint, '5876558b2a0c79dc2c25945201fbe339' as expected, t.parts
+select case when t.fingerprint = 'cb479aa761d46270e259f413692090db' then 'yes' else 'no' end as final_version,
+       t.fingerprint, 'cb479aa761d46270e259f413692090db' as expected, t.parts
   from (select pg_catalog.md5(pg_catalog.string_agg(x, '|' order by x)) as fingerprint, pg_catalog.count(*) as parts
           from (select 'f ' || n.nspname || '.' || p.proname || '(' || pg_catalog.pg_get_function_identity_arguments(p.oid) || ')' as x
                   from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid = p.pronamespace

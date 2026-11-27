@@ -2,6 +2,20 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - Relay: need to know, pull, and the flag
+Changed (owner: "making everyone look at everything can cause confidentiality issues and inter-department competition; users see only what they are passed; the factory might give a date commitment but application may add a week before giving the commitment to sales")
+- **Each team sees only its own hand-overs.** An item is visible to a team once it holds it. The first hand-over (project, details, needed by) is for the first team and the team it passed to. From the second team on, passing needs a message, because the next team sees only the title and that message. The history shows a team what it did and what was handed to or from it; notes are for the writer's own team. Where the item is: only as far as your neighbour ("With Application"). Other teams' numbers, checklists, tools and limits are not shown. The database cuts all of it.
+- **IT sees everything**, and each look at an item of other teams is written to the audit.
+New (owner agreed to "pull limits and the blocked flag")
+- **Pull (kanban):** a stage can have "Most items at once". When the team holds that many, nothing more can be passed to it; the team before sees "Full". The first stage cannot start more than its own limit.
+- **"I am blocked" (andon):** the person holding an item raises a flag with a reason. His team, the admins of its space (in Relay and on the hub) and the team that passed it on see the flag; only his team reads the reason. "Clear the flag", or passing the item on, removes it.
+- **No more Ctrl+F5:** every page's style and script lines carry the delivery's stamp (`node tools/stamp.mjs`), so browsers fetch new files after an update.
+- Database (`db/09_relay.sql`): columns `seen`, `blocked_at`, `blocked_by` on items, `max_open` on stages; `dame_relay_block`, `dame_relay_unblock`; new helpers; home, board and item rewritten to cut by team. `db/upgrade.sql` works from either earlier state (with or without the shortcuts upgrade) and was proven from both: every function, column, constraint, row-security flag and right identical to a fresh install; `seen` filled from each item's history.
+- Tests: `relay_test.sql` now 153 cases (what each team may and may not read, limits, flag); all 15 SQL files pass twice (1,574 cases); `tests/browser/relay.mjs` extended; every other browser test and phase0 pass.
+
+Files: `db/09_relay.sql`, `db/check.sql`, `db/upgrade.sql`, `db/README.md`, `relay.html`, `pages/relay.js`, `pages/relay.css`, `pages/hub.js`, `hub.html`, `kit/v1/shell.js`, `tools/stamp.mjs` (new), every page (stamp), `help/relay.md`, `help/hub.md`, tests, docs, the site book (`28`, `10-notes`).
+SQL to paste: `db/upgrade.sql` (last result must say yes).
+
 ## 2026-11-27 - The hub as home: My work, the chain, shortcuts
 New (owner: "The hub opens on My work - great; the chain is the company map - great; tools hang on the chain - great"; "users can create shortcuts"; "remove demo and all from site"; "Daikin ... relies on reliability and simplicity")
 - **The hub opens on My work**: up to six items of Relay that are with the person or wait for his teams; a press opens the item. The greeting says the count.

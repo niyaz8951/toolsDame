@@ -58,7 +58,10 @@ Known limits, said plainly:
 ## Relay (work between teams)
 - The one place where work crosses spaces. A stage is a space; its team is the space's admins and members (and IT, marked "(IT)" in the history).
 - Only the person who picked an item up moves it; only to the next stage, past stages marked "if needed", or back to the team that passed it on. The database checks each of these, on a locked row, in `dame_relay_*`; the page only leaves out buttons.
-- Everyone named on a flow sees its items; someone on no stage gets the same refusal whether an item exists or not.
+- **Need to know.** A team sees an item only if it holds it or has held it (column `seen`); anyone else gets the same refusal whether the item exists or not. Of an item a team gets: the title and priority; the first hand-over (project, details, needed by) only if it gave or received it; of the history only what its own team did and the hand-overs to or from its team; notes of its own team only; the checklist, target time, limit, tools and numbers of its own stages only. Where an item is, it learns only as far as the team it passed it to. All of this is cut inside the `dame_relay_*` functions; the page receives nothing more.
+- An IT admin sees everything; opening an item none of his teams held writes `relay.looked` to the audit (once a day per item). A business "process owner" with the same view is planned, not built.
+- **Pull.** A stage with a limit refuses a pass when it holds that many. Other teams learn only "full", never the number.
+- **The flag.** "I am blocked" is raised by the person holding the item, with a reason; the flag (not the reason) is also shown to the team that passed it on; admins of the team's space find it in their Relay.
 - The history is append-only (a trigger, also for the owner) and every move is in the audit of the space where it happened.
 - Relay writes only its own four tables. It never touches a space, a tool, a table of a tool or a right.
 - All text is shown as text; titles and notes are cleaned of control characters and cut to length in the database.

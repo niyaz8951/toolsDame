@@ -16,11 +16,11 @@ This folder is **the whole DAME database, once**: every table in its final form 
 | `06_releases.sql` | Versions of a tool (upload, seal, preview, make live, roll back), the private file bucket `tools` and its two policies, opening a tool |
 | `07_data.sql` | The table maker and the one data service (`dame_rows_*`) with the three sharing presets |
 | `08_quotas.sql` | The four limits per space (rows, tools, tables, columns), requests and answers |
-| `09_relay.sql` | Relay: work passed from team to team along the value chain. Four tables (flows, stages, items, history; the history append-only), fifteen `dame_relay_*` functions. Reads spaces and their people; writes only its own tables |
+| `09_relay.sql` | Relay: work passed from team to team along the value chain. Four tables (flows, stages, items, history; the history append-only), seventeen `dame_relay_*` functions. Need to know: every answer is cut to what the caller's team gave or received. Reads spaces and their people; writes only its own tables |
 | `10_rights.sql` | `core.make_first_admin`, `core.security_check`, and the rights: each `dame_*` function granted by name |
-| `upgrade.sql` | For the live database only: the change since the delivery before (now: shortcuts, tools on the chain) |
+| `upgrade.sql` | For the live database only: the change since the delivery before (now: need to know, pull limits and the flag in Relay; also shortcuts and tools on the chain if not yet there) |
 
-In numbers: 21 tables, 156 functions (89 `dame_*` functions, the API; 67 `core.*` helpers), 2 storage policies, 6 settings.
+In numbers: 21 tables, 163 functions (91 `dame_*` functions, the API; 72 `core.*` helpers), 2 storage policies, 6 settings.
 
 ## How to run
 

@@ -18,14 +18,14 @@
 <meta name="referrer" content="no-referrer">
 <title>Relay - DAME</title>
 <link rel="icon" href="kit/v1/icon.svg">
-<link rel="stylesheet" href="kit/v1/dame.css">
-<link rel="stylesheet" href="kit/v1/shell.css">
-<link rel="stylesheet" href="pages/relay.css">
-<script src="kit/v1/theme.js"></script>
-<script src="kit/v1/config.js" defer></script>
-<script src="kit/v1/api.js" defer></script>
-<script src="kit/v1/shell.js" defer></script>
-<script src="pages/relay.js" defer></script>
+<link rel="stylesheet" href="kit/v1/dame.css?v=261127b">
+<link rel="stylesheet" href="kit/v1/shell.css?v=261127b">
+<link rel="stylesheet" href="pages/relay.css?v=261127b">
+<script src="kit/v1/theme.js?v=261127b"></script>
+<script src="kit/v1/config.js?v=261127b" defer></script>
+<script src="kit/v1/api.js?v=261127b" defer></script>
+<script src="kit/v1/shell.js?v=261127b" defer></script>
+<script src="pages/relay.js?v=261127b" defer></script>
 </head>
 <body data-page="relay" data-sections data-title="Relay">
 <main class="dame-page" id="main" hidden>
@@ -33,7 +33,7 @@
     <a class="dame-btn hub-small hub-back" href="hub.html">Back to the hub</a>
     <p class="hub-kicker">Value chain</p>
     <h1>Relay</h1>
-    <p>Work passed from team to team. Pick it up, do your part, pass it on. If something is missing, send it back.</p>
+    <p>Work passed from team to team. Pick it up, do your part, pass it on. If something is missing, send it back. Each team sees only its own hand-overs.</p>
   </div>
   <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
 
@@ -50,6 +50,11 @@
         <p class="dame-hint">Nobody has picked these up yet. Open one and press "Pick it up".</p>
         <div class="relay-cards" id="waiting"></div>
       </div>
+      <div class="relay-group" id="g-flags">
+        <h3>Blocked in your teams</h3>
+        <p class="dame-hint">Someone raised the flag and asks for help. Shown to the admins of the team's space.</p>
+        <div class="relay-cards" id="flags"></div>
+      </div>
       <div class="relay-group" id="g-started">
         <h3>You started, now with other teams</h3>
         <div class="relay-cards" id="started"></div>
@@ -60,7 +65,7 @@
 
     <section class="dame-card" id="flows-card" data-nav="Flows">
       <h2>Flows</h2>
-      <p class="dame-muted">Each flow is a chain of teams. Choose one to see where every item is.</p>
+      <p class="dame-muted">Each flow is a chain of teams. You see the items your teams hold or have held, and the numbers of your own teams.</p>
       <div class="relay-chips" id="flow-chips" role="group" aria-label="Flows"></div>
       <div id="board" hidden>
         <div class="relay-board-head">
@@ -73,6 +78,10 @@
         <div class="relay-figures" id="b-figures"></div>
         <ol class="relay-chain" id="b-chain" aria-label="Stages of this flow"></ol>
         <div class="relay-columns" id="b-columns"></div>
+        <details class="relay-done" id="b-back-box">
+          <summary>Passed back by your team, still open</summary>
+          <div class="relay-cards" id="b-back"></div>
+        </details>
         <details class="relay-done" id="b-done-box">
           <summary>Finished lately</summary>
           <div class="relay-cards" id="b-done"></div>

@@ -20,14 +20,25 @@ Relay carries work from team to team along the value chain, for example a query 
 
 Each level answers only the level that asked it: an item always goes back the way it came.
 
+## What you see, and what you do not
+- An item appears for your team when it is passed to you. Before that you do not see it.
+- You read what was handed to your team and what your team handed on. What other teams wrote to each other stays with them.
+- From the second team on, **write what the next team needs** when you pass on: they see only the title and your message.
+- Once your team has passed an item on, you see only "With <the next team>", however far it has gone.
+- Notes are for your own team.
+
+## Full, and blocked
+- A team can have a limit of items at once. When it is **Full**, nothing more can be passed to it until it passes one on.
+- Stuck? Open the item and press **I am blocked**, and say why. Your team, its admins and the team that passed it to you see the flag. **Clear the flag** when you can go on.
+
 ## Flows
-Each flow is drawn as its chain of teams, from left to right. Under each team: what is there now, what is late, how long it usually takes, and how often it sent something back. Many send-backs show which hand-over needs a better checklist.
+Each flow is drawn as its chain of teams, from left to right. Under your own teams: what is there now, what is late or blocked, how long it usually takes, and how often it sent something back. Other teams show their name only, and "Full" when they take no more.
 
 ## Who may do what
 - Only the team holding an item can move it. The database checks this, not the page.
 - An admin of the team may take over an item from a colleague who is away.
 - Who started it, an admin of the first team, or IT may cancel it, with a reason.
-- Everyone on the flow sees its items and their history. Nothing in the history can be changed or deleted.
+- Nothing in the history can be changed or deleted. IT sees every item; each such look is recorded.
 
 ## For IT: setting up a flow
 1. **Set up** > **Add a flow**, or start from an example.

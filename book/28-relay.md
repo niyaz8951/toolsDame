@@ -17,6 +17,9 @@ First team | Gets the answer back and closes it
 - **A stage "if needed"** may be skipped by the team before it: HQ-AES passes straight to the Factory when the Product team has nothing to decide.
 - **The checklist** is what stops "something missing" before it happens: the button to pass on stays grey until every line is ticked. Each tick is saved at once.
 - **Tools hang on the chain.** IT names, per stage, up to six tools of that team's space. The person holding an item sees them as "Tools for this step". This is where the two halves of the site meet: teams build tools, the chain shows where each is used.
+- **Need to know.** A team sees an item only once it holds it, and of it only what was handed to or from that team. The Factory tells HQ-AES "6 weeks"; Application tells Sales "7 weeks"; Sales reads only "7 weeks". Notes stay in the team. Where an item is, a team learns only as far as its neighbour. Each team sees its own numbers, not the others'. The database cuts every answer; IT sees all and each look is audited.
+- **Pull, not push (kanban).** A stage can have a limit of items at once. A full team takes no more; the team before sees "Full".
+- **"I am blocked" (andon).** The person holding an item raises a flag with a reason. His team, its admins and the team that passed it on see the flag at once.
 - **Something missing** still happens. It sends the item back with what is missing, and the count of send-backs per stage shows which hand-over needs a better checklist.
 
 ## What everyone sees
@@ -35,15 +38,16 @@ Pick up | The team holding it | the item waits at a stage of one of his spaces
 Take over | An admin of that team, or IT | someone else has it; the history names both
 Tick, pass on, answer, send back, close | Only the person who picked it up | he holds it now; the checklist is done; the stages skipped may be skipped; the next team is on
 Cancel | Who started it, an admin of the first team, or IT | a reason is written
-Note | Everyone on the flow | the item is his to see
+Note | Everyone who sees the item | filed under the writer's own team; only that team reads it
+Raise or clear the flag | The person holding it; an admin of the team clears too | a reason to raise
 Set up a flow | IT only | 2 to 12 stages, a real space for each, the first and last never skipped
 :::
 
 - An IT admin acts at every stage, as he acts as admin of every space (owner, 2026-11-27). The history marks each step he does where he is not named as **(IT)**.
-- Everyone named in a team of the flow sees all its items and their history. Someone on no stage sees nothing: the database refuses him the flow, the board and the item, with the same sentence whether the item exists or not.
+- A team sees only the items it holds or has held. Anyone else is refused by the database, with the same sentence whether the item exists or not.
 
 ## Built so that nothing else changes
-- Relay is one database file, `db/09_relay.sql`: four tables (flows, stages, items, history) and fifteen `dame_relay_*` functions, each starting with `core.require_user()` or `core.require_it()`. It reads spaces and their people and writes only its own tables. No space, tool, table, row or right changes. Every tool works exactly as before.
+- Relay is one database file, `db/09_relay.sql`: four tables (flows, stages, items, history) and seventeen `dame_relay_*` functions, each starting with `core.require_user()` or `core.require_it()`. It reads spaces and their people and writes only its own tables. No space, tool, table, row or right changes. Every tool works exactly as before.
 - A stage is a space, so Relay adds no level and no role: Hub > Space > Tool stays.
 - The history is append-only, also for the database owner (a trigger refuses change and delete). Every move is also written to the audit of the space where it happened.
 - A space deleted later leaves its stage without a team: the setup page says so and only IT can act there. Relay never stops a space from being deleted.
@@ -58,6 +62,8 @@ The setup page offers four flows of a company like Daikin. The window picks the 
 - **Spare parts request**: Service > Spare Parts > Finance (if needed) > Spare Parts.
 
 ## Not in this version
-- Parallel stages (Product team **and** Factory at the same time): today one team holds an item at a time.
+- Circulated approval (Product team **and** Factory at the same time): today one team holds an item at a time.
+- A process owner of the business who sees a whole flow: today only IT does.
+- Flows as standard BPMN files for an open-source engine.
 - Files attached to an item: a link or a reference in the text instead.
 - Email when something arrives: the hub card and the inbox show it. IT can add mail on its own servers.

@@ -119,6 +119,7 @@ async function run(width, height, label) {
     await it.waitForSelector('#flow-win #fl-stages');
     const teams = await it.$$eval('#fl-stages select', (s) => s.map((x) => x.value).join(','));
     check(teams === 'sales,applied,hq-aes,product,factory', T + 'the MTO example picks the five teams by name (' + teams + ')');
+    check((await it.locator('#fl-stages [data-k="max"]').count()) === 5, T + 'each stage can be given a limit of items at once');
     check((await it.inputValue('#fl-prefix')) === 'MTO' && (await it.locator('#fl-stages .relay-stage-edit').count()) === 5, T + 'the example fills the number letters and five stages');
     await it.waitForSelector('#fl-stages .relay-stage-edit:nth-child(2) .relay-tool-list input[value="selector"]');
     await it.check('#fl-stages .relay-stage-edit:nth-child(2) .relay-tool-list input[value="selector"]');
@@ -156,6 +157,11 @@ async function run(width, height, label) {
     const passed = await words(sam, '#relay-pass-2', 'Please check the panel option', true);
     check(/Passed on to Technical review/.test(passed), T + 'Sales passes it to Application');
     await close(sam);
+    const fay = await person('fay@work.test');
+    check((await call(fay, 'dame_relay_item', { p_item: 1 })) === 'not_allowed', T + 'the Factory, which has not received it, is refused the item by the database');
+    await relay(fay, '?flow=mto-query#flows');
+    await fay.waitForSelector('#b-chain .relay-step');
+    check((await fay.locator('#b-columns .relay-card').count()) === 0 && (await fay.locator('#b-figures .dame-stat').count()) === 3, T + 'its board shows the chain, no item, and only its own numbers');
 
     // ------------------------------------------------ Application: something is missing
     const abe = await person('abe@work.test');
@@ -191,7 +197,13 @@ async function run(width, height, label) {
     await abe.waitForSelector('#item-win .relay-tick');
     await tickAll(abe);
     check((await abe.locator('#relay-pass-4').count()) === 0, T + 'Application cannot skip HQ-AES');
-    await words(abe, '#relay-pass-3', '', false);
+    await abe.click('#relay-pass-3');
+    await abe.waitForSelector('#relay-words');
+    await abe.click('#relay-words-go');
+    check(/Write at least a few words/.test(await abe.textContent('#item-win-msg')), T + 'from the second team on, a message for the next team is required');
+    await abe.fill('#relay-words', 'Customer asks for 50 mm double skin. Is it possible, and what does it do to the lead time?');
+    await abe.click('#relay-words-go');
+    await abe.waitForSelector('#item-win-msg.hub-ok');
     await close(abe);
 
     const hal = await person('hal@work.test');
@@ -201,12 +213,26 @@ async function run(width, height, label) {
     await hal.waitForSelector('#item-win .relay-tick');
     await tickAll(hal);
     check((await hal.locator('#relay-pass-4').count()) === 1 && (await hal.locator('#relay-pass-5').count()) === 1, T + 'HQ-AES may pass to the Product team or skip to the Factory');
+    check(!/Stadium, Riyadh|Spec 23 73 13/.test(await hal.textContent('#item-win')) && /Is it possible/.test(await hal.textContent('#item-win .relay-history')), T + 'HQ-AES reads what Application wrote to it, not what Sales wrote to Application');
+    check(/raised/.test(await words(hal, '#relay-block', 'Waiting for the factory contact to be back', true)), T + 'HQ-AES raises the flag: I am blocked');
+    await relay(abe, '?flow=mto-query#flows');
+    await abe.waitForSelector('#b-columns [data-stage="3"] .relay-card');
+    check((await abe.locator('#b-columns [data-stage="3"] .relay-pill-blocked').count()) === 1, T + 'Application, which passed it on, sees the flag on its board');
+    await abe.click('#b-columns [data-stage="3"] .relay-card');
+    await abe.waitForSelector('#item-win h2');
+    check(!/factory contact/.test(await abe.textContent('#item-win')) && /With HQ-AES/.test(await abe.textContent('#item-win .relay-now')), T + 'but not the reason, and no button to move it');
+    await close(abe);
+    await relay(sam);
+    check(/With Application/.test(await sam.textContent('#started .relay-card')) && (await sam.locator('#started .relay-pill-blocked').count()) === 0, T + 'Sales knows only: it is with Application');
+    await hal.reload();
+    await hal.waitForSelector('#relay-unblock');
+    check(/cleared/.test(await words(hal, '#relay-unblock', '', false)), T + 'HQ-AES clears the flag');
+    await hal.waitForSelector('#relay-pass-5:not([disabled])');
     const skip = await words(hal, '#relay-pass-5', 'Product team not needed: standard option exists at the factory', true);
     check(/Passed on to Factory answer/.test(skip), T + 'HQ-AES skips straight to the Factory');
     await close(hal);
 
     // ------------------------------------------------ and the answer back down, level by level
-    const fay = await person('fay@work.test');
     await relay(fay);
     await item(fay, 'MTO-0001');
     await fay.click('#relay-pick');
@@ -227,7 +253,8 @@ async function run(width, height, label) {
     await item(sam, 'MTO-0001');
     check(/Closed/.test(await words(sam, '#relay-close', 'Offer revised and sent to the consultant', false)), T + 'Sales closes it');
     check(/Closed/.test(await sam.textContent('#item-win .relay-pills')) && (await sam.locator('#relay-pick, #relay-pass-2, #relay-answer').count()) === 0, T + 'a closed query has no buttons that move it');
-    check((await sam.locator('#item-win .relay-history li').count()) === 14, T + 'the history has every step (14)');
+    check((await sam.locator('#item-win .relay-history li').count()) === 6, T + 'Sales sees its own six lines of the history');
+    check(/Yes: double skin 50 mm/.test(await sam.textContent('#item-win .relay-history')) && !/adder 4%|Factory confirms/.test(await sam.textContent('#item-win')), T + 'Sales reads the answer Application gave it, not what the Factory told HQ-AES');
     await close(sam);
 
     // ------------------------------------------------ the board tells how the chain is doing
@@ -237,7 +264,8 @@ async function run(width, height, label) {
     check((await abe.locator('#b-chain .relay-step:nth-child(2) a.relay-tool').count()) === 1, T + 'Application has its Selection tool on its stage, as a link');
     await relay(sam, '?flow=mto-query#flows');
     await sam.waitForSelector('#b-chain .relay-step');
-    check((await sam.locator('#b-chain .relay-step:nth-child(2) span.relay-tool-off').count()) === 1 && (await sam.locator('#b-chain a.relay-tool').count()) === 0, T + 'Sales sees the tool named, without a link');
+    check((await sam.locator('#b-chain .relay-tool').count()) === 0, T + 'Sales is not shown the tools of another team');
+    check((await sam.locator('#b-figures .dame-stat').count()) === 5 && /^1/.test(await sam.textContent('#b-figures .dame-stat:nth-child(4)')), T + 'the first team also sees: one closed in 30 days, and start to close');
     await abe.goto(SITE + 'space.html?space=applied');
     await abe.waitForSelector('[data-pin="selector"]');
     await abe.click('[data-pin="selector"]');
@@ -249,8 +277,7 @@ async function run(width, height, label) {
     check(/Selection tool/.test(await abe.textContent('#shorts')) && (await abe.isHidden('#shorts-empty')), T + 'the shortcut is on his hub');
     await relay(abe, '?flow=mto-query#flows');
     await abe.waitForSelector('#b-chain .relay-step');
-    check(/usually/.test(await abe.textContent('#b-chain .relay-step:nth-child(1)')), T + 'the chain shows how long a stage usually takes');
-    check(/1/.test(await abe.textContent('#b-figures .dame-stat:nth-child(3)')), T + 'one closed in 30 days');
+    check(/usually/.test(await abe.textContent('#b-chain .relay-step:nth-child(2)')) && !/usually|open/.test(await abe.textContent('#b-chain .relay-step:nth-child(1)')), T + 'the chain shows Application its own usual time, and no number of Sales');
     check(await fits(abe), T + 'the board fits the screen');
     await shot(abe, '4-board');
 
@@ -264,7 +291,7 @@ async function run(width, height, label) {
     check(!(await xan.isHidden('#no-flows')) && (await xan.locator('#part-set-up').isHidden()), T + 'his Relay page says none of his teams is on a flow, and has no Set up');
 
     const audit = (await mock.sql("select string_agg(distinct action, ',' order by action) as a from core.audit where action like 'relay.%'")).rows[0].a;
-    check(audit === 'relay.answered,relay.closed,relay.flow_created,relay.passed,relay.picked,relay.sent_back,relay.started', T + 'every step is in the audit (' + audit + ')');
+    check(audit === 'relay.answered,relay.blocked,relay.closed,relay.flow_created,relay.passed,relay.picked,relay.sent_back,relay.started,relay.unblocked', T + 'every step is in the audit (' + audit + ')');
     check(problems.length === 0, T + 'no script error, no dialog' + (problems.length ? ' -> ' + problems.join(' | ') : ''));
   } catch (err) {
     check(false, T + 'the test ran to the end -> ' + String(err && err.stack || err).slice(0, 900));

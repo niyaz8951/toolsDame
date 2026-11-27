@@ -1,6 +1,6 @@
 # Roadmap
 
-What the site is for, in one sentence: **every piece of work that crosses teams is one item, everyone on its chain can see it, and exactly one team holds it at a time; each team builds its own tools for its own step.**
+What the site is for, in one sentence: **every piece of work that crosses teams is one item, exactly one team holds it at a time, and each team sees only what was handed to it; each team builds its own tools for its own step.**
 
 Two tiers on one core (sign-in, access, audit, one look):
 
@@ -22,14 +22,19 @@ The test for every feature: does it help someone answer faster **what do I do ne
 1. The master site: spaces, tools built from the site, tables from the site, sealed frame, releases, quotas, accounts, audit.
 2. Relay: flows, checklists, pick up, pass on, answer back, send back, close, history.
 3. The hub as home: My work, the chain, shortcuts, spaces. Tools on the chain.
+4. Need to know: each team sees only its own hand-overs. Pull limits per team. The "I am blocked" flag.
 
 ## Next, in this order
-4. **Ideas on each hand-over.** Anyone on the flow posts an idea for a hand-over, others vote, the process owner accepts it into the checklist. One small table.
-5. **A process owner per flow** (a person of the business), and **flow versions**: draft, test, live.
-6. **Fields per stage**: the data a team must hand over (model, capacity, lead time), not only ticks.
-7. **One project list** across flows; a won query starts the order flow.
-8. **Cover**: a deputy per stage, and late items raised to the space admin.
-9. **Health**: per space and for IT.
+Relay is built on lean methods the company already knows; each step adds one.
+5. **Flows as standard BPMN files** (export), so IT can run them on an open-source engine (Flowable, Operaton) if it wishes.
+6. **Circulated approval (ringi)**: one item to several teams at once; it moves on when all have answered.
+7. **Ideas on each hand-over (kaizen)**: the two teams of a hand-over post and vote; an accepted idea becomes a checklist line.
+8. **Share what was solved (yokoten)**: before escalating, a team sees similar closed items it was part of.
+9. **A process owner per flow** (a person of the business, who sees the whole flow), and **flow versions**: draft, test, live.
+10. **Fields per stage**, each marked "stays with us" or "handed over".
+11. **One project list** across flows; a won query starts the order flow.
+12. **Cover**: a deputy per stage, and late items raised to the space admin.
+13. **Health**: per space and for IT.
 
 ## Later, on IT's platform (the demo has no server of its own)
 - **Company sign-in** in place of email and password.

@@ -33,16 +33,17 @@
 - **The Data page as a sheet (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** Each table drawn like a spreadsheet with made-up example rows (saved rows are never shown), "+ Column" at the end, an x on each column to remove it after typing its name (new `dame_table_drop_column`), the five site columns on request, a new table drawn as it is typed, and a request for the AI after each change.
 - **Relay (2026-11-27): built and tested locally. Needs `db/upgrade-relay.sql` on the live project.** Work passed from team to team along the value chain: IT sets up flows (stages in order, a space for each, a checklist before each hand-over), people pick up, pass on, answer back, send back, close. A card on the hub, `relay.html`, four Daikin-style examples. Reads spaces; changes nothing else. Read `book/28-relay.md`.
 - **The hub as home (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** The hub opens on My work and the chain (each team with the number of items it holds), then My shortcuts (tools pinned from their space, at most 12), then Spaces. A Relay stage names up to 6 tools of its team's space. The Demo tag is gone from every page. Plan: `docs/ROADMAP.md`.
-- Tests, all passing locally: fifteen SQL test files by subject (1,525 cases) on the database built from `db/`, nine browser tests, the hostile-tool test (33 attempts).
+- **Need to know, pull, the flag (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** A team sees only the items it holds or has held, and of each only the hand-overs it gave or received; other teams' numbers, notes, checklists and tools are not given to it; IT sees all and each look is audited. A stage may have a limit of items at once: a full team takes no more. The person holding an item can raise a flag, "I am blocked". Pages carry a delivery stamp so browsers fetch new files without Ctrl+F5 (`node tools/stamp.mjs` before each delivery).
+- Tests, all passing locally: fifteen SQL test files by subject (1,574 cases) on the database built from `db/`, nine browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
 ## The owner does now, in this order
-The hub as home (new, 2026-11-27):
-- H1. **SQL editor:** paste all of `db/upgrade.sql`, Run. The security check must show no rows and the last result must say `yes`. (It adds shortcuts and the tools on the chain. Relay must be there already; it is on the live project.)
-- H2. **SQL editor:** paste `tests/sql/shortcuts_test.sql`, then `tests/sql/relay_test.sql`: first row "... passed, 0 failed" each.
-- H3. **On the site** (Ctrl+F5): the hub opens on **My work** and **The chain**. Open a space, press **Pin to hub** on a tool, go back to the hub: it is under **My shortcuts**.
-- H4. Relay > Set up > press the flow's tile > under a stage tick a tool of that team > **Save the flow**. Relay > Flows: the tool is on its stage.
+Need to know, pull and the flag (new, 2026-11-27):
+- N1. **SQL editor:** paste all of `db/upgrade.sql`, Run. The security check must show no rows and the last result must say `yes`. One file: it also adds shortcuts and tools on the chain if the upgrade before was not run.
+- N2. **SQL editor:** paste `tests/sql/relay_test.sql`, Run: first row "... passed, 0 failed".
+- N3. **On the site** (no Ctrl+F5 needed any more): with two trial accounts in two teams of a flow, pass an item on and check that the second team sees the title and the message, not the first team's details; and that the first team sees only "With <the next team>".
+- N4. Relay > Set up > the flow > give a stage "Most items at once" = 1 > Save. Pass two items to it: the second is refused with "full". On an item you hold: **I am blocked**, then **Clear the flag**.
 
 1. **SQL editor:** paste all of `db/check.sql`, Run.
    - `yes`: the live database is the final version. Go on with step 2.
@@ -72,7 +73,7 @@ Besides this file and the changelog: update the chapter of the site book the cha
 - A "go" for health (per space and for IT), which the owner put before phase 5, or for phase 5.
 
 ## Next
-Read `docs/ROADMAP.md`. Next step there: ideas on each hand-over, with votes.
+Read `docs/ROADMAP.md`. Next there: flows exported as standard BPMN; then circulated approval (several teams at once), ideas on each hand-over, the solved-items list.
 
 Phase 5: on every page the info icon, pinned notes, ideas with votes, and the AI prompt setting; the tool's help text; a space admin tightening the AI setting.
 

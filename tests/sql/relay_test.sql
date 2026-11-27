@@ -157,9 +157,11 @@ begin
     perform dame_test.expect('a tool named twice hangs once', '["selector"]', (select tools::text from core.relay_stages where flow = 'zz-mto' and pos = 2));
     perform dame_test.expect('Application sees it and can open it', 'Zz Selector|2|true',
       dame_test.val(cabe, $q$select (t ->> 'name') || '|' || (t ->> 'pos') || '|' || (t ->> 'can_open') from jsonb_array_elements(public.dame_relay_home() -> 'flows' -> 0 -> 'tools') t$q$));
-    perform dame_test.expect('Sales sees it on the chain but cannot open it', 'false',
-      dame_test.val(csam, $q$select t ->> 'can_open' from jsonb_array_elements(public.dame_relay_board('zz-mto') -> 'tools') t$q$));
-    perform dame_test.expect('the hub gets a count per stage', '5',
+    perform dame_test.expect('Sales is not told the tools of another team', '0',
+      dame_test.val(csam, $q$select jsonb_array_length(public.dame_relay_board('zz-mto') -> 'tools')$q$));
+    perform dame_test.expect('Sales is not told the checklist of another team, only of its own', 'true|false',
+      dame_test.val(csam, $q$select ((x -> 0) ? 'checks') || '|' || ((x -> 1) ? 'checks') from (select public.dame_relay_home() -> 'flows' -> 0 -> 'stages' as x) q$q$));
+    perform dame_test.expect('the hub gives Sales the count of its own stage only', '1',
       dame_test.val(csam, $q$select jsonb_array_length(public.dame_relay_home() -> 'flows' -> 0 -> 'counts')$q$));
 
     -- ------------------------------------------------ 2. who sees it, who starts
@@ -217,6 +219,12 @@ begin
       dame_test.val(csam, $q$select jsonb_array_length(public.dame_relay_home() -> 'started')$q$));
     perform dame_test.expect('Application sees it waiting in its inbox', '1',
       dame_test.val(cabe, $q$select public.dame_relay_home() ->> 'waiting'$q$));
+    perform dame_test.expect('the Factory cannot open an item it never held', 'not_allowed',
+      dame_test.run(cfay, format('select public.dame_relay_item(%s)', i1)));
+    perform dame_test.expect('nor write a note on it', 'not_allowed',
+      dame_test.run(cfay, format('select public.dame_relay_note(%s, %L)', i1, 'hello')));
+    perform dame_test.expect('and its board lists no item', '0',
+      dame_test.val(cfay, $q$select jsonb_array_length(public.dame_relay_board('zz-mto') -> 'open')$q$));
     perform dame_test.expect('HQ-AES has nothing yet', '0',
       dame_test.val(chal, $q$select public.dame_relay_home() ->> 'waiting'$q$));
     perform dame_test.expect('Abe cannot pass it before he picks it up', 'not_allowed',
@@ -251,13 +259,23 @@ begin
     perform dame_test.expect('Hal picks it up', 'ok', dame_test.run(chal, format('select public.dame_relay_pick(%s)', i1)));
     perform dame_test.expect('Hal may pass to the Product team or straight to the Factory', '[4, 5]',
       dame_test.val(chal, format($q$select jsonb_agg((x ->> 'pos')::int)::text from jsonb_array_elements(public.dame_relay_item(%s) -> 'can' -> 'pass') x$q$, i1)));
+    perform dame_test.expect('from the second team on, passing needs a message: the next team sees nothing else', 'bad_request',
+      dame_test.run(chal, format('select public.dame_relay_pass(%s, 5, %L)', i1, '')));
     perform dame_test.expect('Hal passes straight to the Factory (Product team skipped)', 'Factory answer',
-      dame_test.val(chal, format('select public.dame_relay_pass(%s, 5, %L) ->> %L', i1, '', 'to')));
+      dame_test.val(chal, format('select public.dame_relay_pass(%s, 5, %L) ->> %L', i1, 'Can the factory do 50 mm panels?', 'to')));
+    perform dame_test.expect('Sales knows only: it is with Application (not that it is at the Factory)', 'next|Technical review|',
+      dame_test.val(csam, format($q$select (c ->> 'view') || '|' || (c ->> 'stage') || '|' || coalesce(c ->> 'picked_by', '') from jsonb_array_elements(public.dame_relay_home() -> 'started') c where (c ->> 'id')::bigint = %s$q$, i1)));
+    perform dame_test.expect('the Factory gets the title and the message to it, not the first hand-over', 'false|false|1',
+      dame_test.val(cfay, format($q$select (x ? 'details') || '|' || (x ? 'project') || '|' || jsonb_array_length(x -> 'history') from (select public.dame_relay_item(%s) as x) q$q$, i1)));
+    perform dame_test.expect('Application has the first hand-over', 'true|Stadium, Riyadh',
+      dame_test.val(cabe, format($q$select (x ? 'details') || '|' || (x ->> 'project') from (select public.dame_relay_item(%s) as x) q$q$, i1)));
     perform dame_test.expect('Fay (Factory admin) picks it up', 'ok', dame_test.run(cfay, format('select public.dame_relay_pick(%s)', i1)));
     perform dame_test.expect('an answer needs text', 'bad_request',
       dame_test.run(cfay, format('select public.dame_relay_back(%s, %L, %L)', i1, 'answer', '')));
     perform dame_test.expect('the Factory answers back to HQ-AES, to Hal', 'Zz Hal HQ',
       dame_test.val(cfay, format('select public.dame_relay_back(%s, %L, %L) ->> %L', i1, 'answer', 'Feasible, 6 weeks extra', 'person')));
+    perform dame_test.expect('the Factory still sees its item, as passed back, without where it is now', 'back|',
+      dame_test.val(cfay, format($q$select (x ->> 'view') || '|' || coalesce(x ->> 'stage', '') from (select public.dame_relay_item(%s) as x) q$q$, i1)));
     perform dame_test.expect('Hal answers back to Application, to Abe', 'Zz Abe Application',
       dame_test.val(chal, format('select public.dame_relay_back(%s, %L, %L) ->> %L', i1, 'answer', 'Factory says feasible', 'person')));
     perform dame_test.expect('Hal can no longer move it, only write a note', 'not_allowed|not_allowed|ok',
@@ -278,13 +296,30 @@ begin
       dame_test.run(cabe, format('select public.dame_relay_note(%s, %L)', i1, 'Customer accepted')));
     perform dame_test.expect('the history tells the whole story', 'started,passed,picked,sent_back,passed,picked,passed,picked,passed,picked,answered,answered,note,answered,closed,note',
       (select string_agg(kind, ',' order by id) from core.relay_events where item = i1));
-    perform dame_test.expect('Hal sees the whole history', '16',
+    perform dame_test.expect('HQ-AES sees only what it did and the hand-overs it gave or received (6 of 16)', '6',
       dame_test.val(chal, format($q$select jsonb_array_length(public.dame_relay_item(%s) -> 'history')$q$, i1)));
+    perform dame_test.expect('Sales sees its own six lines', 'started,passed,sent_back,passed,answered,closed',
+      dame_test.val(csam, format($q$select string_agg(h ->> 'kind', ',') from jsonb_array_elements(public.dame_relay_item(%s) -> 'history') h$q$, i1)));
+    perform dame_test.expect('Sales reads what Application told it, not what the Factory told HQ-AES', '1|0',
+      dame_test.val(csam, format($q$select count(*) filter (where h ->> 'text' like 'Yes, with 6 weeks%%') || '|' || count(*) filter (where h ->> 'text' like 'Feasible%%') from jsonb_array_elements(public.dame_relay_item(%s) -> 'history') h$q$, i1)));
+    perform dame_test.expect('HQ-AES reads what the Factory told it', '1',
+      dame_test.val(chal, format($q$select count(*) from jsonb_array_elements(public.dame_relay_item(%s) -> 'history') h where h ->> 'text' like 'Feasible%%'$q$, i1)));
+    perform dame_test.expect('a note stays in the team that wrote it', '1|0',
+      dame_test.val(chal, format($q$select count(*) from jsonb_array_elements(public.dame_relay_item(%s) -> 'history') h where h ->> 'kind' = 'note'$q$, i1))
+      || '|' || dame_test.val(csam, format($q$select count(*) from jsonb_array_elements(public.dame_relay_item(%s) -> 'history') h where h ->> 'kind' = 'note'$q$, i1)));
+    perform dame_test.expect('IT sees all 16 lines', '16',
+      dame_test.val(ca, format($q$select jsonb_array_length(public.dame_relay_item(%s) -> 'history')$q$, i1)));
+    perform dame_test.expect('each look of IT at an item of other teams is in the audit, once a day', '1',
+      (select count(*)::text from core.audit where action = 'relay.looked' and actor = a));
     perform dame_test.expect('every move is in the audit of the space where it happened', '5|2|3|4',
       (select string_agg(n::text, '|' order by s) from (select space as s, count(*) as n from core.audit
          where action like 'relay.%' and space in ('zz-sales', 'zz-app', 'zz-hq', 'zz-fact') group by space) q));
     perform dame_test.expect('the board knows the Application stage sent one back', '1',
-      dame_test.val(csam, $q$select s ->> 'sent_back' from jsonb_array_elements(public.dame_relay_board('zz-mto') -> 'stats') s where (s ->> 'pos')::int = 2$q$));
+      dame_test.val(cabe, $q$select s ->> 'sent_back' from jsonb_array_elements(public.dame_relay_board('zz-mto') -> 'stats') s where (s ->> 'pos')::int = 2$q$));
+    perform dame_test.expect('Sales gets the numbers of its own stage only', '1',
+      dame_test.val(csam, $q$select string_agg(s ->> 'pos', ',') from jsonb_array_elements(public.dame_relay_board('zz-mto') -> 'stats') s$q$));
+    perform dame_test.expect('only the first team gets "start to close"', 'true|false',
+      dame_test.val(csam, $q$select (public.dame_relay_board('zz-mto') ? 'avg_days')::text$q$) || '|' || dame_test.val(cfay, $q$select (public.dame_relay_board('zz-mto') ? 'avg_days')::text$q$));
     perform dame_test.expect('the board shows the finished item', 'ZMTO-0001',
       dame_test.val(cfay, $q$select public.dame_relay_board('zz-mto') -> 'done' -> 0 ->> 'ref'$q$));
     perform dame_test.expect('the site cannot reach the history table', 'denied',
@@ -355,6 +390,45 @@ begin
     perform dame_test.expect('an open item still finishes its way', 'ok',
       dame_test.run(csam, format('select public.dame_relay_pass(%s, null, %L)', i3, '')));
     perform dame_test.expect('IT switches it on again', 'ok', dame_test.run(ca, $q$select public.dame_relay_flow_active('zz-mto', true)$q$));
+
+    -- ------------------------------------------------ 8b. pull: a team that is full takes no more
+    perform dame_test.expect('a limit of 0 is refused', 'bad_request',
+      dame_test.run(ca, format('select public.dame_relay_flow_save(%L, %L, %L, %L, %L, %L)', 'zz-mto', 'MTO escalation', 'MTO query', 'ZMTO', '', jsonb_set(st, '{1,max_open}', '0'))));
+    perform dame_test.expect('IT lets Application hold one item at a time', 'ok',
+      dame_test.run(ca, format('select public.dame_relay_flow_save(%L, %L, %L, %L, %L, %L)', 'zz-mto', 'MTO escalation', 'MTO query', 'ZMTO', '', jsonb_set(st, '{1,max_open}', '1'))));
+    perform dame_test.expect('Sales is told that Application is full, not its limit', 'true|false',
+      dame_test.val(csam, $q$select (x -> 1 ->> 'full') || '|' || ((x -> 1) ? 'max_open') from (select public.dame_relay_home() -> 'flows' -> 0 -> 'stages' as x) q$q$));
+    perform dame_test.expect('Application knows its own limit', '1',
+      dame_test.val(cabe, $q$select public.dame_relay_home() -> 'flows' -> 0 -> 'stages' -> 1 ->> 'max_open'$q$));
+    i2 := (dame_test.val(csam, $q$select public.dame_relay_start('zz-mto', 'AHU with heat wheel', '', '', 'normal', null) ->> 'id'$q$))::bigint;
+    perform dame_test.expect('Sales readies one more', 'ok',
+      dame_test.run(csam, format('select public.dame_relay_tick(%s, 1, true); select public.dame_relay_tick(%s, 2, true)', i2, i2)));
+    perform dame_test.expect('nothing is pushed to a team that is full', 'stage_full',
+      dame_test.run(csam, format('select public.dame_relay_pass(%s, null, %L)', i2, '')));
+
+    -- ------------------------------------------------ 8c. "I am blocked"
+    perform dame_test.expect('Abe picks up the one Application holds', 'ok', dame_test.run(cabe, format('select public.dame_relay_pick(%s)', i3)));
+    perform dame_test.expect('a flag needs a reason', 'bad_request', dame_test.run(cabe, format('select public.dame_relay_block(%s, %L)', i3, ' ')));
+    perform dame_test.expect('Sales cannot raise a flag on an item it does not hold', 'not_allowed', dame_test.run(csam, format('select public.dame_relay_block(%s, %L)', i3, 'hurry')));
+    perform dame_test.expect('the Factory cannot raise a flag on an item it never saw', 'not_allowed', dame_test.run(cfay, format('select public.dame_relay_block(%s, %L)', i3, 'hello')));
+    perform dame_test.expect('Abe raises the flag', 'ok', dame_test.run(cabe, format('select public.dame_relay_block(%s, %L)', i3, 'Selection software is down')));
+    perform dame_test.expect('a second flag is refused', 'bad_request', dame_test.run(cabe, format('select public.dame_relay_block(%s, %L)', i3, 'again')));
+    perform dame_test.expect('Sales, who passed it on, sees the flag but not the reason', 'true|0',
+      dame_test.val(csam, format($q$select (x ->> 'blocked') || '|' || (select count(*) from jsonb_array_elements(x -> 'history') h where h ->> 'kind' = 'blocked') from (select public.dame_relay_item(%s) as x) q$q$, i3)));
+    perform dame_test.expect('IT, as admin of every space, finds it under blocked', '1',
+      dame_test.val(ca, $q$select jsonb_array_length(public.dame_relay_home() -> 'flags')$q$));
+    perform dame_test.expect('the admin of Sales, not of Application, does not', '0',
+      dame_test.val(csia, $q$select jsonb_array_length(public.dame_relay_home() -> 'flags')$q$));
+    perform dame_test.expect('Application counts one blocked at its stage', '1',
+      dame_test.val(cabe, $q$select public.dame_relay_home() -> 'flows' -> 0 -> 'counts' -> 0 ->> 'blocked'$q$));
+    perform dame_test.expect('Sales cannot clear the flag', 'not_allowed', dame_test.run(csam, format('select public.dame_relay_unblock(%s, %L)', i3, '')));
+    perform dame_test.expect('IT clears it', 'ok', dame_test.run(ca, format('select public.dame_relay_unblock(%s, %L)', i3, 'Licence renewed')));
+    perform dame_test.expect('clearing a flag that is not raised is refused', 'bad_request', dame_test.run(cabe, format('select public.dame_relay_unblock(%s, %L)', i3, '')));
+    perform dame_test.expect('Abe raises it again, then passes the item on: the flag goes with the move', 'ok',
+      dame_test.run(cabe, format('select public.dame_relay_block(%s, %L); select public.dame_relay_tick(%s, 1, true); select public.dame_relay_pass(%s, null, %L)', i3, 'Need HQ', i3, i3, 'Please advise on low noise kit')));
+    perform dame_test.expect('no flag is left', 'true', (select (blocked_at is null)::text from core.relay_items where id = i3));
+    perform dame_test.expect('Application has a free place: Sales passes its item now', 'ok',
+      dame_test.run(csam, format('select public.dame_relay_pass(%s, null, %L)', i2, '')));
 
     -- ------------------- 9. security check
     perform dame_test.expect('core.security_check() finds nothing', '0',

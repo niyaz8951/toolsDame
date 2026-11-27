@@ -40,12 +40,13 @@
     var top = ui.el('span', 'relay-card-top');
     top.appendChild(ui.el('span', 'relay-ref', c.ref));
     if (c.priority === 'urgent') { top.appendChild(ui.el('span', 'relay-pill relay-pill-urgent', 'Urgent')); }
-    if (c.late) { top.appendChild(ui.el('span', 'relay-pill relay-pill-late', 'Late')); }
+    if (c.blocked) { top.appendChild(ui.el('span', 'relay-pill relay-pill-blocked', 'Blocked')); }
+    else if (c.late) { top.appendChild(ui.el('span', 'relay-pill relay-pill-late', 'Late')); }
     a.appendChild(top);
     a.appendChild(ui.el('span', 'relay-card-title', c.title));
     a.appendChild(ui.el('span', 'relay-card-where', c.stage + ' (' + c.space_name + ')'));
     var h = (new Date(c.due).getTime() - Date.now()) / 3600000;
-    a.appendChild(ui.el('span', 'relay-card-text', (c.mine ? 'With you' : 'Waiting to be picked up') + ', ' + (c.late ? 'late by ' : 'due in ') + hoursText(h)));
+    a.appendChild(ui.el('span', 'relay-card-text', (c.mine ? 'With you' : (c.picked_by ? 'With ' + c.picked_by : 'Waiting to be picked up')) + ', ' + (c.late ? 'late by ' : 'due in ') + hoursText(h)));
     if (c.last_move === 'missing') { a.appendChild(ui.el('span', 'relay-move relay-move-missing', 'Sent back: something is missing')); }
     if (c.last_move === 'answer') { a.appendChild(ui.el('span', 'relay-move relay-move-answer', 'The answer came back')); }
     return a;
@@ -68,8 +69,12 @@
       a.href = api.href('relay.html') + '?flow=' + encodeURIComponent(f.id) + '#flows';
       a.appendChild(ui.el('span', 'relay-step-name', s.space_name));
       a.appendChild(ui.el('span', 'relay-step-team', s.name + (s.optional ? ', if needed' : '')));
-      a.appendChild(ui.el('span', 'relay-step-count', String(c.open || 0)));
-      a.appendChild(ui.el('span', 'relay-step-facts', (Number(c.open) === 1 ? 'item' : 'items') + (Number(c.late) ? ', ' + c.late + ' late' : '')));
+      // Numbers only of the person's own teams; of the others the name, and whether they are full.
+      if (counts[s.pos]) {
+        a.appendChild(ui.el('span', 'relay-step-count', String(c.open || 0)));
+        a.appendChild(ui.el('span', 'relay-step-facts', (Number(c.open) === 1 ? 'item' : 'items') + (Number(c.late) ? ', ' + c.late + ' late' : '') + (Number(c.blocked) ? ', ' + c.blocked + ' blocked' : '')));
+      }
+      if (s.full) { a.appendChild(ui.el('span', 'relay-step-facts relay-step-back', 'Full')); }
       li.appendChild(a);
       ol.appendChild(li);
     });
@@ -112,6 +117,9 @@
       var flows = (r && r.flows) || [];
       if (!flows.length) { return; }
       var inbox = (r.inbox || []).slice().sort(function (x, y) { return (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
+      // Flags raised in teams he leads come first: someone is waiting for help.
+      var flags = (r.flags || []).filter(function (f) { return !inbox.some(function (c) { return c.id === f.id; }); });
+      inbox = flags.concat(inbox);
       var work = ui.clear($('work'));
       inbox.slice(0, 6).forEach(function (c) { work.appendChild(workCard(c)); });
       $('work-empty').hidden = inbox.length > 0;
@@ -120,6 +128,7 @@
       var parts = [];
       if (Number(r.working)) { parts.push(r.working + (Number(r.working) === 1 ? ' item is' : ' items are') + ' with you'); }
       if (Number(r.waiting)) { parts.push(r.waiting + (Number(r.waiting) === 1 ? ' waits' : ' wait') + ' for your teams'); }
+      if (flags.length) { parts.push(flags.length + ' blocked in your teams'); }
       $('summary').textContent = parts.length ? parts.join(', ') + '.' : 'Nothing waits for you right now.';
       var chains = ui.clear($('chains'));
       flows.filter(function (f) { return f.active; }).forEach(function (f) { chains.appendChild(chain(f)); });

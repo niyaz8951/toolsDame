@@ -626,6 +626,7 @@
     'relay.started': 'started in Relay', 'relay.picked': 'picked up in Relay', 'relay.released': 'put back in Relay',
     'relay.taken_over': 'took over in Relay', 'relay.passed': 'passed on in Relay', 'relay.answered': 'answered back in Relay',
     'relay.sent_back': 'sent back in Relay', 'relay.closed': 'closed in Relay', 'relay.cancelled': 'cancelled in Relay',
+    'relay.blocked': 'raised the flag in Relay', 'relay.unblocked': 'cleared the flag in Relay', 'relay.looked': 'looked at an item of other teams in Relay',
     'relay.flow_created': 'made a Relay flow', 'relay.flow_changed': 'changed a Relay flow',
     'relay.flow_on': 'switched a Relay flow on', 'relay.flow_off': 'switched a Relay flow off'
   };

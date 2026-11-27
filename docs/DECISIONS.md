@@ -228,3 +228,11 @@
 - **Tools on the chain are set by IT in the flow**, from the tools of the stage's own space. Their names are shown to everyone on the flow; opening one still needs access to the tool. Chosen over hiding the names: the chain is meant to show how the work is done.
 - **Reliable and simple** (owner: Daikin relies on both): one way to do each thing; the hub works even when Relay or shortcuts cannot be read; nothing new is loaded from outside.
 - **"Demo" removed from the pages** so the site reads as a product. The documents keep saying what the demonstration runs on and what is open: IT must be able to trust them.
+
+## Owner, 2026-11-27 (Relay: need to know; lean methods; open standard)
+- **Need to know replaces "the chain is open to everyone on it".** Owner: open view causes confidentiality problems and competition between departments; each team commits to its neighbour (the Factory says 6 weeks, Application tells Sales 7). So: a team sees an item only once it holds it; a hand-over is between its two teams; notes stay in the team; where an item is, a team learns only as far as its neighbour; numbers are a team's own. Given up knowingly: Sales cannot see where a delay sits; only IT (later also a process owner) sees the whole chain.
+- **What travels is what is written.** Nothing of an earlier hand-over is copied forward. From the second team on a message is required when passing on. Later, fields per stage will be marked "stays with us" or "handed over".
+- **Tools on the chain are shown to their own team only** (this replaces the earlier choice of showing their names to everyone on the flow).
+- **Relay follows lean methods the company knows**: pull with a limit per team (kanban), stop-the-line flag (andon), checklist as mistake-proofing (poka-yoke); next: circulated approval (ringi), ideas at the hand-over (kaizen), sharing what was solved (yokoten).
+- **Open standard, not a foreign engine in the demo.** Flows will be exportable as BPMN so IT can run them on an open-source engine (Flowable or Operaton, both Apache 2.0) if it wishes. bpmn.io's drawing tool is not used: its licence requires its watermark on screen.
+- **Delivery stamp on page assets** so nobody needs Ctrl+F5; run `node tools/stamp.mjs` before each delivery.

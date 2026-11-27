@@ -62,7 +62,9 @@
       case 'sent_back': return 'sent it back' + to + ': something is missing';
       case 'closed': return 'closed it';
       case 'cancelled': return 'cancelled it';
-      case 'note': return 'wrote a note';
+      case 'note': return 'wrote a note for the team';
+      case 'blocked': return 'raised the flag: blocked';
+      case 'unblocked': return 'cleared the flag';
       default: return e.kind;
     }
   }
@@ -129,8 +131,10 @@
 
   // ---------------------------------------------------------------- cards
 
+  // One item as a card. What it says depends on what this person may know (c.view):
+  // here = at one of his teams; next = with the team his team passed it to; back = his team passed it back.
   function card(c, showFlow) {
-    var b = el('button', 'relay-card' + (c.priority === 'urgent' ? ' relay-urgent' : '') + (c.late ? ' relay-late' : ''));
+    var b = el('button', 'relay-card' + (c.priority === 'urgent' ? ' relay-urgent' : '') + (c.late ? ' relay-late' : '') + (c.blocked ? ' relay-blocked' : ''));
     b.type = 'button';
     b.setAttribute('data-item', String(c.id));
     var top = el('span', 'relay-card-top');
@@ -138,16 +142,24 @@
     if (c.priority === 'urgent') { top.appendChild(el('span', 'relay-pill relay-pill-urgent', 'Urgent')); }
     if (c.status === 'closed') { top.appendChild(el('span', 'relay-pill relay-pill-ok', 'Closed')); }
     else if (c.status === 'cancelled') { top.appendChild(el('span', 'relay-pill', 'Cancelled')); }
+    else if (c.blocked) { top.appendChild(el('span', 'relay-pill relay-pill-blocked', 'Blocked')); }
     else if (c.late) { top.appendChild(el('span', 'relay-pill relay-pill-late', 'Late')); }
     b.appendChild(top);
     b.appendChild(el('span', 'relay-card-title', c.title));
     if (c.project) { b.appendChild(el('span', 'relay-card-text', c.project)); }
     if (c.status === 'waiting' || c.status === 'working') {
-      // On the board the column already names the stage.
-      if (showFlow !== 'board') { b.appendChild(el('span', 'relay-card-where', (showFlow ? c.flow_name + ': ' : '') + c.stage + ' (' + c.space_name + ')')); }
-      var who = c.status === 'working' ? (c.mine ? 'With you' : 'With ' + c.picked_by) : 'Waiting to be picked up';
-      b.appendChild(el('span', 'relay-card-text', who + ', ' + dueText(c)));
-      if (MOVE[c.last_move]) { b.appendChild(el('span', 'relay-move relay-move-' + c.last_move, MOVE[c.last_move])); }
+      if (c.view === 'here') {
+        // On the board the column already names the stage.
+        if (showFlow !== 'board') { b.appendChild(el('span', 'relay-card-where', (showFlow ? c.flow_name + ': ' : '') + c.stage + ' (' + c.space_name + ')')); }
+        var who = c.status === 'working' ? (c.mine ? 'With you' : 'With ' + c.picked_by) : 'Waiting to be picked up';
+        b.appendChild(el('span', 'relay-card-text', who + ', ' + dueText(c)));
+        if (MOVE[c.last_move]) { b.appendChild(el('span', 'relay-move relay-move-' + c.last_move, MOVE[c.last_move])); }
+      } else if (c.view === 'next') {
+        b.appendChild(el('span', 'relay-card-where', (showFlow && showFlow !== 'board' ? c.flow_name + ': ' : '') + 'With ' + c.space_name));
+        b.appendChild(el('span', 'relay-card-text', 'Your team passed it on. They answer back to you.'));
+      } else {
+        b.appendChild(el('span', 'relay-card-text', 'Your team passed it back. Still open with the other teams.'));
+      }
     } else if (c.closed_at) {
       b.appendChild(el('span', 'relay-card-text', (c.status === 'closed' ? 'Closed ' : 'Cancelled ') + ui.when(c.closed_at)));
     }
@@ -170,11 +182,13 @@
     var nMine = fill($('mine'), mine, true);
     var nWait = fill($('waiting'), waiting, true);
     var nStart = fill($('started'), home.started || [], true);
+    var nFlags = fill($('flags'), home.flags || [], true);
+    $('g-flags').hidden = !nFlags;
     $('g-mine').hidden = !nMine;
     $('g-waiting').hidden = !nWait;
     $('g-started').hidden = !nStart;
     $('no-flows').hidden = (home.flows || []).length > 0;
-    $('work-empty').hidden = !!(nMine + nWait + nStart) || !(home.flows || []).length;
+    $('work-empty').hidden = !!(nMine + nWait + nStart + nFlags) || !(home.flows || []).length;
     $('work-card').dataset.badge = String(nMine + nWait);
   }
 
@@ -233,12 +247,16 @@
     start.hidden = !f.can_start;
     start.textContent = 'Start a new ' + f.word;
 
+    // Numbers: of the person's own teams only. The first team (and IT) also gets "start to close".
     var figs = ui.clear($('b-figures'));
-    var late = b.stats.reduce(function (n, s) { return n + Number(s.late || 0); }, 0);
-    figure(figs, String(b.open.length), 'open now');
-    figure(figs, String(late), 'late now');
-    figure(figs, String(b.closed_30 || 0), 'closed in 30 days');
-    figure(figs, b.avg_days === null || b.avg_days === undefined ? '-' : hoursText(Number(b.avg_days) * 24), 'start to close, usually');
+    var sum = function (k) { return b.stats.reduce(function (n, s) { return n + Number(s[k] || 0); }, 0); };
+    figure(figs, String(sum('open')), 'with your teams now');
+    figure(figs, String(sum('late')), 'of them late');
+    figure(figs, String(sum('blocked')), 'of them blocked');
+    if (b.avg_days !== undefined) {
+      figure(figs, String(b.closed_30 || 0), 'closed in 30 days');
+      figure(figs, b.avg_days === null ? '-' : hoursText(Number(b.avg_days) * 24), 'start to close, usually');
+    }
 
     var chain = ui.clear($('b-chain'));
     var cols = ui.clear($('b-columns'));
@@ -246,16 +264,20 @@
     b.stats.forEach(function (s) { stats[s.pos] = s; });
     var n = b.stages.length;
     b.stages.forEach(function (s, i) {
-      var st = stats[s.pos] || {};
-      var li = el('li', 'relay-step' + (s.optional ? ' relay-step-optional' : '') + (s.team_ok ? '' : ' relay-step-broken'));
+      var st = stats[s.pos];
+      var li = el('li', 'relay-step' + (s.optional ? ' relay-step-optional' : '') + (s.team_ok ? '' : ' relay-step-broken') + (st ? '' : ' relay-step-other'));
       li.style.setProperty('--relay-hue', String(Math.round(48 - (i / Math.max(1, n - 1)) * 48)));
       li.appendChild(el('span', 'relay-step-no', String(s.pos)));
       li.appendChild(el('span', 'relay-step-name', s.name));
       li.appendChild(el('span', 'relay-step-team', s.space_name + (s.optional ? ', if needed' : '')));
       var facts = el('span', 'relay-step-facts');
-      facts.appendChild(el('span', null, (st.open || 0) + ' open' + (Number(st.late) ? ', ' + st.late + ' late' : '')));
-      facts.appendChild(el('span', null, st.avg_hours === null || st.avg_hours === undefined ? 'target ' + hoursText(s.hours) : 'usually ' + hoursText(Number(st.avg_hours)) + ' (target ' + hoursText(s.hours) + ')'));
-      if (Number(st.sent_back)) { facts.appendChild(el('span', 'relay-step-back', 'sent back ' + st.sent_back + 'x in 90 days')); }
+      if (st) {
+        facts.appendChild(el('span', null, (st.open || 0) + ' open' + (s.max_open ? ' of ' + s.max_open + ' at most' : '') + (Number(st.late) ? ', ' + st.late + ' late' : '')));
+        if (Number(st.blocked)) { facts.appendChild(el('span', 'relay-step-back', st.blocked + ' blocked')); }
+        facts.appendChild(el('span', null, st.avg_hours === null || st.avg_hours === undefined ? 'target ' + hoursText(s.hours) : 'usually ' + hoursText(Number(st.avg_hours)) + ' (target ' + hoursText(s.hours) + ')'));
+        if (Number(st.sent_back)) { facts.appendChild(el('span', 'relay-step-back', 'sent back ' + st.sent_back + 'x in 90 days')); }
+      }
+      if (s.full) { facts.appendChild(el('span', 'relay-step-back relay-step-full', 'Full: takes no more for now')); }
       if (!s.team_ok) { facts.appendChild(el('span', 'relay-step-back', s.team_gone ? 'its team was deleted: ask IT' : 'its team is switched off')); }
       li.appendChild(facts);
       var links = toolLinks(b.tools, s.pos);
@@ -271,6 +293,8 @@
       cols.appendChild(col);
     });
     cols.style.setProperty('--relay-cols', String(n));
+    var back = fill($('b-back'), b.open.filter(function (c) { return c.view === 'back'; }), false);
+    $('b-back-box').hidden = !back;
     var done = fill($('b-done'), b.done || [], false);
     $('b-done-box').hidden = !done;
   }
@@ -404,15 +428,18 @@
     list.appendChild(li);
   }
 
-  // The stages as a small chain: done, here, still to come.
+  // The stages as a small chain. Marked: where it is as far as this person may know, and
+  // the stages that held it (IT: the real road; others: their own teams).
   function miniChain(it) {
     var ol = el('ol', 'relay-mini');
     ol.setAttribute('aria-label', 'Where it is');
+    var open = it.status === 'waiting' || it.status === 'working';
     var seen = {};
-    it.path.forEach(function (p) { seen[p] = true; });
+    (it.path || []).forEach(function (p) { seen[p] = true; });
     it.stages.forEach(function (s) {
-      var here = it.status !== 'closed' && it.status !== 'cancelled' && s.pos === it.pos;
-      var li = el('li', here ? 'relay-mini-here' : (seen[s.pos] ? 'relay-mini-done' : (s.optional ? 'relay-mini-optional' : '')));
+      var here = open && it.pos !== null && s.pos === it.pos;
+      var done = it.path ? seen[s.pos] : s.mine;
+      var li = el('li', here ? 'relay-mini-here' : (done ? 'relay-mini-done' : (s.optional ? 'relay-mini-optional' : '')));
       li.appendChild(el('span', 'relay-mini-dot', String(s.pos)));
       li.appendChild(el('span', 'relay-mini-name', s.name));
       if (here) { li.setAttribute('aria-current', 'step'); }
@@ -469,24 +496,34 @@
     if (it.status === 'closed') { pills.appendChild(el('span', 'relay-pill relay-pill-ok', 'Closed')); }
     if (it.status === 'cancelled') { pills.appendChild(el('span', 'relay-pill', 'Cancelled')); }
     if (open && it.late) { pills.appendChild(el('span', 'relay-pill relay-pill-late', 'Late')); }
+    if (open && it.blocked) { pills.appendChild(el('span', 'relay-pill relay-pill-blocked', 'Blocked')); }
     if (Number(it.sent_back)) { pills.appendChild(el('span', 'relay-pill', 'Sent back ' + it.sent_back + 'x')); }
     if (pills.firstChild) { body.appendChild(pills); }
     body.appendChild(miniChain(it));
 
-    // Where it is and who has it: the one sentence that matters most.
+    // Where it is, as far as this person may know: the one sentence that matters most.
     if (open) {
       var now = el('p', 'relay-now');
-      var who = it.status === 'working' ? (it.mine ? 'You are working on it' : it.picked_by + ' is working on it') : 'Nobody has picked it up yet';
-      now.appendChild(el('strong', null, 'At ' + it.stage + ' (' + it.space_name + '). '));
-      now.appendChild(document.createTextNode(who + '; ' + dueText(it) + '.'));
+      if (it.view === 'here') {
+        var who = it.status === 'working' ? (it.mine ? 'You are working on it' : it.picked_by + ' is working on it') : 'Nobody has picked it up yet';
+        now.appendChild(el('strong', null, 'At ' + it.stage + ' (' + it.space_name + '). '));
+        now.appendChild(document.createTextNode(who + '; ' + dueText(it) + '.'));
+      } else if (it.view === 'next') {
+        now.appendChild(el('strong', null, 'With ' + it.space_name + '. '));
+        now.appendChild(document.createTextNode('Your team passed it on. They answer back to your team when they have what you asked for.'));
+      } else {
+        now.appendChild(el('strong', null, 'Your team passed it back. '));
+        now.appendChild(document.createTextNode('It is still open with the other teams.'));
+      }
       body.appendChild(now);
-      if (MOVE[it.last_move]) { body.appendChild(el('p', 'relay-move relay-move-' + it.last_move, MOVE[it.last_move] + '. Read the last line of the history below.')); }
+      if (it.blocked) { body.appendChild(el('p', 'relay-flag', it.view === 'here' ? 'The flag is raised: the person holding it is blocked and asks for help. The reason is in the history below.' : 'The flag is raised: the person holding it is blocked. Their team has been told.')); }
+      if (it.view === 'here' && MOVE[it.last_move]) { body.appendChild(el('p', 'relay-move relay-move-' + it.last_move, MOVE[it.last_move] + '. Read the last line of the history below.')); }
     }
 
     var facts = el('ul', 'relay-facts');
     fact(facts, 'Project or customer', it.project);
     fact(facts, 'Needed by', it.needed_by ? dateText(it.needed_by) : '');
-    fact(facts, 'Started', it.started_by + ', ' + ui.when(it.started_at));
+    fact(facts, 'Started', (it.started_by ? it.started_by + ', ' : '') + ui.when(it.started_at));
     body.appendChild(facts);
     if (it.details) { body.appendChild(el('p', 'relay-details', it.details)); }
 
@@ -550,11 +587,14 @@
         targets.forEach(function (t, i) {
           var label = (i === 0 ? 'Pass on to ' : 'Skip to ') + t.name + ' (' + t.team + ')';
           var b = btn(label, i === 0 ? 'dame-btn-primary' : '', 'relay-pass-' + t.pos, function () {
-            wordsStep(w, step, label, 'A note for the next team (optional): what you did, what they should look at.', 'Pass it on', 'dame-btn-primary', false, function (text) {
+            var first = it.pos === 1;
+            wordsStep(w, step, label, first ? 'The next team gets the details above, and this note if you write one.'
+              : 'Write what the next team needs. They see only the title and what you write here, nothing of what you were told.', 'Pass it on', 'dame-btn-primary', !first, function (text) {
               act(w, 'dame_relay_pass', { p_item: it.id, p_to: t.pos, p_note: text }, function (got) { return 'Passed on to ' + got.to + '. It is in their inbox now.'; });
             });
           });
-          b.disabled = !ready || !t.team_ok;
+          b.disabled = !ready || !t.team_ok || t.full;
+          if (t.full) { b.textContent = label + ': full'; b.title = 'This team holds as many items as it may at once. It frees a place when it passes one on.'; }
           if (!t.team_ok) { b.title = 'The team of this stage is switched off or deleted. Ask IT.'; }
           row.appendChild(b);
         });
@@ -587,12 +627,13 @@
       });
       panel.appendChild(el('p', 'relay-release-row')).appendChild(rel);
     } else if (open && !can.pick && !can.take_over) {
-      panel.appendChild(el('p', 'dame-muted', 'It is with ' + it.space_name + '. Only that team can move it. You can follow it here and write a note.'));
+      panel.appendChild(el('p', 'dame-muted', 'Only the team holding it can move it. You can follow it here and write a note for your own team.'));
     }
     if (panel.firstChild) { body.appendChild(panel); }
 
     // ---- the history
     body.appendChild(el('h3', null, 'History'));
+    if (!it.path) { body.appendChild(el('p', 'dame-hint', 'You see what your team did, and what was handed to or from your team. Other teams\' hand-overs stay with them.')); }
     var hist = el('ol', 'relay-history');
     (it.history || []).forEach(function (e) {
       var li = el('li', 'relay-h-' + e.kind);
@@ -611,11 +652,25 @@
     var noteBox = el('div', 'relay-step-box');
     noteBox.hidden = true;
     more.appendChild(btn('Add a note', '', 'relay-note', function () {
-      wordsStep(w, noteBox, 'A note for everyone on this ' + it.word, 'It is added to the history. It does not move the item.', 'Add the note', 'dame-btn-primary', false, function (text) {
+      wordsStep(w, noteBox, 'A note for your team', 'Only your own team sees it. It does not move the item.', 'Add the note', 'dame-btn-primary', false, function (text) {
         if (!text.trim()) { ui.say(w.msg, 'Write the note first.', 'warn'); return; }
         act(w, 'dame_relay_note', { p_item: it.id, p_text: text }, 'The note is added.');
       });
     }));
+    if (can.block) {
+      more.appendChild(btn('I am blocked', '', 'relay-block', function () {
+        wordsStep(w, noteBox, 'Raise the flag: I am blocked', 'Say what stops you. Your team, its admins and the team that passed it to you see the flag at once; only your team reads the reason.', 'Raise the flag', 'dame-btn-primary', true, function (text) {
+          act(w, 'dame_relay_block', { p_item: it.id, p_reason: text }, 'The flag is raised. Clear it when you can go on; passing the item on clears it too.');
+        });
+      }));
+    }
+    if (can.unblock) {
+      more.appendChild(btn('Clear the flag', 'dame-btn-primary', 'relay-unblock', function () {
+        wordsStep(w, noteBox, 'Clear the flag', 'What solved it (optional).', 'Clear the flag', 'dame-btn-primary', false, function (text) {
+          act(w, 'dame_relay_unblock', { p_item: it.id, p_note: text }, 'The flag is cleared.');
+        });
+      }));
+    }
     if (can.cancel) {
       more.appendChild(btn('Cancel this ' + it.word, 'hub-danger', 'relay-cancel', function () {
         wordsStep(w, noteBox, 'Cancel ' + it.ref, 'Why is it no longer needed? Every team on it can read this.', 'Cancel it', 'hub-danger', true, function (text) {
@@ -757,7 +812,7 @@
     var desc = input('What it is for (optional)', 'fl-desc', src.description, 400);
 
     form.appendChild(el('h3', null, 'Stages, in order'));
-    form.appendChild(el('p', 'dame-hint', 'Each stage is done by one team: the admins and members of a space. The checklist is what that team must tick before it passes the item on. A stage "if needed" may be skipped by the team before it.'));
+    form.appendChild(el('p', 'dame-hint', 'Each stage is done by one team: the admins and members of a space. The checklist is what that team must tick before it passes the item on. A stage "if needed" may be skipped by the team before it. "Most items at once" is the team\'s limit: when it is full, nothing more is passed to it until it passes one on.'));
     var list = el('ol', 'relay-stage-list');
     list.id = 'fl-stages';
     form.appendChild(list);
@@ -805,6 +860,12 @@
       hours.value = String(s.hours || 24); hours.setAttribute('data-k', 'hours');
       lh.appendChild(hours);
       g.appendChild(lh);
+      var lm = el('label', 'hub-field', 'Most items at once (empty = no limit)');
+      var max = el('input', 'dame-input');
+      max.type = 'number'; max.min = '1'; max.max = '500'; max.step = '1'; max.inputMode = 'numeric';
+      max.value = s.max_open ? String(s.max_open) : ''; max.setAttribute('data-k', 'max');
+      lm.appendChild(max);
+      g.appendChild(lm);
       var lo = el('label', 'dame-check relay-optional');
       var opt = el('input');
       opt.type = 'checkbox'; opt.checked = !!s.optional; opt.setAttribute('data-k', 'optional');
@@ -847,7 +908,7 @@
       }
       team.addEventListener('change', function () { chosen = []; showTools(); });
       showTools();
-      var r = { li: li, no: no, team: team, name: sname, hours: hours, opt: opt, optBox: lo, checks: checks,
+      var r = { li: li, no: no, team: team, name: sname, hours: hours, opt: opt, optBox: lo, checks: checks, max: max,
         tools: function () { return Array.prototype.map.call(toolBox.querySelectorAll('input:checked'), function (c) { return c.value; }); } };
       up.addEventListener('click', function () { move(r, -1); });
       down.addEventListener('click', function () { move(r, 1); });
@@ -907,7 +968,7 @@
       ev.preventDefault();
       ui.say(w.msg, '');
       var stages = rows.map(function (r) {
-        return { space: r.team.value, name: r.name.value, hours: Number(r.hours.value), optional: r.opt.checked, tools: r.tools(),
+        return { space: r.team.value, name: r.name.value, hours: Number(r.hours.value), optional: r.opt.checked, tools: r.tools(), max_open: r.max.value.trim() ? Number(r.max.value) : null,
           checks: r.checks.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean) };
       });
       var bad = stages.findIndex(function (s) { return !s.space; });
