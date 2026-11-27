@@ -16,7 +16,7 @@
 - Downloads through the site with an allow-list; a request limit per tool; script errors shown to the tool's manager.
 - The builder: "I already have a page", plain HTML styled like the site, "Open the preview" and "Make live" right after the upload.
 - `tests/browser/company.mjs`: seven departments, 14 tools, 1,176 cross-department tries, all refused. Write-up: `docs/IT-REVIEW.md`.
-- The builder is a guide: three choices, then one step at a time; a database question in plain words; every link a button; pages load about twice as fast.
+- The builder is a guide: two choices ("Use a ready-made page" was removed on 2026-11-27), then one step at a time; a database question in plain words; every link a button; pages load about twice as fast.
 - The look of the DAME hub: palette, mark, movement, a day and night button that tools follow.
 - The information button on every page, a usage guide per tool (`006_help.sql`), IT adds a person by email (`007_add_people.sql`).
 - A review window for the database tables of an uploaded page (add columns before they are made); colour and icon of a space (`008_space_look.sql`).
@@ -39,8 +39,8 @@
    Then `010_accounts.sql` and `tests/sql/010_accounts_test.sql`. After 010, three things to try (Ctrl+F5 first): (a) the round button top right > **My account**: save a job title, then change your password; (b) IT admin > People > **Open** on the trial account > **Generate** > **Reset password** twice; (c) in a private window sign in as the trial account with that temporary password and choose a new one. If (b) or (c) fails, send the exact message: like 009, a reset writes into Supabase's own sign-in tables.
 4. **On the site** (Ctrl+F5 first): IT admin > Site settings > **Who may ask for access**: type the work email domain(s), Save. Empty means anyone may ask.
 5. IT admin > Spaces > **Make a test space**, press its tile, then **Open its admin page**.
-6. Press the **Converter** tile, then "Build and access", **Use a ready-made page**, **Use it**, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.
-7. Press the **Tracker** tile, "Build and access", **Use a ready-made page**, **Use it**, **Create the tables**, **Next: upload**, **Upload as a new version**, **Open the preview**, add a row; back on the admin page **Make live** twice. Open it from the hub and add a real row.
+6. Press the **Converter** tile, then "Build and access", **I already have a page**, choose `examples/converter/index.html` from the repo, **Next: upload**, **Upload as a new version**, then **Make live** twice. Open it from the hub.
+7. Press the **Tracker** tile, "Build and access", **Build a new page** (or bring a page that declares its tables), **Create the tables**, **Next: upload**, **Upload as a new version**, **Open the preview**, add a row; back on the admin page **Make live** twice. Open it from the hub and add a real row.
 8. Optional, a real department tool: make a space, a tool, and upload any file from `examples/departments/`.
 9. **Supabase > Authentication:** set the minimum password length to 12.
 10. **Supabase > Advisors > Security:** no errors. Send any warning text.

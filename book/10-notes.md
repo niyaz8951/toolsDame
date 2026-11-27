@@ -41,6 +41,8 @@ The running log of the site. Newest first. Every change to the site adds a line 
 
 - Accounts (2026-11-27): My account for every person (details, password, access, sign-ins); on the IT page a person is one line and a window, where IT corrects the account and resets a password with a temporary one. A temporary password counts 7 days and is asked again before anything opens. SQL file 010.
 
+- Builder (2026-11-27): "Create tool" now leads straight to the tool's own admin page, where it is built; the settings window opens from the tile of a tool that exists. "Use a ready-made page" is removed: two ways remain. No SQL.
+
 ## Ideas noted, not decided
 - Tell the people of a space when a new tool goes live.
 - Show the table list in the review window in even plainer words.

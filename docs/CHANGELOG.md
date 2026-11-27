@@ -14,6 +14,17 @@ Changed (owner: "site must give a detailed prompt to keep site guidelines and da
 
 Files: `kit/ai-fix.md` (new), `kit/ai-prompt.md`, `kit/v1/pack.js`, `kit/v1/lib/index.json`, `pages/admin-tool.js`, `admin/tool.html`, `help/admin-tool.md`, `kit/tool-guide.md`, the tests, `docs/`, the site book (`18-builder`, `10-notes`, `04`, `09`, `21`).
 SQL to paste: none.
+## 2026-11-27 - A new tool opens its build page; "Use a ready-made page" removed
+Changed (owner: "after Create tool it must take me to the admin page; the settings window only for tools created before"; "remove the ready-made page: IT creates common tools, departments create their own")
+- **Create tool** now leads straight to the tool's own admin page, on Build, with one line saying what to do next. The settings window opens only from the tile of a tool that exists.
+- **The builder has two ways:** "Build a new page" and "I already have a page". The third card and its step are gone. The example pages stay in the repo for IT and for the tests.
+- The greeting uses one entry in the tab's session storage (`dame.made`, the tool's id, read once and removed).
+- No function, no right, no SQL changed.
+- Tests: phase 2 follows the new path (new checks: lands on the build page, greeting once, the window from the tile); phase 4 builds its two tools through "I already have a page" and checks that no third way is offered.
+
+Files: `pages/admin-space.js`, `pages/admin-tool.js`, `admin/tool.html`, help, docs, the site book, the browser tests.
+SQL to paste: none.
+
 ## 2026-11-27 - Accounts: My account, password change, reset by IT
 Added (owner: "user accounts with profiles, basic username, password and a few more things as in a company; IT resets a password with a temporary one; this makes it a fully working site before health")
 - **My account** (`account.html`, from the round account button): my name, sign-in, staff number and role (read only), my work details to keep up to date (job title, department, office, work phone), changing my password, everything I can open with my level, and my last ten sign-ins.

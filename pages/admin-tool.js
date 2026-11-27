@@ -151,8 +151,6 @@
   var sourceText = '';     // the page as text, when the check was of one page: added columns are written into it
   var focus = null;        // the review window, while it is open
   var newColumns = [];     // columns added in the review window that the page has no field for yet
-  var SAMPLE = { dame: 1, tables: { bids: { sharing: 'team', columns: { project: 'text', capacity_kw: 'number', due: 'date',
-    status: { choice: ['open', 'won', 'lost'] }, lead: 'person', notes: 'longtext' } } } };
 
   function draftKey() { return 'dame.brief.' + space + '.' + tool; }
 
@@ -359,7 +357,7 @@
 
   // ------------------------------------------------------------------ the guide: one step on screen at a time
   var STEPS = ['step-1', 'step-data', 'step-2', 'step-3', 'step-4', 'step-5'];
-  var way = null;          // 'ai' | 'own' | 'ready' | null (the three choices are shown)
+  var way = null;          // 'ai' | 'own' | null (the two choices are shown)
   var at = 0;
   var kitDone = false;
   var oldPage = '';        // a page the person already has, to be rebuilt by the AI
@@ -380,8 +378,7 @@
     $('wz-where').textContent = 'Step ' + (at + 1) + ' of ' + list.length;
     $('wz-bar').setAttribute('data-at', String(Math.round((at + 1) / list.length * 6)));
     $('bring-file').hidden = way !== 'own';
-    $('bring-ready').hidden = way !== 'ready';
-    $('bring-paste').hidden = way === 'ready';
+    $('bring-paste').hidden = false;
     $('code-starter').hidden = way !== 'ai';
     $('paste-title').hidden = way !== 'ai';
     $('paste-label').textContent = way === 'ai' ? 'The AI answers with one file, index.html. Copy all of its code and paste it here' : 'The code of your page';
@@ -393,7 +390,7 @@
     var next = $('wz-next');
     next.hidden = now === 'step-3' || now === 'step-5' || (now === 'step-2' && !kitDone && aiMode !== 'off') || (now === 'step-4' && !ready);
     next.textContent = now === 'step-2' ? 'I have the AI\'s answer. Next' : now === 'step-4' ? 'Next: upload' : 'Next';
-    $('wz-back').textContent = at === 0 ? 'Back to the three choices' : 'Back';
+    $('wz-back').textContent = at === 0 ? 'Back to the two choices' : 'Back';
     $('wz-back').hidden = uploaded;
   }
 
@@ -513,7 +510,7 @@
   }
 
   // The page's own list of tables with the added columns in it, so that a page that draws
-  // its form from that list (the ready-made tracker does) shows the new columns by itself.
+  // its form from that list (as `kit/starter/tracker.html` does) shows the new columns by itself.
   function withExtras(text) {
     var manifest = toManifest(wanted);
     var json = JSON.stringify(manifest, null, 1).replace(/</g, '\\u003c');
@@ -615,7 +612,7 @@
       box.appendChild(card);
     });
 
-    box.appendChild(ui.el('p', 'dame-muted', 'Every table also keeps by itself who added a row and when. A column you add here is made in the database; a page made from the site\'s ready-made tracker shows it by itself, a page written by the AI must be told (the site writes that message for you).'));
+    box.appendChild(ui.el('p', 'dame-muted', 'Every table also keeps by itself who added a row and when. A column you add here is made in the database; a page that draws its form from its list of tables shows it by itself, any other page must be told (the site writes that message for you).'));
     box.appendChild(warn);
     var pending = plan.create.length + plan.add.length;
     var foot = ui.el('div', 'dame-row hub-focus-foot');
@@ -851,8 +848,6 @@
     var box = ui.clear($('data-tables'));
     tables.forEach(function (t) { box.appendChild(tableBlock(t)); });
     $('data-empty').hidden = tables.length > 0;
-    var own = $('example').querySelector('[value="own"]');
-    if (own) { own.hidden = tables.length === 0; }
   }
 
   function dataForm() {
@@ -898,7 +893,6 @@
     $('brief').addEventListener('input', saveDraft);
     $('go-ai').addEventListener('click', function () { begin('ai'); });
     $('go-own').addEventListener('click', function () { begin('own'); });
-    $('go-ready').addEventListener('click', function () { begin('ready'); });
     $('wz-next').addEventListener('click', next);
     $('wz-back').addEventListener('click', back);
     $('wz-restart').addEventListener('click', restart);
@@ -917,25 +911,6 @@
     $('kit-copy').addEventListener('click', function () { if (described()) { kitDone = true; show(); copy(starterKit(), $('kit-copy'), 'Copied. Paste it into the AI.'); } });
     $('kit-save').addEventListener('click', function () { if (described()) { kitDone = true; show(); saveFile('dame-starter-kit-' + tool + '.md', starterKit()); } });
 
-    // Ready-made pages: served by this site, loaded into the box like a pasted answer.
-    $('example').querySelector('[value="own"]').hidden = tables.length === 0;
-    if (tables.length) { $('example').value = 'own'; }
-    else if (/track|list|log|regist/.test(tool)) { $('example').value = 'tracker'; }
-    $('example-load').addEventListener('click', async function () {
-      try {
-        var which = $('example').value;
-        if (which === 'starter') { $('code').value = starterPage(); check(function (packer) { return packer.fromCode($('code').value); }); return; }
-        var page = (await text(which === 'converter' ? 'examples/converter/index.html' : 'kit/starter/tracker.html')).replace(/<!--[\s\S]*?-->\s*/, '');
-        if (which !== 'converter') {
-          page = page.split('{{TOOL}}').join(toolName.replace(/[<>&]/g, ' '))
-            .split('{{TABLES}}').join(JSON.stringify(which === 'own' ? toManifest(tables) : SAMPLE, null, 1).replace(/</g, '\\u003c'));
-        }
-        $('code').value = page;
-        check(function (packer) { return packer.fromCode($('code').value); });
-      } catch (err) {
-        ui.sayError($('msg'), err);
-      }
-    });
     $('tables-create').addEventListener('click', openFocus);
     $('tables-review').addEventListener('click', openFocus);
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { closeFocus(); } });
@@ -1045,6 +1020,13 @@
     }));
     await builder(me, load());
     $('body').hidden = false;
+    // Arrived straight from "Create tool" on the space admin page: say so once.
+    try {
+      if (sessionStorage.getItem('dame.made') === space + '/' + tool) {
+        ui.say($('msg'), 'The tool is created. Now build it: choose below how you want to make its page. The site guides you one step at a time; the information button (i) explains everything. Its name, look and managers are on the space admin page, on its tile.', 'ok');
+      }
+      sessionStorage.removeItem('dame.made');
+    } catch (e) { /* no greeting */ }
   }
 
   start().catch(function (err) {

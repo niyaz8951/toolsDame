@@ -2,12 +2,11 @@
 
 The people who build tools are not developers. The builder exists so that they never need to be.
 
-## The three ways
+## The two ways
 | Way | Steps |
 |---|---|
 | Build a new page | Describe > database question > starter kit to the AI > paste the answer > what the site found > upload |
 | I already have a page | Choose the file (or paste) > what the site found > upload. A refused page gets one complete request for the AI |
-| Use a ready-made page | Converter, tracker, a list and form for the tool's own tables, or the empty starter page > what the site found > upload |
 
 One step is on screen at a time. "Next" does not move until the step is done.
 
@@ -77,7 +76,8 @@ The check exists to save people time and to keep the site looking like one site.
 - Only IT adds a library.
 - Not yet done: checking the library against a list of known vulnerabilities at each release.
 
-## The ready-made pages
+## Pages kept in the repo as examples
+The builder offers none of them (owner, 2026-11-27: IT builds the common tools, departments build their own). They stay as examples and for the tests.
 - `kit/starter/index.html`: the empty starting page.
 - `kit/starter/tracker.html`: a list and a form that draw themselves from the table list in the page. Add a column in the review window and it shows by itself.
 - `examples/`: a converter, the parts extractor (Excel in, Excel out), six department tools.

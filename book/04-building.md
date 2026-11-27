@@ -6,7 +6,7 @@ A tool is one page. The site gives it the look, the bar, the sign-in, the people
 
 ## Step by step
 1. The space admin creates the tile: a name, an id, a colour, who gets it.
-2. On the tool's admin page the builder chooses **one of three ways**: build a new page, bring a page he already has, or use a ready-made page.
+2. On the tool's admin page the builder chooses **one of two ways**: build a new page, or bring a page he already has.
 3. **Build a new page**: he writes in his own words what the tool should do, and answers one question: does it save data in the database?
 4. He copies the **starter kit** and pastes it into the approved AI. The kit is one text: the rules of the site, the building blocks, a starting page, and his description.
 5. He pastes the AI's answer back. The site **checks** it and says in plain words what is wrong, with a ready "fix request" for the AI: one complete text with the points, every rule of the site, the database rules and the page itself.

@@ -122,6 +122,11 @@
 - The look and feel is judged as a careful phone user would: one-line bar, finger-sized targets, notch-safe, calm movement. These live in `kit/v1/shell.css` only; contract 4 (`dame.css`, `dame.js`) is not touched by look-and-feel work on hub pages.
 - Admin pages show one part at a time (tabs), the open part kept in the address; a tool's managers and delete field are folded in the space admin (owner's go, same day). Showing only: contract 3 stands, the database enforces.
 
+## Owner, 2026-11-27 (builder)
+- **After "Create tool" the person lands on the tool's own admin page**, on Build. The settings window (name, look, managers, switch off, delete) is for a tool that exists and opens from its tile.
+- **"Use a ready-made page" is removed.** IT builds the common tools; a department's admins build their own. The builder has two ways: build a new page, or bring a page. The example pages stay in the repo (`examples/`, `kit/starter/`) for IT and for the tests; this replaces the two lines above about offering them ready-made.
+- The test space keeps its two empty tools; they are built like any other tool.
+
 ## Owner, 2026-11-27 (accounts)
 - Every person has an account page; IT can reset a password with a temporary one. Health comes after this.
 - **Who changes what.** The person: job title, department, office, work phone, and his password. IT only: name, username (never changed), staff number. Reason: name and staff number say who someone is to the admins who give access; a person renaming himself "IT admin" must not be possible.

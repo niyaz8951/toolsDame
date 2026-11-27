@@ -83,6 +83,15 @@ async function run(width, height, label) {
   const builder = async (page, tool) => { await page.goto(SITE + 'admin/tool.html?space=test-space&tool=' + tool); await page.waitForSelector('#body:not([hidden])'); };
   // The builder is a guide with one step on screen: these do what a person does to get to a step.
   const way = async (page, which) => { if (await page.locator('#wz-restart').isVisible()) { await page.click('#wz-restart'); } await page.click('#go-' + which); };
+  // Brings one of the repo's example pages as "a page I already have": pasted and checked, as a person would.
+  const SAMPLE = { dame: 1, tables: { bids: { sharing: 'team', columns: { project: 'text', capacity_kw: 'number', due: 'date', status: { choice: ['open', 'won', 'lost'] }, lead: 'person', notes: 'longtext' } } } };
+  const bring = async (page, which) => {
+    let text = (await readFile(join(ROOT, which === 'converter' ? 'examples/converter/index.html' : 'kit/starter/tracker.html'), 'utf8')).replace(/<!--[\s\S]*?-->\s*/, '');
+    if (which !== 'converter') { text = text.split('{{TOOL}}').join('Tracker').split('{{TABLES}}').join(JSON.stringify(SAMPLE, null, 1)); }
+    await way(page, 'own');
+    await page.fill('#code', text);
+    await page.click('#code-check');
+  };
   const toUpload = async (page) => { if (await page.locator('.hub-focus').count()) { await page.click('#tables-later'); } if (await page.locator('#wz-next').isVisible()) { await page.click('#wz-next'); } };
   const openTool = async (page, tool, extra = '') => { await page.goto(SITE + 'tool.html?space=test-space&tool=' + tool + extra); };
   const twice = async (page, box, labelText) => {
@@ -117,9 +126,8 @@ async function run(width, height, label) {
 
     // --- sub tile 1: stand-alone, from a ready-made page
     await builder(ita.page, 'converter');
-    check((await ita.page.inputValue('#example')) === 'converter', T + 'the builder offers a ready-made stand-alone page');
-    await way(ita.page, 'ready');
-    await ita.page.click('#example-load');
+    check((await ita.page.locator('#go-ai, #go-own').count()) === 2 && (await ita.page.locator('#go-ready, #example').count()) === 0 && (await ita.page.locator('#wz-start .hub-choice').count()) === 2, T + 'the builder offers two ways; there is no ready-made page');
+    await bring(ita.page, 'converter');
     await ita.page.waitForSelector('#up-report li.hub-ok');
     check(/The check passed: index\.html .*Next: upload/.test(await ita.page.textContent('#up-report')) && !(await ita.page.locator('#tables-need').isVisible()), T + 'stand-alone: the check passes and no table is asked for');
     await toUpload(ita.page); await ita.page.click('#up-send');
@@ -149,9 +157,7 @@ async function run(width, height, label) {
 
     // --- sub tile 2: saves rows. The page says which tables it needs; the site makes them.
     await builder(ita.page, 'tracker');
-    check((await ita.page.inputValue('#example')) === 'tracker', T + 'for a tile named Tracker the ready-made tracker is offered first');
-    await way(ita.page, 'ready');
-    await ita.page.click('#example-load');
+    await bring(ita.page, 'tracker');
     await ita.page.waitForSelector('#tables-need:not([hidden])');
     const need = await ita.page.textContent('#tables-need');
     check(/One thing left/.test(await ita.page.textContent('#up-report')) && /New table bids \(team\): project text, capacity_kw number, due date, status choice \(open, won, lost\), lead person, notes longtext/.test(need), T + 'the site reads which table the page needs and lists it in plain words');
@@ -173,7 +179,7 @@ async function run(width, height, label) {
     await shot(ita.page, '2b-review-window');
     await ita.page.click('#tables-go');
     await said(ita.page, 'The tables are made');
-    check(/shows the added columns by itself/.test(await ita.page.textContent('#msg')) && !(await ita.page.locator('.hub-focus').count()) && !(await ita.page.locator('#cols-copy').isVisible()), T + 'the ready-made tracker draws its form from the list, so no request for the AI is needed');
+    check(/shows the added columns by itself/.test(await ita.page.textContent('#msg')) && !(await ita.page.locator('.hub-focus').count()) && !(await ita.page.locator('#cols-copy').isVisible()), T + 'a page that draws its form from its table list draws its form from the list, so no request for the AI is needed');
     check((await mock.sql("select count(*)::int as n from information_schema.columns where table_name = 'bids' and column_name = 'unit_price' and table_schema in ('t_test_space__tracker', 'p_test_space__tracker')")).rows[0].n === 2, T + 'the added column exists in the live table and in the preview copy');
     check(!(await ita.page.locator('#tables-need').isVisible()) && !(await ita.page.locator('#up-send').isDisabled()), T + 'one press makes the table; nobody typed SQL');
     check(/bids/.test(await ita.page.textContent('#data-tables')) && /0 rows/.test(await ita.page.textContent('[data-table="bids"]')), T + 'the Data section lists the new table with its columns');
@@ -193,8 +199,7 @@ async function run(width, height, label) {
     check(emptyRow.project === 'Fields left empty' && emptyRow.due === null && emptyRow.capacity_kw === null && emptyRow.status === null, T + 'a date, number or choice left empty on a form is saved as "no value", not refused');
     await kit(f, `Dame.table('bids').remove('${emptyRow.id}')`);
     await builder(ita.page, 'tracker');
-    await way(ita.page, 'ready');
-    await ita.page.click('#example-load');
+    await bring(ita.page, 'tracker');
     await ita.page.waitForSelector('.hub-focus');
     const again = await ita.page.textContent('.hub-focus');
     check(/Already in the database/.test(again) && /In the database/.test(again) && /Nothing new to create/.test(await ita.page.textContent('#tables-go')), T + 'a page whose tables already exist still opens the window, to see the columns and add more');
@@ -318,7 +323,6 @@ async function run(width, height, label) {
     await ita.page.click('#kit-copy');
     const kitText = await ita.page.evaluate(() => navigator.clipboard.readText());
     check(/id="dame-tables"/.test(kitText) && /Dame\.table\('bids'\)/.test(kitText) && /already has these tables.*bids \(team\).*prices \(reference\)/.test(kitText) && !/saves nothing/.test(kitText), T + 'the starter kit teaches the AI the tables, and names the ones this tool already has');
-    check((await ita.page.locator('#example option[value="own"]').getAttribute('hidden')) === null, T + 'once a tool has tables, a list and form for them is offered without AI');
     await ita.page.fill('[data-table="prices"] .hub-delete input', 'prices');
     await ita.page.click('[data-table="prices"] .hub-delete button');
     await said(ita.page, 'The table prices and its rows are deleted');

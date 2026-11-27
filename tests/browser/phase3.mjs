@@ -344,7 +344,7 @@ async function run(width, height, label) {
     await ben.page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
     await ben.page.goto(SITE + 'admin/tool.html?space=lab&tool=secret');
     await ben.page.waitForSelector('#body:not([hidden])');
-    check(await ben.page.locator('#go-ai').isVisible() && !(await ben.page.locator('#wz').isVisible()), T + 'the builder starts with three choices and nothing else');
+    check(await ben.page.locator('#go-ai').isVisible() && (await ben.page.locator('#wz-start .hub-choice').count()) === 2 && !(await ben.page.locator('#wz').isVisible()), T + 'the builder starts with its two choices and nothing else');
     await ben.page.click('#go-ai');
     check(await ben.page.locator('#brief').isVisible() && !(await ben.page.locator('#step-data').isVisible()) && !(await ben.page.locator('#kit-copy').isVisible()) && /Step 1 of 6/.test(await ben.page.textContent('#wz-where')), T + 'only step 1 is on screen');
     await ben.page.click('#wz-next');

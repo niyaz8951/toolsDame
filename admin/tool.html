@@ -49,7 +49,6 @@
         <div class="hub-choices">
           <button class="hub-choice" type="button" id="go-ai"><strong>Build a new page</strong><span>You say in your own words what the tool should do. The site prepares the request for the AI, checks the answer and uploads it. No programming.</span></button>
           <button class="hub-choice" type="button" id="go-own"><strong>I already have a page</strong><span>You have an HTML file, made by you or by an AI. The site checks it and uploads it.</span></button>
-          <button class="hub-choice" type="button" id="go-ready"><strong>Use a ready-made page</strong><span>No AI at all. A simple converter, a tracker, or a list and form for this tool's tables.</span></button>
         </div>
       </div>
 
@@ -107,20 +106,6 @@
             </label>
             <p class="dame-muted">The site reads the file in your browser and checks it. Nothing is uploaded yet.</p>
             <p class="hub-sub">Or paste the code instead</p>
-          </div>
-          <div id="bring-ready" hidden>
-            <h3>Choose a ready-made page</h3>
-            <div class="dame-row">
-              <label class="dame-sr" for="example">Ready-made page</label>
-              <select class="dame-input hub-grow" id="example">
-                <option value="converter">A converter: calculates, saves nothing</option>
-                <option value="tracker">A tracker: saves rows in a database table</option>
-                <option value="own" hidden>A list and form for this tool's own database tables</option>
-                <option value="starter">The empty starter page</option>
-              </select>
-              <button class="dame-btn dame-btn-primary" type="button" id="example-load">Use it</button>
-            </div>
-            <p class="dame-muted">The site checks the page and shows you the result. Nothing is uploaded yet.</p>
           </div>
           <div id="bring-paste" hidden>
             <h3 id="paste-title">Bring the AI's answer here</h3>

@@ -339,9 +339,12 @@
         idTouched = false;
         showLevel();
         showNewTool(false);
-        await load();
-        // The new tool opens at once: its next step, "Build and access", is the main button of its window.
-        openTool(id, 'Tool ' + name + ' is created. Next: press "Build and access". The site guides you one step at a time; the information button (i) explains everything.');
+        // A new tool goes straight to its own admin page, where it is built. Its window (name, look,
+        // managers, switch off, delete) is for a tool that exists: it opens from the tile.
+        // The one word left for that page is the tool's id, in this tab only, read once.
+        try { sessionStorage.setItem('dame.made', space + '/' + id); } catch (e) { /* the page opens without its greeting */ }
+        location.assign(api.href('admin/tool.html') + '?space=' + encodeURIComponent(space) + '&tool=' + encodeURIComponent(id));
+        return;
       } catch (err) {
         ui.sayError(msg, err);
         msg.scrollIntoView({ block: 'nearest' });
