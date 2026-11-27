@@ -50,6 +50,8 @@ The running log of the site. Newest first. Every change to the site adds a line 
 
 - Quotas (2026-11-27): each space may use 10,000 rows, 10 tables a tool and 60 columns a table until IT says otherwise. IT admin has a Quotas tab in the look of Spaces: "Change the default" on top, one tile per space, changes and answers only in the space's window. A space admin sees what is used under Quota and asks IT for more. Owner: "this is very important"; rows are limited because rows are what fills a database. SQL: file 011.
 
+- Tools per space (2026-11-27): a fourth quota, 10 tools a space by default, set and asked for in the same Quotas windows. Reason: tables are limited per tool, so without it a space had no ceiling. A space that already has more keeps its tools. SQL: file 012.
+
 ## Ideas noted, not decided
 - Tell the people of a space when a new tool goes live.
 - Show the table list in the review window in even plainer words.

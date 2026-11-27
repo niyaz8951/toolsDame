@@ -92,7 +92,7 @@ async function run(width, height, label) {
     const bea = await person('bea@work.test');
     check((await call(bea, 'dame_table_create', { p_space: 'sales', p_tool: 'quotes', p_name: 'lines', p_sharing: 'team', p_columns: cols })) === 'ALLOWED', T + 'the admin makes a table');
     await open(bea, 'admin/space.html?space=sales', '#q-stats .dame-stat');
-    check(/0 of 10,000/.test(await text(bea, '#q-stats')) && /0 of 10/.test(await text(bea, '#q-stats')) && /60/.test(await text(bea, '#q-stats')), T + 'a new space shows the default: 10,000 rows, 10 tables a tool, 60 columns');
+    check(/0 of 10,000/.test(await text(bea, '#q-stats')) && /1 of 10\s*tools/.test(await text(bea, '#q-stats')) && /1 of 10\s*tables/.test(await text(bea, '#q-stats')) && /60/.test(await text(bea, '#q-stats')), T + 'a new space shows the default: 10,000 rows, 10 tools, 10 tables a tool, 60 columns');
     check(/default/.test(await text(bea, '#q-state')) && (await bea.inputValue('#qr-rows')) === '10000', T + 'the page says the space is on the default and offers to ask for more');
     check(await fits(bea), T + 'the quota part fits the screen');
 
@@ -100,7 +100,7 @@ async function run(width, height, label) {
     const ada = await person('ada@work.test');
     await open(ada, 'admin/it.html', '#q-tiles [data-quota]');
     check((await ada.locator('#q-tiles .hub-tile').count()) === 2 && /Sales/.test(await text(ada, '#q-tiles')) && /0 of 10,000 rows/.test(await text(ada, '#q-tiles')), T + 'IT sees one tile per space with what it uses');
-    check(/10,000 rows in the space, 10 tables in a tool, 60 columns in a table/.test(await text(ada, '#q-default-text')), T + 'the default is 10,000 rows, 10 tables a tool, 60 columns');
+    check(/10,000 rows in the space, 10 tools in the space, 10 tables in a tool, 60 columns in a table/.test(await text(ada, '#q-default-text')), T + 'the default is 10,000 rows, 10 tools, 10 tables a tool, 60 columns');
     check(await fits(ada), T + 'IT\'s quota part fits the screen');
     await shot(ada, '1-it-quotas');
     await ada.click('#q-tiles [data-quota="sales"]');
@@ -111,11 +111,12 @@ async function run(width, height, label) {
     await ada.waitForSelector('#quota-win-msg.hub-warn');
     check(/100 to 10000000/.test(await ada.textContent('#quota-win-msg')) && (await ada.inputValue('#sq-rows')) === '50', T + 'a limit below 100 rows is refused by the database, in words; the typed number stays');
     await ada.fill('#sq-rows', '100');
+    await ada.fill('#sq-tools', '1');
     await ada.fill('#sq-tables', '2');
     await ada.fill('#sq-columns', '5');
     await ada.click('#sq-form button[type=submit]');
     await ada.waitForSelector('#quota-win-msg.hub-ok');
-    check(/Own limits/.test(await ada.textContent('#quota-win')), T + 'IT gives Sales 100 rows, 2 tables a tool, 5 columns');
+    check(/Own limits/.test(await ada.textContent('#quota-win')), T + 'IT gives Sales 100 rows, 1 tool, 2 tables a tool, 5 columns');
     check(await fits(ada), T + 'the quota window fits the screen');
     await shot(ada, '2-it-quota-window');
     await ada.click('#quota-win-close');
@@ -138,6 +139,9 @@ async function run(width, height, label) {
     check((await call(bea, 'dame_table_create', { p_space: 'sales', p_tool: 'quotes', p_name: 'second', p_sharing: 'team', p_columns: cols })) === 'ALLOWED'
       && (await call(bea, 'dame_table_create', { p_space: 'sales', p_tool: 'quotes', p_name: 'third', p_sharing: 'team', p_columns: cols })) === 'quota_full', T + 'the second table is made, the third is refused');
 
+    const tool = (id) => call(bea, 'dame_tool_create', { p_space: 'sales', p_id: id, p_name: 'Second tool', p_description: '', p_icon: '', p_colour: '', p_open_to_space: false, p_open_level: 'read' });
+    check((await tool('second')) === 'quota_full', T + 'a second tool is refused where one is allowed');
+
     // ------------------------------------------------ nobody raises his own limit
     for (const [who, page] of [['the member', cal], ['the space admin', bea]]) {
       check((await call(page, 'dame_quota_set', { p_space: 'sales', p_rows: 5000000, p_tables: 50, p_columns: 100 })) === 'not_allowed'
@@ -151,7 +155,13 @@ async function run(width, height, label) {
 
     // ------------------------------------------------ asking IT for more
     await open(bea, 'admin/space.html?space=sales', '#q-stats .dame-stat');
-    check(/100 of 100/.test(await text(bea, '#q-stats')) && /2 of 2/.test(await text(bea, '#q-stats')) && /full/.test(await text(bea, '#q-state')), T + 'the admin sees that the space is full');
+    check(/100 of 100/.test(await text(bea, '#q-stats')) && /1 of 1\s*tools/.test(await text(bea, '#q-stats')) && /2 of 2/.test(await text(bea, '#q-stats')) && /full/.test(await text(bea, '#q-state')), T + 'the admin sees that the space is full');
+    await bea.click('#tool-add');
+    await bea.fill('#tl-name', 'One too many');
+    await bea.click('#tl-create');
+    await bea.waitForSelector('#tl-msg.hub-warn');
+    check(/1 tools, the limit IT set/.test(await bea.textContent('#tl-msg')), T + '"Add a tool" says in words that the space has its limit of tools');
+    await bea.click('#tl-cancel');
     check(/Quotes/.test(await text(bea, '#q-tools')) && /100/.test(await text(bea, '#q-tools')), T + 'and in which tool the rows are');
     await shot(bea, '3-space-full');
     await bea.fill('#qr-rows', '500');
@@ -159,10 +169,11 @@ async function run(width, height, label) {
     await bea.click('#form-quota button[type=submit]');
     await bea.waitForSelector('#msg.hub-warn');
     check(/why the space needs more/.test(await bea.textContent('#msg')) && (await bea.inputValue('#qr-rows')) === '500', T + 'a request without a real reason is refused, in words; the typed number stays');
+    await bea.fill('#qr-tools', '3');
     await bea.fill('#qr-reason', EVIL);
     await bea.click('#form-quota button[type=submit]');
     await bea.waitForSelector('#msg.hub-ok');
-    check(/waiting for IT/.test(await text(bea, '#q-open')) && /500 rows/.test(await text(bea, '#q-open-text')) && !(await bea.locator('#q-ask').isVisible()), T + 'the request is sent and shown as waiting');
+    check(/waiting for IT/.test(await text(bea, '#q-open')) && /500 rows/.test(await text(bea, '#q-open-text')) && /3 tools/.test(await text(bea, '#q-open-text')) && !(await bea.locator('#q-ask').isVisible()), T + 'the request is sent and shown as waiting');
     check((await add(bea)) === 'quota_full', T + 'asking gives nothing by itself');
     const reqId = Number((await mock.sql("select id from core.quota_requests where status = 'open'")).rows[0].id);
     check((await call(bea, 'dame_quota_answer', { p_request: reqId, p_grant: true, p_rows: null, p_tables: null, p_columns: null, p_note: null })) === 'not_allowed'
@@ -183,9 +194,10 @@ async function run(width, height, label) {
     await ada.fill('#rq-note', 'Half for now.');
     await twice(ada, '#rq-grant');
     await ada.waitForSelector('#quota-win-msg.hub-ok');
-    check(/300 rows/.test(await ada.textContent('#quota-win-msg')) && (await ada.locator('#rq-rows').count()) === 0 && (await ada.inputValue('#sq-rows')) === '300', T + 'IT grants 300 rows where 500 were asked');
+    check(/300 rows/.test(await ada.textContent('#quota-win-msg')) && (await ada.locator('#rq-rows').count()) === 0 && (await ada.inputValue('#sq-rows')) === '300' && (await ada.inputValue('#sq-tools')) === '3', T + 'IT grants 300 rows where 500 were asked, and the 3 tools');
     await ada.click('#quota-win-close');
     check((await add(cal)) === 'ALLOWED', T + 'the member adds rows again');
+    check((await tool('second')) === 'ALLOWED', T + 'and the admin makes a second tool');
     await open(bea, 'admin/space.html?space=sales', '#q-stats .dame-stat');
     check(/101 of 300/.test(await text(bea, '#q-stats')) && /Granted/.test(await text(bea, '#q-answers')) && /Half for now/.test(await text(bea, '#q-answers')) && /Ada IT/.test(await text(bea, '#q-answers')), T + 'the admin sees the new limit and IT\'s answer');
     check(await bea.locator('#q-ask').isVisible() && (await bea.inputValue('#qr-rows')) === '300', T + 'and can ask again');
@@ -218,7 +230,7 @@ async function run(width, height, label) {
     await open(ada, 'admin/it.html', '#q-tiles [data-quota]');
     await ada.click('#q-default');
     await ada.waitForSelector('#quota-default:not([hidden])');
-    check((await ada.inputValue('#qd-rows')) === '10000' && (await ada.inputValue('#qd-tables')) === '10' && (await ada.inputValue('#qd-columns')) === '60', T + '"Change the default" opens its window with the numbers of now');
+    check((await ada.inputValue('#qd-rows')) === '10000' && (await ada.inputValue('#qd-tools')) === '10' && (await ada.inputValue('#qd-tables')) === '10' && (await ada.inputValue('#qd-columns')) === '60', T + '"Change the default" opens its window with the numbers of now');
     await ada.fill('#qd-rows', '5');
     await ada.click('#qd-save');
     await ada.waitForSelector('#qd-msg.hub-warn');

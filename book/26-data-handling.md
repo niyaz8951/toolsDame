@@ -91,7 +91,7 @@ None of this was chosen as a retention policy. It is the absence of one, and is 
 ## Limits that protect the database
 | Limit | Value |
 |---|---|
-| Tables per tool; columns per table | 10; 60 by default, set per space by IT (the quota) |
+| Tools per space; tables per tool; columns per table | 10; 10; 60 by default, set per space by IT (the quota) |
 | One text value; one long text; one structured value | 1,000; 20,000; 100,000 characters |
 | One row | 300,000 characters |
 | Rows returned by one list | 100 by default, 1,000 at most |

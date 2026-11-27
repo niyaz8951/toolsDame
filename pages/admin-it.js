@@ -345,8 +345,18 @@
     return i;
   }
 
+  // The tools limit arrives with db/core/012: until it is run, the pages show and send three numbers.
+  function hasTools() { return !!quotas && quotas.defaults.tools !== undefined && quotas.defaults.tools !== null; }
+
   function limits(o) {
-    return num(o.rows) + ' rows in the space, ' + num(o.tables) + ' tables in a tool, ' + num(o.columns) + ' columns in a table';
+    return num(o.rows) + ' rows in the space, ' + (o.tools !== undefined && o.tools !== null ? num(o.tools) + ' tools in the space, ' : '') +
+      num(o.tables) + ' tables in a tool, ' + num(o.columns) + ' columns in a table';
+  }
+
+  // The arguments of a call, with the tools number only where the database knows it.
+  function withTools(args, value) {
+    if (hasTools()) { args.p_tools = value; }
+    return args;
   }
 
   function isFull(q) { return Number(q.rows_used) >= Number(q.max_rows); }
@@ -359,7 +369,8 @@
     t.setAttribute('data-quota', q.space);
     t.appendChild(ui.el('span', 'hub-tile-icon', (q.name.trim().charAt(0) || 'S').toUpperCase()));
     t.appendChild(ui.el('span', 'hub-tile-name', q.name));
-    t.appendChild(ui.el('span', 'hub-tile-text', num(q.rows_used) + ' of ' + num(q.max_rows) + ' rows used'));
+    t.appendChild(ui.el('span', 'hub-tile-text', num(q.rows_used) + ' of ' + num(q.max_rows) + ' rows used' +
+      (hasTools() ? ', ' + num(q.tools_used) + ' of ' + num(q.max_tools) + ' tools' : '')));
     if (q.request) { t.appendChild(ui.el('span', 'hub-pill', 'Request waiting')); }
     if (isFull(q)) { t.appendChild(ui.el('span', 'hub-pill', 'Full')); }
     else if (isNear(q)) { t.appendChild(ui.el('span', 'hub-pill', 'Nearly full')); }
@@ -406,6 +417,7 @@
     body.appendChild(title);
     body.appendChild(ui.el('p', 'dame-muted', num(q.rows_used) + ' of ' + num(q.max_rows) + ' rows used' +
       (isFull(q) ? ': the space is full, its tools take no new rows. ' : '. ') +
+      (hasTools() ? num(q.tools_used) + ' of ' + num(q.max_tools) + ' tools. ' : '') +
       'It has ' + num(q.tables) + (Number(q.tables) === 1 ? ' table' : ' tables') + '; the tool with most has ' + num(q.most_tables) + ' of ' + num(q.max_tables) + '.'));
 
     var r = q.request;
@@ -415,9 +427,10 @@
       card.setAttribute('data-request', q.space);
       card.appendChild(ui.el('p', null, r.asked_by.name + ' asked on ' + ui.when(r.asked_at) + ' for ' + limits(r) + '.'));
       card.appendChild(ui.el('p', null, 'Reason: ' + r.reason));
-      card.appendChild(ui.el('p', 'dame-hint', 'Change a number to give less or more than asked. Granting sets the limits of this space to these three numbers.'));
+      card.appendChild(ui.el('p', 'dame-hint', 'Change a number to give less or more than asked. Granting sets the limits of this space to these numbers.'));
       var two = ui.el('div', 'hub-two');
       var rows = numberField(two, 'Rows to give', 'rq-rows', r.rows, 100, 10000000);
+      var rTools = hasTools() ? numberField(two, 'Tools in the space', 'rq-tools', r.tools, 1, 200) : null;
       var tables = numberField(two, 'Tables in one tool', 'rq-tables', r.tables, 1, 100);
       var cols = numberField(two, 'Columns in one table', 'rq-columns', r.columns, 1, 200);
       card.appendChild(two);
@@ -431,10 +444,10 @@
       card.appendChild(noteLabel);
       var answer = ui.el('div', 'dame-row');
       var grant = ui.confirmButton('Grant', 'dame-btn-primary', function (btn) {
-        var n = whole([rows.value, tables.value, cols.value]);
-        if (!n) { ui.say(qwin.msg, 'Write whole numbers in all three boxes.', 'warn'); btn.disabled = false; btn.textContent = 'Grant'; btn.classList.remove('hub-armed'); return; }
-        inQuota('dame_quota_answer', { p_request: r.id, p_grant: true, p_rows: n[0], p_tables: n[1], p_columns: n[2], p_note: note.value },
-          q.name + ' now has ' + limits({ rows: n[0], tables: n[1], columns: n[2] }) + '.');
+        var n = whole([rows.value, tables.value, cols.value, rTools ? rTools.value : 1]);
+        if (!n) { ui.say(qwin.msg, 'Write whole numbers in all the boxes.', 'warn'); btn.disabled = false; btn.textContent = 'Grant'; btn.classList.remove('hub-armed'); return; }
+        inQuota('dame_quota_answer', withTools({ p_request: r.id, p_grant: true, p_rows: n[0], p_tables: n[1], p_columns: n[2], p_note: note.value }, n[3]),
+          q.name + ' now has ' + limits({ rows: n[0], tables: n[1], columns: n[2], tools: rTools ? n[3] : null }) + '.');
       });
       grant.id = 'rq-grant';
       var decline = ui.confirmButton('Decline', '', function () {
@@ -449,12 +462,13 @@
     }
 
     body.appendChild(ui.el('p', 'hub-sub', 'Limits of this space'));
-    body.appendChild(ui.el('p', 'dame-hint', 'A limit below what is used deletes nothing: only new rows, tables or columns are refused until there is room again.'));
+    body.appendChild(ui.el('p', 'dame-hint', 'A limit below what is used deletes nothing: only new rows, tools, tables or columns are refused until there is room again.'));
     var form = ui.el('form', 'hub-edit');
     form.id = 'sq-form';
     form.noValidate = true;
     var three = ui.el('div', 'hub-two');
     var qRows = numberField(three, 'Rows in the space (100 to 10,000,000)', 'sq-rows', q.max_rows, 100, 10000000);
+    var qTools = hasTools() ? numberField(three, 'Tools in the space (1 to 200)', 'sq-tools', q.max_tools, 1, 200) : null;
     var qTables = numberField(three, 'Tables in one tool (1 to 100)', 'sq-tables', q.max_tables, 1, 100);
     var qCols = numberField(three, 'Columns in one table (1 to 200)', 'sq-columns', q.max_columns, 1, 200);
     form.appendChild(three);
@@ -464,7 +478,7 @@
     row.appendChild(save);
     if (q.own) {
       var back = ui.confirmButton('Back to the site\'s default', '', function () {
-        inQuota('dame_quota_set', { p_space: q.space, p_rows: null, p_tables: null, p_columns: null }, q.name + ' is back on the site\'s default.');
+        inQuota('dame_quota_set', withTools({ p_space: q.space, p_rows: null, p_tables: null, p_columns: null }, null), q.name + ' is back on the site\'s default.');
       });
       back.id = 'sq-default';
       row.appendChild(back);
@@ -472,9 +486,9 @@
     form.appendChild(row);
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
-      var n = whole([qRows.value, qTables.value, qCols.value]);
-      if (!n) { ui.say(qwin.msg, 'Write whole numbers in all three boxes.', 'warn'); return; }
-      inQuota('dame_quota_set', { p_space: q.space, p_rows: n[0], p_tables: n[1], p_columns: n[2] }, 'The limits of ' + q.name + ' are saved.');
+      var n = whole([qRows.value, qTables.value, qCols.value, qTools ? qTools.value : 1]);
+      if (!n) { ui.say(qwin.msg, 'Write whole numbers in all the boxes.', 'warn'); return; }
+      inQuota('dame_quota_set', withTools({ p_space: q.space, p_rows: n[0], p_tables: n[1], p_columns: n[2] }, n[3]), 'The limits of ' + q.name + ' are saved.');
     });
     body.appendChild(form);
   }
@@ -540,6 +554,8 @@
       $('qd-rows').value = quotas.defaults.rows;
       $('qd-tables').value = quotas.defaults.tables;
       $('qd-columns').value = quotas.defaults.columns;
+      $('qd-tools').value = hasTools() ? quotas.defaults.tools : '';
+      $('qd-tools-field').hidden = !hasTools();
       $('qd-rows').focus();
     } else if (!on) {
       $('q-default').focus();
@@ -817,11 +833,11 @@
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('quota-default').hidden) { showDefault(false); } });
     $('form-quota').addEventListener('submit', async function (ev) {
       ev.preventDefault();
-      var n = whole([$('qd-rows').value, $('qd-tables').value, $('qd-columns').value]);
-      if (!n) { ui.say($('qd-msg'), 'Write whole numbers in all three boxes.', 'warn'); return; }
+      var n = whole([$('qd-rows').value, $('qd-tables').value, $('qd-columns').value, hasTools() ? $('qd-tools').value : 1]);
+      if (!n) { ui.say($('qd-msg'), 'Write whole numbers in all the boxes.', 'warn'); return; }
       $('qd-save').disabled = true;
       try {
-        await api.rpc('dame_quota_default_set', { p_rows: n[0], p_tables: n[1], p_columns: n[2] });
+        await api.rpc('dame_quota_default_set', withTools({ p_rows: n[0], p_tables: n[1], p_columns: n[2] }, n[3]));
         showDefault(false);
         await load();
         ui.say($('msg'), 'The default is saved. It holds now for every space without limits of its own.', 'ok');

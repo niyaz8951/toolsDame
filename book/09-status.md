@@ -24,7 +24,7 @@
 ## Not built yet
 - Pinned notes and ideas with votes on every page.
 - A second person approving before a tool goes live.
-- Export, a health page, a free SQL console for space admins. (Quotas on rows, tables and columns are built: file 011.)
+- Export, a health page, a free SQL console for space admins. (Quotas on rows, tools, tables and columns are built: files 011 and 012.)
 - Charts as a building block.
 - Company sign-in (that is the target, not the demo).
 

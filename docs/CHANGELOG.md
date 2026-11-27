@@ -2,6 +2,18 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - Quotas: tools in a space
+New (owner: "yes add tools limit too")
+- **A fourth limit per space: tools, 10 by default** (IT may give 1 to 200). Tables were limited per tool, so a space had no ceiling; now a space on the defaults holds at most 10 tools and 100 tables.
+- "Add a tool" in a space that has its limit is refused by the database with a sentence that points to the Quota part.
+- The Quotas windows (default, a space's limits, a request, the space admin's "Ask IT for more") show the fourth box. A space that already has more tools than its limit keeps them.
+- Until `012` is run the pages show and send three numbers, as before. Checked: the pages of this delivery against a database with file 011 only.
+- Tests: `tests/sql/012_tools_quota_test.sql` (60 cases) is new, `tests/browser/quotas.mjs` covers tools. All twelve SQL test files pass locally. Not yet run on the real Supabase project.
+
+Files: `db/core/012_tools_quota.sql` (new), `tests/sql/012_tools_quota_test.sql` (new), `tests/browser/quotas.mjs`, `admin/it.html`, `admin/space.html`, `pages/admin-it.js`, `pages/admin-space.js`, `help/`, `docs/`, the site book (`17-data`, `22-questions`, `10-notes`).
+SQL to paste: `db/core/012_tools_quota.sql`, then `tests/sql/012_tools_quota_test.sql`.
+Owner: paste the SQL, reload the site (Ctrl+F5), open IT admin > Quotas and press a tile.
+
 ## 2026-11-27 - The site book in pictures; presenting with topic nodes, pointer tools, a red Close
 Changed (owner: "bad presentation and bad read, no clear diagrams, no pointer options; people who see this have limited time and attention; visuals in notes and presentation; topic nodes to jump, name on hover; close button must be red")
 - **"DAME in five minutes"**: a new first chapter, eleven slides, almost all pictures: the problem, the three levels, who decides what, idea to live tool, why uploaded code cannot do harm, the numbers, what IT keeps, demo and target, what is open, what we ask. Button **Present in 5 minutes** on the book page and on the hub card.

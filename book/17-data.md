@@ -67,20 +67,22 @@ For a private table, a row that is not yours answers "not found", the same as a 
 - Row changes are not written to the audit one by one. Each row carries who changed it last and when.
 
 ## Quotas: how much of the database a space may use
-Three limits per space, enforced by the database (`db/core/011_quotas.sql`), shown by the pages.
+Four limits per space, enforced by the database (`db/core/011_quotas.sql`, tools: `012_tools_quota.sql`), shown by the pages.
 
 | Limit | Counts | Default | IT may set |
 |---|---|---|---|
 | Rows | Every row of the space: all its tools, live and preview together | 10,000 | 100 to 10,000,000 |
+| Tools | Tools in the space | 10 | 1 to 200 |
 | Tables | Tables in one tool | 10 | 1 to 100 |
 | Columns | Own columns in one table | 60 | 1 to 200 |
 
 - **Who sets them.** IT only: the site's default (for every space without limits of its own) and one space's own limits. On the IT admin page, Quotas: "Change the default" on top, one tile per space, and a window per space where its limits are changed.
-- **Who asks.** An admin of the space, on his admin page under Quota: the three numbers he wants and a sentence why. One request per space at a time; he can take it back. IT grants (with the numbers asked, or others), or declines with a sentence. The admin reads the answer on his page.
+- **Who asks.** An admin of the space, on his admin page under Quota: the numbers he wants and a sentence why. One request per space at a time; he can take it back. IT grants (with the numbers asked, or others), or declines with a sentence. The admin reads the answer on his page.
 - **Nobody raises his own limit.** Asking is the space admin's function, deciding is IT's; neither can call the other's. An IT admin who is also admin of a space can do both, and both lines are in the audit with his name.
 - **When the rows are used up.** Reading, changing and deleting work as before. Only a new row is refused, in every tool of the space, with: "the space has reached its limit of N rows... tell the admin of the space". The admin sees a warning from 80% used.
 - **How rows are counted.** One number per space, raised by each added row and lowered by each deleted one in the same statement that checks the limit, so two people adding at once cannot both take the last free row. The number is counted again from the tables whenever the admin or IT looks, and when a table or tool is deleted.
-- **A limit below what is used** deletes nothing. New rows, tables or columns are refused until there is room.
+- **A limit below what is used** deletes nothing. New rows, tools, tables or columns are refused until there is room.
+- **Why tools are limited too.** Tables are limited per tool; without a limit on tools a space could still grow without end. With the defaults a space holds at most 10 tools and 100 tables.
 - **In the audit:** `quota.set`, `quota.default_set`, `quota.requested`, `quota.request_taken_back`, `quota.granted`, `quota.declined`.
 - **Not counted:** the size of a row (one row can still hold 300,000 characters), and the stored files of a tool's versions.
 

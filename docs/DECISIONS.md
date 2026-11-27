@@ -152,7 +152,8 @@
 - **Fixed limits became quota.** 30 tables a tool is now 10 by default (IT can give up to 100); 60 columns a table stays the default (IT can give up to 200). A tool that already has more than its limit keeps its tables; it can make no new one.
 - **IT sets, the space admin asks.** Two functions with two different checks. A full space still reads, changes and deletes.
 - **The count is one number per space**, kept in the same statement that checks it and counted again whenever someone looks. It is not a count per add over every table: that would slow every save as tables grow.
-- **Not in this delivery:** a quota by size in bytes, a quota on stored files, a limit on tools per space, a message to IT when a request arrives (IT sees a number on the Quotas tab).
+- **Tools per space (file 012, the same day):** owner: "yes add tools limit too". Default 10, IT may give 1 to 200. Reason: tables are limited per tool, so a space had no ceiling. The quota functions take the tools number as a last, optional argument: pages from before 012 keep working.
+- **Not in this delivery:** a quota by size in bytes, a quota on stored files, a message to IT when a request arrives (IT sees a number on the Quotas tab).
 
 ## Owner, 2026-11-27 (what the database is for; the site book is shown to IT admins only)
 - Owner: "the whole site design is on the assumption that the IT team will anyway move the whole site to their servers and inside domains; keep the book in the repo, no need to move it to the database; accordingly ensure database usage."

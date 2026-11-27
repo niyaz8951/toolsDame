@@ -57,7 +57,7 @@
 
     <section class="dame-card" data-nav="Quota">
       <h2>Database quota of this space</h2>
-      <p class="dame-muted">IT sets how much of the database this space may use. When the rows are used up, the tools still read, change and delete; only new rows are refused, until rows are deleted or IT gives more.</p>
+      <p class="dame-muted">IT sets how much this space may use: rows, tools, tables in a tool, columns in a table. When the rows are used up, the tools still read, change and delete; only new rows are refused, until rows are deleted or IT gives more.</p>
       <p class="dame-empty" id="q-off" hidden>This part is not switched on yet: the owner pastes db/core/011_quotas.sql into the database first.</p>
       <div id="q-body" hidden>
         <div class="dame-stats" id="q-stats"></div>
@@ -85,6 +85,9 @@
             <div class="hub-two">
               <label class="hub-field">Rows in the space
                 <input class="dame-input" id="qr-rows" type="number" min="100" max="10000000" step="1" inputmode="numeric" autocomplete="off">
+              </label>
+              <label class="hub-field" id="qr-tools-field">Tools in the space
+                <input class="dame-input" id="qr-tools" type="number" min="1" max="200" step="1" inputmode="numeric" autocomplete="off">
               </label>
               <label class="hub-field">Tables in one tool
                 <input class="dame-input" id="qr-tables" type="number" min="1" max="100" step="1" inputmode="numeric" autocomplete="off">

@@ -51,7 +51,7 @@ No vault is needed because the demo has no secret in use. The SQL console of the
 
 ## Capacity
 - The demo runs on free plans: a small database, a small file store, a project that is paused when unused, a built-in mail sender that sends only a few messages an hour.
-- Each space has a quota set by IT: rows in the whole space (10,000 by default), tables a tool (10), columns a table (60). A full space still reads, changes and deletes. The quota counts rows, not bytes or stored files.
+- Each space has a quota set by IT: rows in the whole space (10,000 by default), tools in the space (10), tables a tool (10), columns a table (60). A full space still reads, changes and deletes. The quota counts rows, not bytes or stored files.
 - A page makes one or two calls to load. Nothing was measured under load; "How it is tested" says so.
 
 ## What the provider does, and what we rely on

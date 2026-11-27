@@ -280,8 +280,11 @@
     box.appendChild(d);
   }
 
+  var toolsLimit = false; // the tools limit arrives with db/core/012: until it is run, three numbers are shown and sent
+
   function limitsText(o) {
-    return num(o.rows) + ' rows in the space, ' + num(o.tables) + ' tables in a tool, ' + num(o.columns) + ' columns in a table';
+    return num(o.rows) + ' rows in the space, ' + (o.tools !== undefined && o.tools !== null ? num(o.tools) + ' tools in the space, ' : '') +
+      num(o.tables) + ' tables in a tool, ' + num(o.columns) + ' columns in a table';
   }
 
   // Until 011 is run the card says so and the rest of the page works.
@@ -294,7 +297,10 @@
     var max = Number(q.max_rows);
     var share = max > 0 ? used / max : 1;
     var stats = ui.clear($('q-stats'));
+    toolsLimit = q.max_tools !== undefined && q.max_tools !== null;
+    $('qr-tools-field').hidden = !toolsLimit;
     stat(stats, num(used) + ' of ' + num(max), 'rows used in this space');
+    if (toolsLimit) { stat(stats, num(q.tools_used) + ' of ' + num(q.max_tools), 'tools in this space'); }
     stat(stats, num(q.most_tables) + ' of ' + num(q.max_tables), 'tables in the tool that has most');
     stat(stats, num(q.max_columns), 'columns allowed in one table');
     $('q-bar').firstElementChild.style.width = (Math.min(1, share) * 100).toFixed(1) + '%';
@@ -335,11 +341,12 @@
       }));
     } else {
       // The boxes start at what the space has. Numbers the admin typed stay until the limits change.
-      var now = [q.max_rows, q.max_tables, q.max_columns].join('/');
+      var now = [q.max_rows, q.max_tables, q.max_columns, q.max_tools].join('/');
       if (now !== askFor || !askTyped) {
         $('qr-rows').value = q.max_rows;
         $('qr-tables').value = q.max_tables;
         $('qr-columns').value = q.max_columns;
+        $('qr-tools').value = toolsLimit ? q.max_tools : '';
         askTyped = false;
       }
       askFor = now;
@@ -392,17 +399,20 @@
       act('dame_space_admin_add', { p_space: space, p_user: person.id }, person.name + ' is now an admin.');
     }));
 
-    ['qr-rows', 'qr-tables', 'qr-columns'].forEach(function (id) {
+    ['qr-rows', 'qr-tools', 'qr-tables', 'qr-columns'].forEach(function (id) {
       $(id).addEventListener('input', function () { askTyped = true; });
     });
     $('form-quota').addEventListener('submit', function (ev) {
       ev.preventDefault();
-      var want = { rows: Number($('qr-rows').value), tables: Number($('qr-tables').value), columns: Number($('qr-columns').value) };
-      if (![want.rows, want.tables, want.columns].every(function (n) { return Number.isInteger(n) && n > 0; })) {
-        ui.say($('msg'), 'Write whole numbers in all three boxes. Leave a number as it is if you do not need more of it.', 'warn');
+      var want = { rows: Number($('qr-rows').value), tables: Number($('qr-tables').value), columns: Number($('qr-columns').value),
+        tools: toolsLimit ? Number($('qr-tools').value) : 1 };
+      if (![want.rows, want.tables, want.columns, want.tools].every(function (n) { return Number.isInteger(n) && n > 0; })) {
+        ui.say($('msg'), 'Write whole numbers in all the boxes. Leave a number as it is if you do not need more of it.', 'warn');
         return;
       }
-      act('dame_quota_request', { p_space: space, p_rows: want.rows, p_tables: want.tables, p_columns: want.columns, p_reason: $('qr-reason').value },
+      var args = { p_space: space, p_rows: want.rows, p_tables: want.tables, p_columns: want.columns, p_reason: $('qr-reason').value };
+      if (toolsLimit) { args.p_tools = want.tools; }
+      act('dame_quota_request', args,
         'The request is sent to IT. The answer shows here.');
     });
 

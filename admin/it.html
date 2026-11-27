@@ -114,7 +114,7 @@
 
     <section class="dame-card" data-nav="Quotas">
       <h2>Database quotas</h2>
-      <p class="dame-muted">How much of the database a space may use: rows in the whole space, tables in one tool, columns in one table. A full space still reads, changes and deletes; only new rows are refused, with a sentence that says to ask the space's admin.</p>
+      <p class="dame-muted">How much a space may use: rows in the whole space, tools in the space, tables in one tool, columns in one table. A full space still reads, changes and deletes; only new rows are refused, with a sentence that says to ask the space's admin.</p>
       <p class="dame-empty" id="q-off" hidden>This part is not switched on yet: the owner pastes db/core/011_quotas.sql into the database first.</p>
       <div id="q-body" hidden>
         <div class="dame-row">
@@ -146,6 +146,9 @@
     <p class="dame-muted">What a space gets until you give it limits of its own. A change holds at once for every space on the default; spaces with their own limits keep them.</p>
     <label class="hub-field">Rows in a space, all its tools together (100 to 10,000,000)
       <input class="dame-input" id="qd-rows" type="number" min="100" max="10000000" step="1" inputmode="numeric" autocomplete="off">
+    </label>
+    <label class="hub-field" id="qd-tools-field">Tools in a space (1 to 200)
+      <input class="dame-input" id="qd-tools" type="number" min="1" max="200" step="1" inputmode="numeric" autocomplete="off">
     </label>
     <label class="hub-field">Tables in one tool (1 to 100)
       <input class="dame-input" id="qd-tables" type="number" min="1" max="100" step="1" inputmode="numeric" autocomplete="off">
