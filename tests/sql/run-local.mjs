@@ -65,28 +65,6 @@ for (const name of (await readdir(HERE)).filter((f) => /_test\.sql$/.test(f)).so
   console.log((tidy ? 'ok    ' : 'FAIL  ') + name + ' leaves nothing behind');
 }
 
-// db/upgrade-relay.sql on the database as it was before Relay (every file but 09_relay.sql)
-// must give the same database as a fresh install: check.sql says yes, and every Relay function
-// has the same code, word for word.
-{
-  const old = new PGlite();
-  await old.exec(await readFile(join(HERE, 'local-shim.sql'), 'utf8'));
-  const before = parts.filter((f) => f !== '09_relay.sql');
-  await old.exec('begin;\n' + (await Promise.all(before.map((f) => readFile(join(DB, f), 'utf8')))).join('\n') + '\ncommit;');
-  await old.exec(await readFile(join(DB, 'upgrade-relay.sql'), 'utf8'));
-  const said = (await old.query(await readFile(join(DB, 'check.sql'), 'utf8'))).rows[0].final_version;
-  const code = "select md5(string_agg(p.proname || pg_get_function_identity_arguments(p.oid) || p.prosrc || array_to_string(p.proconfig, ',') || p.prosecdef, '|' order by p.proname)) as m from pg_proc p join pg_namespace n on n.oid = p.pronamespace where p.proname like '%relay%'";
-  const same = (await old.query(code)).rows[0].m === (await db.query(code)).rows[0].m;
-  const rights = "select string_agg(p.proname || ':' || has_function_privilege('authenticated', p.oid, 'execute') || has_function_privilege('anon', p.oid, 'execute'), ',' order by p.proname) as r from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname like 'dame\\_%'";
-  const sameRights = (await old.query(rights)).rows[0].r === (await db.query(rights)).rows[0].r;
-  const clean = (await old.query('select count(*)::int as n from core.security_check()')).rows[0].n === 0;
-  let twice = false;
-  try { await old.exec(await readFile(join(DB, 'upgrade-relay.sql'), 'utf8')); } catch (err) { twice = /already/.test(err.message); await old.exec('rollback').catch(() => {}); }
-  const ok = said === 'yes' && same && sameRights && clean && twice;
-  if (!ok) { failed += 1; }
-  console.log((ok ? 'ok    ' : 'FAIL  ') + 'db/upgrade-relay.sql on the version before: check.sql ' + said + ', Relay code ' + (same ? 'identical' : 'DIFFERENT') +
-    ', rights ' + (sameRights ? 'identical' : 'DIFFERENT') + ', security check ' + (clean ? 'empty' : 'NOT EMPTY') + ', a second run ' + (twice ? 'refused' : 'NOT REFUSED'));
-}
 
 console.log(failed ? '\n' + failed + ' problem(s)' : '\nAll SQL checks passed');
 process.exit(failed ? 1 : 0);

@@ -1,6 +1,7 @@
 <!doctype html>
 <!--
-  hub.html - the dashboard: the spaces a signed-in user may open, as tiles.
+  hub.html - the home of every person: his work (Relay), the chain of teams,
+  his shortcuts, and the spaces he may open.
   Serves: contract 2 (Structure: Hub > Space > Tool). Must not change: the
   security policy stays the first element of the head; no inline script; the
   page only shows what the database returns, it decides nothing.
@@ -17,6 +18,7 @@
 <link rel="icon" href="kit/v1/icon.svg">
 <link rel="stylesheet" href="kit/v1/dame.css">
 <link rel="stylesheet" href="kit/v1/shell.css">
+<link rel="stylesheet" href="pages/relay.css">
 <script src="kit/v1/theme.js"></script>
 <script src="kit/v1/config.js" defer></script>
 <script src="kit/v1/api.js" defer></script>
@@ -28,21 +30,50 @@
   <div class="hub-hero">
     <p class="hub-kicker">DAME</p>
     <h1 id="hello">Hub</h1>
-    <p>Your spaces. Each tile is one department.</p>
+    <p id="summary">Your work, the chain, and your tools.</p>
   </div>
   <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
-  <div class="hub-tiles" id="spaces"></div>
-  <p class="dame-empty" id="empty" hidden>You have no spaces yet. An IT admin creates a space; its admin then adds you or gives you a tool.</p>
-  <div class="dame-card hub-relay-card" id="relay-card" hidden>
-    <h2>Relay</h2>
-    <p class="dame-muted">Work passed from team to team along the value chain: pick it up, do your part, pass it on.</p>
-    <p class="hub-relay-count" id="relay-count"></p>
-    <a class="dame-btn dame-btn-primary" id="relay-link" href="relay.html">Open Relay</a>
-  </div>
+
+  <section class="hub-home" id="work-part" hidden aria-labelledby="work-title">
+    <div class="hub-home-head">
+      <h2 id="work-title">My work</h2>
+      <a class="dame-btn hub-small" id="work-all" href="relay.html">Open Relay</a>
+    </div>
+    <div class="relay-cards" id="work"></div>
+    <p class="dame-empty" id="work-empty" hidden>Nothing waits for you. When a team passes something to one of your teams, it shows here.</p>
+  </section>
+
+  <section class="hub-home" id="chain-part" hidden aria-labelledby="chain-title">
+    <div class="hub-home-head">
+      <h2 id="chain-title">The chain</h2>
+    </div>
+    <p class="dame-muted">How work moves through the company, and how much each team holds now. Press a team to see its items.</p>
+    <div id="chains"></div>
+  </section>
+
+  <section class="hub-home" id="short-part" aria-labelledby="short-title">
+    <div class="hub-home-head">
+      <h2 id="short-title">My shortcuts</h2>
+    </div>
+    <div class="hub-shorts" id="shorts"></div>
+    <p class="dame-hint" id="shorts-empty" hidden>No shortcuts yet. Open a space and press "Pin to hub" on a tool you use often.</p>
+  </section>
+
+  <section class="hub-home" aria-labelledby="spaces-title">
+    <div class="hub-home-head">
+      <h2 id="spaces-title">Spaces</h2>
+    </div>
+    <div class="hub-tiles" id="spaces"></div>
+    <p class="dame-empty" id="empty" hidden>You have no spaces yet. An IT admin creates a space; its admin then adds you or gives you a tool.</p>
+  </section>
+
   <div class="dame-card" id="it-card" hidden>
     <h2>IT admin</h2>
-    <p class="dame-muted">Approve new accounts, switch accounts off, set the site rules, read the audit.</p>
-    <a class="dame-btn dame-btn-primary" href="admin/it.html">Open IT admin</a>
+    <p class="dame-muted">People, spaces, site rules, quotas and the audit. Flows are set up in Relay.</p>
+    <div class="dame-row">
+      <a class="dame-btn dame-btn-primary" href="admin/it.html">Open IT admin</a>
+      <a class="dame-btn" id="relay-setup" href="relay.html#set-up">Set up a flow</a>
+    </div>
   </div>
   <div class="dame-card hub-book-card" id="book-card" hidden>
     <h2>Site book</h2>

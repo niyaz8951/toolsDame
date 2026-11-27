@@ -1,4 +1,4 @@
-# DAME Platform (demo)
+# DAME Platform
 
 A master site for the company: IT controls sign-in, users and spaces; each department runs its own space and builds its own tools from the site, with no repo and no SQL.
 

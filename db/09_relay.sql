@@ -55,6 +55,9 @@ create table core.relay_stages (
   -- what must be done before the item is passed on: up to 10 lines of text
   checks    jsonb not null default '[]'::jsonb
             check (pg_catalog.jsonb_typeof(checks) = 'array' and pg_catalog.jsonb_array_length(checks) <= 10),
+  -- the tools of the stage's space that help do this stage: up to 6 tool ids
+  tools     jsonb not null default '[]'::jsonb
+            check (pg_catalog.jsonb_typeof(tools) = 'array' and pg_catalog.jsonb_array_length(tools) <= 6),
   primary key (flow, pos)
 );
 
@@ -242,6 +245,31 @@ language sql stable set search_path = '' as $$
    where s.flow = p_flow;
 $$;
 
+-- The tools hung on the stages of a flow, for this caller: can_open says whether he may open each.
+-- A tool that was deleted since is left out.
+create function core.relay_tools_json(p_uid uuid, p_flow text) returns jsonb
+language sql stable set search_path = '' as $$
+  select coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
+           'pos', s.pos, 'space', t.space, 'id', t.id, 'name', t.name, 'icon', t.icon, 'colour', t.colour,
+           'can_open', core.tool_level(p_uid, t.space, t.id) is not null) order by s.pos, x.o), '[]'::jsonb)
+    from core.relay_stages s
+    cross join lateral pg_catalog.jsonb_array_elements_text(s.tools) with ordinality x (id, o)
+    join core.tools t on t.space = s.space and t.id = x.id
+   where s.flow = p_flow;
+$$;
+
+-- How many items each stage of a flow holds now, and how many of them are late.
+create function core.relay_counts_json(p_flow text) returns jsonb
+language sql stable set search_path = '' as $$
+  select coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('pos', s.pos,
+           'open', (select count(*) from core.relay_items i where i.flow = s.flow and i.status in ('waiting', 'working')
+                      and i.path[pg_catalog.cardinality(i.path)] = s.pos),
+           'late', (select count(*) from core.relay_items i where i.flow = s.flow and i.status in ('waiting', 'working')
+                      and i.path[pg_catalog.cardinality(i.path)] = s.pos
+                      and pg_catalog.now() > i.stage_since + pg_catalog.make_interval(hours => s.hours))) order by s.pos), '[]'::jsonb)
+    from core.relay_stages s where s.flow = p_flow;
+$$;
+
 -- An item as a card: what a list or the board shows.
 create function core.relay_card_json(p_uid uuid, p_item core.relay_items) returns jsonb
 language sql stable set search_path = '' as $$
@@ -315,6 +343,8 @@ begin
            'id', f.id, 'name', f.name, 'word', f.item_word, 'prefix', f.prefix,
            'description', f.description, 'active', f.active,
            'stages', core.relay_stages_json(f.id),
+           'counts', core.relay_counts_json(f.id),
+           'tools', core.relay_tools_json(v_uid, f.id),
            'can_start', f.active and core.relay_can_act(v_uid, s1.space),
            'open', (select count(*) from core.relay_items i where i.flow = f.id and i.status in ('waiting', 'working')),
            'late', (select count(*) from core.relay_items i
@@ -387,6 +417,7 @@ begin
               'prefix', v_flow.prefix, 'description', v_flow.description, 'active', v_flow.active,
               'can_start', v_flow.active and core.relay_can_act(v_uid, (select s.space from core.relay_stages s where s.flow = v_flow.id and s.pos = 1))),
     'stages', core.relay_stages_json(v_flow.id),
+    'tools', core.relay_tools_json(v_uid, v_flow.id),
     'stats', v_stats,
     'open', (select coalesce(pg_catalog.jsonb_agg(core.relay_card_json(v_uid, q.it) order by core.relay_rank(q.it)), '[]'::jsonb)
                from (select x as it from core.relay_items x where x.flow = v_flow.id and x.status in ('waiting', 'working') limit 500) q),
@@ -432,6 +463,7 @@ begin
     'details', v.details,
     'path', pg_catalog.to_jsonb(v.path),
     'stages', core.relay_stages_json(v.flow),
+    'tools', core.relay_tools_json(v_uid, v.flow),
     'checks', v_stage.checks,
     'ticks', v.ticks,
     'back_to', (select pg_catalog.jsonb_build_object('pos', s.pos, 'name', s.name, 'space_name', coalesce(sp.name, s.space),
@@ -719,6 +751,7 @@ begin
             'id', f.id, 'name', f.name, 'word', f.item_word, 'prefix', f.prefix,
             'description', f.description, 'active', f.active,
             'stages', core.relay_stages_json(f.id),
+            'tools', core.relay_tools_json(v_uid, f.id),
             'open', (select count(*) from core.relay_items i where i.flow = f.id and i.status in ('waiting', 'working')),
             'items', (select count(*) from core.relay_items i where i.flow = f.id),
             'created_at', f.created_at) order by f.name), '[]'::jsonb)
@@ -749,6 +782,7 @@ declare
   v_sname  text;
   v_space  text;
   v_line   text;
+  v_tools  jsonb;
 begin
   if not core.id_ok(p_flow) then
     perform core.fail('bad_request', 'The id must be 3 to 30 lower-case letters, digits and single dashes, like mto-query.', 400);
@@ -810,8 +844,24 @@ begin
     if pg_catalog.jsonb_array_length(v_checks) > 10 then
       perform core.fail('bad_request', 'Stage ' || i || ': at most 10 checklist lines.', 400);
     end if;
+    -- The tools hung on this stage: tools of the stage's own space, each once, at most 6.
+    v_tools := '[]'::jsonb;
+    if st ? 'tools' then
+      if pg_catalog.jsonb_typeof(st -> 'tools') <> 'array' then
+        perform core.fail('bad_request', 'Stage ' || i || ': the tools cannot be read. Reload the page.', 400);
+      end if;
+      select coalesce(pg_catalog.jsonb_agg(d.id order by d.o), '[]'::jsonb) into v_tools
+        from (select x.id, min(x.o) as o from pg_catalog.jsonb_array_elements_text(st -> 'tools') with ordinality x (id, o) group by x.id) d;
+      if exists (select 1 from pg_catalog.jsonb_array_elements_text(v_tools) x (id)
+                  where not exists (select 1 from core.tools t where t.space = v_space and t.id = x.id)) then
+        perform core.fail('bad_request', 'Stage ' || i || ': a chosen tool is not a tool of that team''s space. Choose again.', 400);
+      end if;
+      if pg_catalog.jsonb_array_length(v_tools) > 6 then
+        perform core.fail('bad_request', 'Stage ' || i || ': at most 6 tools.', 400);
+      end if;
+    end if;
     v_clean := v_clean || pg_catalog.jsonb_build_array(pg_catalog.jsonb_build_object(
-      'pos', i, 'space', v_space, 'name', v_sname, 'hours', v_hours, 'checks', v_checks,
+      'pos', i, 'space', v_space, 'name', v_sname, 'hours', v_hours, 'checks', v_checks, 'tools', v_tools,
       'optional', coalesce((st ->> 'optional')::boolean, false)));
   end loop;
 
@@ -845,9 +895,9 @@ begin
     delete from core.relay_stages where flow = p_flow;
   end if;
 
-  insert into core.relay_stages (flow, pos, space, name, optional, hours, checks)
+  insert into core.relay_stages (flow, pos, space, name, optional, hours, checks, tools)
   select p_flow, (n ->> 'pos')::integer, n ->> 'space', n ->> 'name', (n ->> 'optional')::boolean,
-         (n ->> 'hours')::integer, n -> 'checks'
+         (n ->> 'hours')::integer, n -> 'checks', n -> 'tools'
     from pg_catalog.jsonb_array_elements(v_clean) n;
 
   perform core.audit_add(v_uid, case when v_old.id is null then 'relay.flow_created' else 'relay.flow_changed' end,

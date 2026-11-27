@@ -14,6 +14,8 @@
 
   var LEVEL = { read: 'You can read', contribute: 'You can add', edit: 'You can edit', approve: 'You can approve' };
 
+  var pinned = {};   // tool id -> true, for this space
+
   function $(id) { return document.getElementById(id); }
 
   function tile(space, t) {
@@ -27,7 +29,31 @@
     pills.appendChild(ui.el('span', 'hub-pill', t.is_manager ? 'You manage it' : (LEVEL[t.level] || '')));
     if (!t.active) { pills.appendChild(ui.el('span', 'hub-pill', 'Switched off')); }
     a.appendChild(pills);
-    return a;
+    // The tile and, under it, the button that puts the tool on the person's hub.
+    var wrap = ui.el('div', 'hub-tile-wrap');
+    var pin = ui.el('button', 'dame-btn hub-small hub-pin');
+    pin.type = 'button';
+    pin.setAttribute('data-pin', t.id);
+    function show() {
+      var on = !!pinned[t.id];
+      pin.textContent = on ? 'On your hub' : 'Pin to hub';
+      pin.setAttribute('aria-pressed', String(on));
+      pin.title = on ? 'Press to take it off your hub' : 'Press to put a shortcut on your hub';
+    }
+    pin.addEventListener('click', async function () {
+      pin.disabled = true;
+      try {
+        await api.rpc('dame_shortcut_set', { p_space: space, p_tool: t.id, p_on: !pinned[t.id] });
+        pinned[t.id] = !pinned[t.id];
+        ui.say($('msg'), pinned[t.id] ? t.name + ' is on your hub now.' : t.name + ' is off your hub.', 'ok');
+      } catch (err) { ui.sayError($('msg'), err); }
+      pin.disabled = false;
+      show();
+    });
+    show();
+    wrap.appendChild(a);
+    wrap.appendChild(pin);
+    return wrap;
   }
 
   async function start() {
@@ -35,6 +61,8 @@
     // Asked at the same moment as the sign-in check, so the page waits once, not twice.
     var asked = id ? api.rpc('dame_space_get', { p_space: id }) : null;
     if (asked) { asked.catch(function () {}); }
+    var shorts = api.rpc('dame_shortcuts_list');
+    shorts.catch(function () {});
     await ui.guard();
     $('main').hidden = false;
     if (!id) {
@@ -47,6 +75,7 @@
     $('text').textContent = space.description;
     if (!space.active) { ui.say($('msg'), 'This space is switched off by IT. Only its admins can open it.', 'warn'); }
 
+    try { (await shorts || []).forEach(function (s) { if (s.space === space.id) { pinned[s.id] = true; } }); } catch (err) { /* no pins shown */ }
     var box = ui.clear($('tools'));
     space.tools.forEach(function (t) { box.appendChild(tile(space.id, t)); });
     $('empty').hidden = space.tools.length > 0;

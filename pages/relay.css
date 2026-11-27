@@ -123,6 +123,20 @@
 .relay-optional { align-self: end; min-height: 44px; align-items: center; }
 .relay-locked { margin: 0 0 12px; }
 
+/* ---- links: a card or a stage that opens something; tools hung on a stage */
+a.relay-card { text-decoration: none; }
+.relay-step-link { display: flex; flex-direction: column; gap: 2px; color: inherit; text-decoration: none; }
+.relay-step-link:focus-visible { outline-offset: -4px; }
+.relay-step-count { font-size: 1.7rem; font-weight: 750; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.relay-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.relay-tool { display: inline-flex; align-items: center; min-height: 30px; padding: 2px 10px; border-radius: 8px; background: rgba(255,255,255,.6); color: #1F1500; font-size: .8rem; font-weight: 650; text-decoration: none; border: 1px solid rgba(0,0,0,.18); }
+a.relay-tool:hover { background: #fff; }
+.relay-tool-off { opacity: .6; font-weight: 500; }
+.relay-act .relay-tools { margin: 0 0 4px; }
+.relay-act .relay-tool { background: var(--dame-soft); color: var(--dame-accent); border-color: var(--dame-line); min-height: 40px; padding: 6px 14px; font-size: .92rem; }
+.relay-tool-list { display: flex; flex-direction: column; gap: 4px; margin: 0 0 10px; }
+.relay-tool-list .dame-check { margin: 0; min-height: 36px; align-items: center; }
+
 /* ---- narrow screens: the chain runs downwards, the columns stack */
 @media (max-width: 700px) {
   .relay-chain { flex-direction: column; }

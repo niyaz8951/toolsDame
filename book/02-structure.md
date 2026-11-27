@@ -14,7 +14,7 @@ Three levels, always: the hub, a space, a tool.
 2 Tool | Its own tables, its own people
 :::
 
-- **Hub**: the home page. One tile per space you were given.
+- **Hub**: the home page. First your work and the chain of teams (Relay), then your shortcuts, then one tile per space you were given.
 - **Space**: one department. One tile per tool you were given.
 - **Tool**: one page under the site's bar. The bar belongs to the site; everything below it is the tool.
 - Every space and tool has an **id** (small letters, digits, dashes). It is permanent and never used again, even after a delete.

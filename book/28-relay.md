@@ -16,6 +16,7 @@ First team | Gets the answer back and closes it
 - **Each level answers only the level that asked it.** An item always goes back the way it came, to the team that passed it on and to the very person there who did. Nobody can jump the chain.
 - **A stage "if needed"** may be skipped by the team before it: HQ-AES passes straight to the Factory when the Product team has nothing to decide.
 - **The checklist** is what stops "something missing" before it happens: the button to pass on stays grey until every line is ticked. Each tick is saved at once.
+- **Tools hang on the chain.** IT names, per stage, up to six tools of that team's space. The person holding an item sees them as "Tools for this step". This is where the two halves of the site meet: teams build tools, the chain shows where each is used.
 - **Something missing** still happens. It sends the item back with what is missing, and the count of send-backs per stage shows which hand-over needs a better checklist.
 
 ## What everyone sees
@@ -23,7 +24,7 @@ First team | Gets the answer back and closes it
 My work | What is with me, what waits for my teams, what I started that is with others | inbox
 The chain | Each flow drawn as its teams, left to right, yellow to red as in the value chain picture: open, late, the usual time, sent back | board
 The item | Where it is, who has it, when it is due, the checklist, the buttons that apply, and its whole history | window
-The hub | One card: "2 waiting for your teams, 1 with you" | hub
+The hub | Opens on My work and the chain: each team with the number of items it holds | home
 :::
 
 ## Who may do what

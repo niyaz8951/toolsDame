@@ -67,6 +67,20 @@
     }
   }
 
+  // The tools hung on one stage, as links. A tool the person cannot open is named, not linked.
+  function toolLinks(tools, pos) {
+    var here = (tools || []).filter(function (t) { return t.pos === pos; });
+    if (!here.length) { return null; }
+    var box = el('span', 'relay-tools');
+    here.forEach(function (t) {
+      var a = el(t.can_open ? 'a' : 'span', 'relay-tool' + (t.can_open ? '' : ' relay-tool-off'), t.name);
+      if (t.can_open) { a.href = api.href('tool.html') + '?space=' + encodeURIComponent(t.space) + '&tool=' + encodeURIComponent(t.id); }
+      else { a.title = 'A tool of that team. Ask its space admin for access.'; }
+      box.appendChild(a);
+    });
+    return box;
+  }
+
   // ---------------------------------------------------------------- windows
 
   // A window over the page, the same as the admin pages use. Escape or a press outside closes it.
@@ -244,6 +258,8 @@
       if (Number(st.sent_back)) { facts.appendChild(el('span', 'relay-step-back', 'sent back ' + st.sent_back + 'x in 90 days')); }
       if (!s.team_ok) { facts.appendChild(el('span', 'relay-step-back', s.team_gone ? 'its team was deleted: ask IT' : 'its team is switched off')); }
       li.appendChild(facts);
+      var links = toolLinks(b.tools, s.pos);
+      if (links) { li.appendChild(links); }
       chain.appendChild(li);
 
       var col = el('div', 'relay-col');
@@ -491,6 +507,11 @@
     }
 
     if (holds) {
+      var stepTools = toolLinks(it.tools, it.pos);
+      if (stepTools) {
+        panel.appendChild(el('h3', null, 'Tools for this step'));
+        panel.appendChild(stepTools);
+      }
       panel.appendChild(el('h3', null, 'Before you pass it on'));
       var checks = it.checks || [];
       var ticks = {};
@@ -742,6 +763,7 @@
     form.appendChild(list);
 
     var rows = [];
+    var toolsOf = {};   // space id -> its tools, asked once per window
     function stageRow(s) {
       var li = el('li', 'relay-stage-edit');
       var head = el('div', 'relay-stage-head');
@@ -795,7 +817,38 @@
       checks.rows = 3; checks.maxLength = 1700; checks.value = (s.checks || []).join('\n'); checks.setAttribute('data-k', 'checks');
       lc.appendChild(checks);
       li.appendChild(lc);
-      var r = { li: li, no: no, team: team, name: sname, hours: hours, opt: opt, optBox: lo, checks: checks };
+      // Tools for this step: the tools of the team's space, read when the team is chosen.
+      li.appendChild(el('p', 'hub-sub', 'Tools for this step (optional, up to 6)'));
+      var toolBox = el('div', 'relay-tool-list');
+      li.appendChild(toolBox);
+      var chosen = (s.toolIds || []).slice();
+      async function showTools() {
+        ui.clear(toolBox);
+        if (!team.value) { toolBox.appendChild(el('span', 'dame-hint', 'Choose the team first.')); return; }
+        var id = team.value;
+        var list;
+        try {
+          if (!toolsOf[id]) { toolsOf[id] = api.rpc('dame_space_get', { p_space: id }).then(function (sp) { return sp.tools || []; }); }
+          list = await toolsOf[id];
+        } catch (err) { delete toolsOf[id]; list = []; }
+        if (team.value !== id) { return; }
+        ui.clear(toolBox);
+        if (!list.length) { toolBox.appendChild(el('span', 'dame-hint', 'This space has no tools yet.')); return; }
+        list.forEach(function (t) {
+          var l = el('label', 'dame-check');
+          var c = el('input');
+          c.type = 'checkbox';
+          c.value = t.id;
+          c.checked = chosen.indexOf(t.id) !== -1;
+          l.appendChild(c);
+          l.appendChild(el('span', null, t.name));
+          toolBox.appendChild(l);
+        });
+      }
+      team.addEventListener('change', function () { chosen = []; showTools(); });
+      showTools();
+      var r = { li: li, no: no, team: team, name: sname, hours: hours, opt: opt, optBox: lo, checks: checks,
+        tools: function () { return Array.prototype.map.call(toolBox.querySelectorAll('input:checked'), function (c) { return c.value; }); } };
       up.addEventListener('click', function () { move(r, -1); });
       down.addEventListener('click', function () { move(r, 1); });
       rm.addEventListener('click', function () { rows.splice(rows.indexOf(r), 1); li.remove(); number(); });
@@ -832,6 +885,7 @@
     });
     form.appendChild(addStage);
     (src.stages && src.stages.length ? src.stages : [{}, {}]).forEach(function (s) {
+      if (f) { s = Object.assign({}, s, { toolIds: (f.tools || []).filter(function (t) { return t.pos === s.pos; }).map(function (t) { return t.id; }) }); }
       var r = stageRow(s);
       rows.push(r);
       list.appendChild(r.li);
@@ -853,7 +907,7 @@
       ev.preventDefault();
       ui.say(w.msg, '');
       var stages = rows.map(function (r) {
-        return { space: r.team.value, name: r.name.value, hours: Number(r.hours.value), optional: r.opt.checked,
+        return { space: r.team.value, name: r.name.value, hours: Number(r.hours.value), optional: r.opt.checked, tools: r.tools(),
           checks: r.checks.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean) };
       });
       var bad = stages.findIndex(function (s) { return !s.space; });

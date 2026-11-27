@@ -219,3 +219,12 @@
 - **Who acts:** only the person who picked the item up; an admin of the team may take over; IT acts everywhere (it acts as admin of every space) and the history marks it "(IT)". Everyone named on a flow sees its items: the value chain is open to the people on it.
 - **Independent:** one database file, `db/09_relay.sql`; it reads spaces and people and writes only its own tables. A space deleted later leaves the stage without a team (shown to IT) rather than being blocked by Relay.
 - **Not now:** parallel stages, files on an item, mail. Noted in STATUS.
+
+## Owner, 2026-11-27 (two tiers; the hub as home)
+- **Two tiers on one core.** Department tools: any team builds, inside its space, sealed. Process tools: IT builds them as Relay flows, across spaces. Process tools are configured on the one Relay engine, not hand-built one by one. Written in `docs/ROADMAP.md`.
+- **Basics first, done well** (owner: "only basics but great basics"). The core idea: one item, visible to its chain, held by one team. Integrations, versions, fields and AI wait; the roadmap lists them.
+- **The hub is the person's home**: My work, the chain, shortcuts, spaces, in that order. Relay is no longer a card to open.
+- **Shortcuts are per person and live in the database** (what a person enters); no audit line, since they change no right and no data of others. Only a tool he can open; the list filters again at every read.
+- **Tools on the chain are set by IT in the flow**, from the tools of the stage's own space. Their names are shown to everyone on the flow; opening one still needs access to the tool. Chosen over hiding the names: the chain is meant to show how the work is done.
+- **Reliable and simple** (owner: Daikin relies on both): one way to do each thing; the hub works even when Relay or shortcuts cannot be read; nothing new is loaded from outside.
+- **"Demo" removed from the pages** so the site reads as a product. The documents keep saying what the demonstration runs on and what is open: IT must be able to trust them.

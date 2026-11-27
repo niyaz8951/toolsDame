@@ -108,10 +108,11 @@ async function run(width, height, label) {
     await mock.sql("insert into core.spaces (id, name, created_by) values ('sales', 'Sales', '" + ada + "'), ('applied', 'Application', '" + ada + "'), ('hq-aes', 'HQ-AES', '" + ada + "'), ('product', 'Product team', '" + ada + "'), ('factory', 'Factory', '" + ada + "'), ('finance', 'Finance', '" + ada + "')");
     await mock.sql("insert into core.space_members (space, user_id, added_by) values ('sales', '" + ids.sam + "', '" + ada + "'), ('applied', '" + ids.abe + "', '" + ada + "'), ('hq-aes', '" + ids.hal + "', '" + ada + "'), ('finance', '" + ids.xan + "', '" + ada + "')");
     await mock.sql("insert into core.space_admins (space, user_id, added_by) values ('factory', '" + ids.fay + "', '" + ada + "')");
+    await mock.sql("insert into core.tools (space, id, name, open_to_space, open_level, created_by) values ('applied', 'selector', 'Selection tool', true, 'read', '" + ada + "')");
 
     // ------------------------------------------------ IT sets up the flow from the example
     const it = await person('ada@work.test');
-    check(!(await it.isHidden('#relay-card')) && /Set up a flow/.test(await it.textContent('#relay-link')), T + 'IT sees the Relay card on the hub, asking for a flow');
+    check(!(await it.isHidden('#relay-setup')) && (await it.locator('.hub-tag').count()) === 0, T + 'IT has "Set up a flow" on the hub; no page carries a Demo tag');
     await relay(it, '#set-up');
     check(!(await it.isHidden('#part-set-up')), T + 'IT has the Set up part');
     await it.click('[data-example="mto"]');
@@ -119,16 +120,21 @@ async function run(width, height, label) {
     const teams = await it.$$eval('#fl-stages select', (s) => s.map((x) => x.value).join(','));
     check(teams === 'sales,applied,hq-aes,product,factory', T + 'the MTO example picks the five teams by name (' + teams + ')');
     check((await it.inputValue('#fl-prefix')) === 'MTO' && (await it.locator('#fl-stages .relay-stage-edit').count()) === 5, T + 'the example fills the number letters and five stages');
+    await it.waitForSelector('#fl-stages .relay-stage-edit:nth-child(2) .relay-tool-list input[value="selector"]');
+    await it.check('#fl-stages .relay-stage-edit:nth-child(2) .relay-tool-list input[value="selector"]');
     check(await winFits(it), T + 'the setup window fits the screen');
     await shot(it, '1-setup-window');
     await it.click('#fl-save');
     await it.waitForSelector('#msg.hub-ok');
     check((await it.locator('#flow-tiles [data-setup="mto-query"]').count()) === 1, T + 'the flow is made and has its tile');
     check(Number((await mock.sql("select count(*) as n from core.relay_stages where flow = 'mto-query' and optional")).rows[0].n) === 1, T + 'the Product team stage may be skipped, as in the example');
+    check((await mock.sql("select tools::text as t from core.relay_stages where flow = 'mto-query' and pos = 2")).rows[0].t === '["selector"]', T + 'the Selection tool hangs on the Application stage');
 
     // ------------------------------------------------ Sales starts a query
     const sam = await person('sam@work.test');
-    check(!(await sam.isHidden('#relay-card')) && /Nothing waits/.test(await sam.textContent('#relay-count')), T + 'Sales sees the Relay card: nothing waits yet');
+    await sam.waitForSelector('#chain-part:not([hidden])');
+    check(/Nothing waits/.test(await sam.textContent('#summary')) && (await sam.locator('#chains .relay-step').count()) === 5 && !(await sam.isHidden('#work-empty')), T + 'the hub of Sales opens on My work (nothing yet) and the chain of five teams');
+    check(await fits(sam), T + 'the hub fits the screen');
     await relay(sam, '#flows');
     await sam.waitForSelector('#b-chain .relay-step');
     check((await sam.locator('#b-chain .relay-step').count()) === 5 && !(await sam.isHidden('#b-start')), T + 'Sales sees the chain of five teams and may start an MTO query');
@@ -153,7 +159,12 @@ async function run(width, height, label) {
 
     // ------------------------------------------------ Application: something is missing
     const abe = await person('abe@work.test');
-    check(/1 waiting for your teams/.test(await abe.textContent('#relay-count')), T + 'the hub tells Application: 1 waiting for your teams');
+    await abe.waitForSelector('#work .relay-card');
+    check(/1 waits for your teams/.test(await abe.textContent('#summary')) && /^1/.test(await abe.textContent('#chains .relay-step:nth-child(2) .relay-step-count')), T + 'the hub tells Application: 1 waits for your teams, and the chain shows 1 at its stage');
+    await shot(abe, '0-hub');
+    await abe.click('#work .relay-card');
+    await abe.waitForSelector('#item-win h2');
+    check(/MTO-0001/.test(await abe.textContent('#item-win')), T + 'a press on the hub card opens the item');
     await relay(abe);
     check((await abe.locator('#waiting .relay-card').count()) === 1, T + 'it is in Application\'s inbox, waiting');
     await shot(abe, '3-inbox');
@@ -223,6 +234,21 @@ async function run(width, height, label) {
     await relay(abe, '?flow=mto-query#flows');
     await abe.waitForSelector('#b-chain .relay-step');
     check(/sent back 1x/.test(await abe.textContent('#b-chain .relay-step:nth-child(2)')), T + 'the chain shows that Application sent one back');
+    check((await abe.locator('#b-chain .relay-step:nth-child(2) a.relay-tool').count()) === 1, T + 'Application has its Selection tool on its stage, as a link');
+    await relay(sam, '?flow=mto-query#flows');
+    await sam.waitForSelector('#b-chain .relay-step');
+    check((await sam.locator('#b-chain .relay-step:nth-child(2) span.relay-tool-off').count()) === 1 && (await sam.locator('#b-chain a.relay-tool').count()) === 0, T + 'Sales sees the tool named, without a link');
+    await abe.goto(SITE + 'space.html?space=applied');
+    await abe.waitForSelector('[data-pin="selector"]');
+    await abe.click('[data-pin="selector"]');
+    await abe.waitForSelector('#msg.hub-ok');
+    check(/On your hub/.test(await abe.textContent('[data-pin="selector"]')), T + 'Application pins the tool in its space');
+    check((await call(sam, 'dame_shortcut_set', { p_space: 'applied', p_tool: 'selector', p_on: true })) === 'not_allowed', T + 'Sales cannot pin a tool it does not have');
+    await abe.goto(SITE + 'hub.html');
+    await abe.waitForSelector('#shorts .hub-short');
+    check(/Selection tool/.test(await abe.textContent('#shorts')) && (await abe.isHidden('#shorts-empty')), T + 'the shortcut is on his hub');
+    await relay(abe, '?flow=mto-query#flows');
+    await abe.waitForSelector('#b-chain .relay-step');
     check(/usually/.test(await abe.textContent('#b-chain .relay-step:nth-child(1)')), T + 'the chain shows how long a stage usually takes');
     check(/1/.test(await abe.textContent('#b-figures .dame-stat:nth-child(3)')), T + 'one closed in 30 days');
     check(await fits(abe), T + 'the board fits the screen');
@@ -230,7 +256,8 @@ async function run(width, height, label) {
 
     // ------------------------------------------------ someone on no stage
     const xan = await person('xan@work.test');
-    check(await xan.isHidden('#relay-card'), T + 'someone on no stage gets no Relay card');
+    await xan.waitForSelector('#shorts-empty:not([hidden])');
+    check((await xan.isHidden('#work-part')) && (await xan.isHidden('#chain-part')), T + 'someone on no stage has no My work and no chain on his hub');
     check((await call(xan, 'dame_relay_item', { p_item: 1 })) === 'not_allowed' && (await call(xan, 'dame_relay_board', { p_flow: 'mto-query' })) === 'not_allowed', T + 'and the database refuses him the item and the board');
     check((await call(sam, 'dame_relay_flow_save', { p_flow: 'mine', p_name: 'x', p_word: 'x x', p_prefix: 'XX', p_description: '', p_stages: [] })) === 'not_allowed', T + 'a member cannot set up a flow, whatever the page shows');
     await relay(xan);

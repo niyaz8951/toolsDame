@@ -361,7 +361,6 @@
     header.appendChild(infoButton());
     header.appendChild(themeButton());
     header.appendChild(userBox);
-    header.appendChild(el('span', 'hub-tag', 'Demo'));
     document.body.insertBefore(header, document.body.firstChild);
   }
 
@@ -390,7 +389,6 @@
     var inner = String(me.email || '').slice(-api.userDomain.length) === api.userDomain;
     var who = me.username || (inner ? String(me.email).slice(0, -api.userDomain.length) : me.email);
     if (who) { menu.appendChild(el('p', 'hub-menu-sub', who)); }
-    menu.appendChild(el('p', 'hub-menu-sub', 'Demo site'));
     var mine = el('a', 'dame-btn hub-small hub-myaccount', 'My account');
     mine.href = api.href('account.html');
     menu.appendChild(mine);

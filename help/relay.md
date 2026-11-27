@@ -16,6 +16,8 @@ Relay carries work from team to team along the value chain, for example a query 
    - **Close it**: at the last stage, or at the first team once the answer has come back.
 3. Not your turn after all: **Put it back for the team**.
 
+**Tools for this step**: when IT hung tools on your stage, they are listed above the checklist. Press one to open it.
+
 Each level answers only the level that asked it: an item always goes back the way it came.
 
 ## Flows
@@ -30,7 +32,7 @@ Each flow is drawn as its chain of teams, from left to right. Under each team: w
 ## For IT: setting up a flow
 1. **Set up** > **Add a flow**, or start from an example.
 2. Give it a name, what one item is called, and the letters of its number (MTO gives MTO-0001).
-3. Add the stages in order. For each: the team (a space), a name, the hours it should take at most, the checklist, and whether it may be skipped.
+3. Add the stages in order. For each: the team (a space), a name, the hours it should take at most, the checklist, whether it may be skipped, and up to 6 tools of that team that help do the step.
 4. **Create the flow**. The team of the first stage can now start items.
 
 While items are open, stages can be renamed and checklists changed, but not added, removed, moved or given to another team. A flow is never deleted: switch it off and nothing new starts, while open items still finish.

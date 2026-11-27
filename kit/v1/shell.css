@@ -750,7 +750,21 @@ button.hub-tile { font: inherit; text-align: left; cursor: pointer; width: 100%;
   .hub-grid th, .hub-grid td { padding: 6px 8px; }
 }
 
-/* The Relay card on the hub (relay.html has its own pages/relay.css). */
-.hub-relay-card { border-left: 5px solid #F2A61C; }
-.hub-relay-count { font-weight: 600; }
-.hub-relay-busy { color: var(--dame-accent); }
+/* The hub as home: my work, the chain, shortcuts, spaces. One calm column, plain headings. */
+.hub-home { margin: 0 0 30px; }
+.hub-home-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 10px; }
+.hub-home-head h2 { margin: 0; font-size: 1.2rem; }
+.hub-chain { margin: 0 0 14px; }
+.hub-chain h3 { margin: 0 0 6px; font-size: .95rem; color: var(--dame-muted); }
+.hub-shorts { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.hub-short { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--dame-line); background: var(--dame-surface); color: var(--dame-text); text-decoration: none; box-shadow: var(--dame-shadow); transition: transform .2s var(--dame-ease), border-color .2s var(--dame-ease); }
+.hub-short:hover { transform: translateY(-2px); border-color: var(--dame-accent); }
+.hub-short-icon { flex: none; width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; background: linear-gradient(135deg, var(--dame-accent) 0%, color-mix(in srgb, var(--dame-accent) 60%, #fff) 100%); }
+.hub-short-text { display: flex; flex-direction: column; min-width: 0; }
+.hub-short-text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hub-short-text span { font-size: .82rem; color: var(--dame-muted); }
+/* A tool's tile in its space, with the button that pins it to the hub. */
+.hub-tile-wrap { position: relative; display: flex; }
+.hub-tile-wrap > .hub-tile { flex: 1; padding-bottom: 62px; }
+.hub-pin { position: absolute; left: 22px; bottom: 16px; min-height: 36px; }
+.hub-pin[aria-pressed="true"] { border-color: var(--dame-accent); color: var(--dame-accent); font-weight: 600; }

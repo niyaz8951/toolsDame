@@ -18,9 +18,9 @@ This folder is **the whole DAME database, once**: every table in its final form 
 | `08_quotas.sql` | The four limits per space (rows, tools, tables, columns), requests and answers |
 | `09_relay.sql` | Relay: work passed from team to team along the value chain. Four tables (flows, stages, items, history; the history append-only), fifteen `dame_relay_*` functions. Reads spaces and their people; writes only its own tables |
 | `10_rights.sql` | `core.make_first_admin`, `core.security_check`, and the rights: each `dame_*` function granted by name |
-| `upgrade-relay.sql` | For the live demo only: adds `09_relay.sql` word for word, with its rights, to a database of the version before |
+| `upgrade.sql` | For the live database only: the change since the delivery before (now: shortcuts, tools on the chain) |
 
-In numbers: 20 tables, 152 functions (87 `dame_*` functions, the API; 65 `core.*` helpers), 2 storage policies, 6 settings.
+In numbers: 21 tables, 156 functions (89 `dame_*` functions, the API; 67 `core.*` helpers), 2 storage policies, 6 settings.
 
 ## How to run
 

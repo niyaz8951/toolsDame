@@ -62,12 +62,6 @@
   },
   {
    "part": 0,
-   "file": "28-relay.md",
-   "title": "Relay: work passed between teams",
-   "text": "The value chain on the site: a flow of teams, the checklist before each hand-over, the answer back the way it came."
-  },
-  {
-   "part": 0,
    "file": "06-security.md",
    "title": "Security",
    "text": "Why code from many teams cannot harm the site or each other."
@@ -89,6 +83,12 @@
    "file": "09-status.md",
    "title": "Where we are",
    "text": "What is built, what is proven, what comes next."
+  },
+  {
+   "part": 0,
+   "file": "28-relay.md",
+   "title": "Relay: work passed between teams",
+   "text": "The value chain on the site: a flow of teams, the checklist before each hand-over, the answer back the way it came."
   },
   {
    "part": 1,

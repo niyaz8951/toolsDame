@@ -5,3 +5,5 @@
 3. Press a tile to run the tool.
 
 Missing a tool: ask the space admin.
+
+**Pin to hub**: the button under a tool puts a shortcut on your hub. Press it again ("On your hub") to take it off.

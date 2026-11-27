@@ -280,18 +280,18 @@ try {
   await DEPTS[0].user.page.waitForSelector('#spaces a');
   await DEPTS[0].user.page.click('.hub-info');
   await DEPTS[0].user.page.waitForSelector('.hub-rich li');
-  check(/Each tile is a space/.test(await DEPTS[0].user.page.textContent('.hub-sheet')), 'every hub page has the information button with its own steps');
+  check(/one tile per department/.test(await DEPTS[0].user.page.textContent('.hub-sheet')), 'every hub page has the information button with its own steps');
   await DEPTS[0].user.page.keyboard.press('Escape');
 
   // ------------------------------------------------------------------ the site book: shown to IT admins only
   const reader = it.page;
   await reader.goto(SITE + 'hub.html');
   await reader.waitForSelector('#book-chapters a');
-  check((await reader.locator('#book-chapters a').count()) === 10, 'IT: the hub offers the site book with the ten chapters of its overview');
+  check((await reader.locator('#book-chapters a').count()) === 11, 'IT: the hub offers the site book with the eleven chapters of its overview');
   await reader.click('a:has-text("Read the site book")');
   await reader.waitForSelector('#chapters button');
   check(/DAME in five minutes/.test(await reader.textContent('#page')) && (await reader.locator('#page .hub-dg').count()) >= 9 && (await reader.locator('#page script, #page img, #page a').count()) === 0, 'the book opens on its first chapter, written to the page as text');
-  check((await reader.locator('#chapters .hub-book-link').count()) === 28 && (await reader.locator('#chapters .hub-book-part').count()) === 4, 'the book has 28 chapters in four parts: the overview, the detail, what a reviewer asks, the log');
+  check((await reader.locator('#chapters .hub-book-link').count()) === 29 && (await reader.locator('#chapters .hub-book-part').count()) === 4, 'the book has 29 chapters in four parts: the overview, the detail, what a reviewer asks, the log');
   await reader.click('#chapters .hub-book-link >> nth=6');
   check(/sealed frame/.test(await reader.textContent('#page')) && (await reader.locator('#page table').count()) === 1 && (await reader.locator('#page .hub-flow span').count()) === 4, 'a chapter shows its steps, lists and tables (Security)');
   await reader.click('#present-one');
@@ -305,7 +305,7 @@ try {
   await reader.waitForSelector('.hub-present');
   check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 45, 'the overview as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
   await reader.keyboard.press('Escape');
-  await reader.click('#chapters .hub-book-link >> nth=13');
+  await reader.click('#chapters .hub-book-link >> nth=14');
   const detailText = await reader.textContent('#page');
   check(/What can be reached from outside/.test(detailText) && /Considered and not done/.test(detailText) && /Why this way/.test(detailText) && (await reader.locator('#page code').count()) > 5,
     'a chapter for IT says how it is done, why, and what was considered and not done (The database)');
@@ -314,7 +314,7 @@ try {
   check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 90, 'the detail as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
   await reader.keyboard.press('Escape');
 
-  await reader.click('#chapters .hub-book-link >> nth=20');
+  await reader.click('#chapters .hub-book-link >> nth=21');
   check(/A stranger on the internet/.test(await reader.textContent('#page')) && (await reader.locator('#page table').count()) >= 6, 'the part "What a reviewer asks" opens with the threats, one table per kind of person');
 
   // The presentation: pictures, topics to jump to, tools for pointing, a red Close.
@@ -330,7 +330,7 @@ try {
   await reader.keyboard.press('Escape');
   await reader.click('#present-all');
   await reader.waitForSelector('.hub-rail-node');
-  check((await reader.locator('.hub-rail-node').count()) === 10 && (await reader.locator('.hub-rail-node[aria-current=true]').count()) === 1, 'the overview shows one topic node per chapter on the left, the open one marked');
+  check((await reader.locator('.hub-rail-node').count()) === 11 && (await reader.locator('.hub-rail-node[aria-current=true]').count()) === 1, 'the overview shows one topic node per chapter on the left, the open one marked');
   await reader.hover('.hub-rail-node >> nth=6');
   check(await reader.locator('.hub-rail-node >> nth=6').locator('.hub-rail-tip').isVisible() && /7\. Security/.test(await reader.locator('.hub-rail-node >> nth=6').textContent()), 'hovering a node shows the name of its chapter');
   await reader.click('.hub-rail-node >> nth=6');

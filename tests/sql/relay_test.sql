@@ -142,6 +142,26 @@ begin
     perform dame_test.expect('making the flow is in the audit', '1',
       (select count(*)::text from core.audit where action = 'relay.flow_created' and target = 'zz-mto'));
 
+    -- ------------------------------------------------ 1b. tools hung on the chain
+    insert into core.tools (space, id, name, open_to_space, open_level, created_by) values
+      ('zz-app', 'selector', 'Zz Selector', true, 'read', a), ('zz-sales', 'pricer', 'Zz Pricer', true, 'read', a);
+    perform dame_test.expect('a tool of another space cannot hang on a stage', 'bad_request',
+      dame_test.run(ca, format('select public.dame_relay_flow_save(%L, %L, %L, %L, %L, %L)', 'zz-mto', 'MTO escalation', 'MTO query', 'ZMTO', '',
+        jsonb_set(st, '{1,tools}', '["pricer"]'))));
+    perform dame_test.expect('seven tools on a stage are refused', 'bad_request',
+      dame_test.run(ca, format('select public.dame_relay_flow_save(%L, %L, %L, %L, %L, %L)', 'zz-mto', 'MTO escalation', 'MTO query', 'ZMTO', '',
+        jsonb_set(st, '{1,tools}', '["a1","a2","a3","a4","a5","a6","a7"]'))));
+    st := jsonb_set(st, '{1,tools}', '["selector", "selector"]');
+    perform dame_test.expect('IT hangs the selector on the Application stage', 'ok',
+      dame_test.run(ca, format('select public.dame_relay_flow_save(%L, %L, %L, %L, %L, %L)', 'zz-mto', 'MTO escalation', 'MTO query', 'ZMTO', 'Special units', st)));
+    perform dame_test.expect('a tool named twice hangs once', '["selector"]', (select tools::text from core.relay_stages where flow = 'zz-mto' and pos = 2));
+    perform dame_test.expect('Application sees it and can open it', 'Zz Selector|2|true',
+      dame_test.val(cabe, $q$select (t ->> 'name') || '|' || (t ->> 'pos') || '|' || (t ->> 'can_open') from jsonb_array_elements(public.dame_relay_home() -> 'flows' -> 0 -> 'tools') t$q$));
+    perform dame_test.expect('Sales sees it on the chain but cannot open it', 'false',
+      dame_test.val(csam, $q$select t ->> 'can_open' from jsonb_array_elements(public.dame_relay_board('zz-mto') -> 'tools') t$q$));
+    perform dame_test.expect('the hub gets a count per stage', '5',
+      dame_test.val(csam, $q$select jsonb_array_length(public.dame_relay_home() -> 'flows' -> 0 -> 'counts')$q$));
+
     -- ------------------------------------------------ 2. who sees it, who starts
     perform dame_test.expect('someone on no stage sees no flow', '0',
       dame_test.val(cxan, $q$select jsonb_array_length(public.dame_relay_home() -> 'flows')$q$));

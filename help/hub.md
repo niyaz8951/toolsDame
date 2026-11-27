@@ -1,11 +1,12 @@
 # Hub
 
-1. Each tile is a space: one department.
-2. You see only the spaces you were given.
-3. Press a tile to open the space and its tools.
+Your home. From top to bottom:
 
-Missing a space: ask that space's admin, or IT.
+1. **My work**: items of Relay that are with you or wait for your teams. Press one to open it.
+2. **The chain**: how work moves through the company, team by team, with the number of items each team holds now. Press a team to see them.
+3. **My shortcuts**: tools you pinned. To add one, open its space and press **Pin to hub** on its tile. At most 12.
+4. **Spaces**: one tile per department you were given. Press it to see its tools.
 
-IT admins also see two cards here: **IT admin**, and the **Site book**, which explains how the site is built and protected.
+My work and The chain show only when one of your teams is on a flow. Missing a space: ask that space's admin, or IT.
 
-**Relay**: when one of your teams is on a flow, a card shows what waits for your teams and what is with you. Relay carries work from team to team (for example Sales > Application > HQ-AES > Factory); open it to pick up, do your part and pass it on.
+IT admins also see two cards: **IT admin**, and the **Site book**, which explains how the site is built and protected.

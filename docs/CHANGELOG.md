@@ -2,6 +2,20 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - The hub as home: My work, the chain, shortcuts
+New (owner: "The hub opens on My work - great; the chain is the company map - great; tools hang on the chain - great"; "users can create shortcuts"; "remove demo and all from site"; "Daikin ... relies on reliability and simplicity")
+- **The hub opens on My work**: up to six items of Relay that are with the person or wait for his teams; a press opens the item. The greeting says the count.
+- **The chain**: each flow drawn as its teams, each with the number of items it holds now and how many are late; a press opens the flow.
+- **My shortcuts**: tools a person pinned. In a space, each tool tile has **Pin to hub** / **On your hub**. At most 12; only a tool he can open; a shortcut disappears when access or the tool goes.
+- **Tools on the chain**: in Relay > Set up, each stage can name up to 6 tools of its team's space. They show on the stage in Flows and as "Tools for this step" for the person holding an item. Someone without access sees the name, not a link.
+- **No Demo tag** on any page; the README title too. The documents still say plainly what the demonstration runs on.
+- `docs/ROADMAP.md`: the idea in one sentence, the two tiers, whether it is worth building against bought platforms, what is next, the integrations for IT's platform.
+- Database: table `core.shortcuts`, `dame_shortcuts_list`, `dame_shortcut_set` (`db/02`, `db/05`); column `tools` on `core.relay_stages`, `core.relay_tools_json`, `core.relay_counts_json` (`db/09`); new fingerprint. `db/upgrade.sql` for the live project, proven on the version before: every function, column, constraint, row-security flag and right identical to a fresh install; existing stages kept; a second run refused. The two earlier upgrade files are removed (they ran).
+- Tests: `tests/sql/shortcuts_test.sql` (19 cases), 9 new Relay cases; all 15 SQL files pass twice (1,525 cases); `tests/browser/relay.mjs` extended (hub, chain, tool on a stage, pin); every other browser test and phase0 pass.
+
+Files: `hub.html`, `pages/hub.js`, `pages/space.js`, `pages/relay.js`, `pages/relay.css`, `kit/v1/shell.js`, `kit/v1/shell.css`, `help/hub.md`, `help/space.md`, `help/relay.md`, `db/02_tables.sql`, `db/05_spaces_tools.sql`, `db/09_relay.sql`, `db/check.sql`, `db/upgrade.sql`, `db/README.md`, tests, docs (`ROADMAP.md` new), the site book (`02`, `28`, `10-notes`).
+SQL to paste: `db/upgrade.sql` (last result must say yes).
+
 ## 2026-11-27 - Relay: work passed between teams
 New (owner: "a tool across all spaces controlled by DAME IT where they see what they have to do on a task once the previous team has handed over ... hand over to the next team and send it back if something is missing"; "Relay works and demo is needed, implement it with basic understanding of the work flow in a company like Daikin")
 - **Relay** (`relay.html`), a hub feature owned by IT, beside the spaces, not a tile in one. A **flow** is stages in order, each done by one team (a space); each stage has a checklist to tick before passing on, a target in hours, and may be marked "if needed" (may be skipped).

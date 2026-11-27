@@ -102,6 +102,16 @@ create table core.tools (
   primary key (space, id)
 );
 
+-- A person's shortcuts on the hub: the tools he pinned. Deleting a tool takes its shortcuts with it.
+create table core.shortcuts (
+  user_id   uuid not null references core.profiles (id),
+  space     text not null,
+  tool      text not null,
+  added_at  timestamptz not null default pg_catalog.now(),
+  primary key (user_id, space, tool),
+  foreign key (space, tool) references core.tools (space, id) on delete cascade
+);
+
 -- Ids are permanent and never reused: a deleted space or tool leaves its id here.
 create table core.retired_ids (
   kind        text not null check (kind in ('space', 'tool')),

@@ -32,18 +32,18 @@
 - **One database, final version (2026-11-27): `db/`.** Nine files by subject plus `install.sql` (one transaction) and `check.sql` (is a database this version? yes or no). Every function once, every table in its final form, the ten Supabase stand-ins marked `SUPABASE:`. Proved identical to the twelve step files that built the demo before they were removed (they are in the repository's history). The pages lost the "not switched on yet" branches that only served a half-built database. Read `db/README.md`.
 - **The Data page as a sheet (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** Each table drawn like a spreadsheet with made-up example rows (saved rows are never shown), "+ Column" at the end, an x on each column to remove it after typing its name (new `dame_table_drop_column`), the five site columns on request, a new table drawn as it is typed, and a request for the AI after each change.
 - **Relay (2026-11-27): built and tested locally. Needs `db/upgrade-relay.sql` on the live project.** Work passed from team to team along the value chain: IT sets up flows (stages in order, a space for each, a checklist before each hand-over), people pick up, pass on, answer back, send back, close. A card on the hub, `relay.html`, four Daikin-style examples. Reads spaces; changes nothing else. Read `book/28-relay.md`.
-- Tests, all passing locally: fourteen SQL test files by subject (1,488 cases) on the database built from `db/`, nine browser tests, the hostile-tool test (33 attempts).
+- **The hub as home (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** The hub opens on My work and the chain (each team with the number of items it holds), then My shortcuts (tools pinned from their space, at most 12), then Spaces. A Relay stage names up to 6 tools of its team's space. The Demo tag is gone from every page. Plan: `docs/ROADMAP.md`.
+- Tests, all passing locally: fifteen SQL test files by subject (1,525 cases) on the database built from `db/`, nine browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
 ## The owner does now, in this order
-Relay first (new, 2026-11-27):
-- R1. **SQL editor:** paste all of `db/upgrade-relay.sql`, Run. The security check must show no rows and the last result must say `yes`. If it says "Run db/upgrade.sql first": do step 0 below, then R1 again.
-- R2. **SQL editor:** paste `tests/sql/relay_test.sql`, Run: first row "... passed, 0 failed".
-- R3. **On the site** (Ctrl+F5): make spaces named Sales, Application, HQ-AES, Product team and Factory (or use yours) and put a trial account in Sales and one in Application. Hub > **Relay** > **Set up** > the example **MTO query** > check the teams > **Create the flow**.
-- R4. As the Sales account: Relay > Flows > **Start a new MTO query**, tick, **Pass on**. As the Application account: **Pick it up**, then **Something is missing** or pass it on. Back as Sales: it is under "With you". If a step fails, send the exact message.
+The hub as home (new, 2026-11-27):
+- H1. **SQL editor:** paste all of `db/upgrade.sql`, Run. The security check must show no rows and the last result must say `yes`. (It adds shortcuts and the tools on the chain. Relay must be there already; it is on the live project.)
+- H2. **SQL editor:** paste `tests/sql/shortcuts_test.sql`, then `tests/sql/relay_test.sql`: first row "... passed, 0 failed" each.
+- H3. **On the site** (Ctrl+F5): the hub opens on **My work** and **The chain**. Open a space, press **Pin to hub** on a tool, go back to the hub: it is under **My shortcuts**.
+- H4. Relay > Set up > press the flow's tile > under a stage tick a tool of that team > **Save the flow**. Relay > Flows: the tool is on its stage.
 
-0. **SQL editor of the live Supabase project:** paste all of `db/upgrade.sql`, Run (skip if it ran already: it then says "This upgrade was already run"). The security check must show no rows and the last result must say `yes`. (It gives IT admins every space and tool, and adds removing a column if the last upgrade did not run yet.) Then paste `tests/sql/spaces_tools_test.sql`, Run: first row "... passed, 0 failed". On the site (Ctrl+F5) as IT admin: the hub shows every space.
 1. **SQL editor:** paste all of `db/check.sql`, Run.
    - `yes`: the live database is the final version. Go on with step 2.
    - `no`: send the row. The live project missed some of the earlier step files. Either I send one `db/upgrade.sql` for exactly what it misses, or, since the demo holds sample data only, start a fresh Supabase project and run `db/01` to `db/10` there (then `select core.make_first_admin('your email');`).
@@ -60,7 +60,7 @@ Relay first (new, 2026-11-27):
 If a step fails, send the exact message on screen.
 
 ## With every delivery
-A change to the database: change the file of its subject in `db/`, put the new fingerprint in `db/check.sql`, and bring `db/upgrade.sql` (only the change) for the live project; `node tests/sql/run-local.mjs` must pass. The next delivery after it ran removes `db/upgrade.sql`. Relay came as its own `db/upgrade-relay.sql`, because it was not known whether `db/upgrade.sql` had run; both are removed once the owner confirms they ran.
+A change to the database: change the file of its subject in `db/`, put the new fingerprint in `db/check.sql`, and bring `db/upgrade.sql` (only the change) for the live project; `node tests/sql/run-local.mjs` must pass. The next delivery after it ran removes `db/upgrade.sql`. 
 
 Besides this file and the changelog: update the chapter of the site book the change touches (`book/*.md`) and add a line to `book/10-notes.md`.
 
@@ -72,6 +72,8 @@ Besides this file and the changelog: update the chapter of the site book the cha
 - A "go" for health (per space and for IT), which the owner put before phase 5, or for phase 5.
 
 ## Next
+Read `docs/ROADMAP.md`. Next step there: ideas on each hand-over, with votes.
+
 Phase 5: on every page the info icon, pinned notes, ideas with votes, and the AI prompt setting; the tool's help text; a space admin tightening the AI setting.
 
 Relay, later: parallel stages (Product team and Factory at once), files on an item, mail when something arrives, the shared project and customer list (one number from enquiry to service).

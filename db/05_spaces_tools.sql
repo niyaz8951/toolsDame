@@ -585,3 +585,47 @@ begin
   end if;
   return core.audit_json(p_limit, p_before, p_space, p_tool);
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- Shortcuts: the tools a person pinned to his hub
+-- ---------------------------------------------------------------------------
+-- SHORTCUTS-BEGIN
+-- The caller's shortcuts, oldest first. A tool he can no longer open is left out.
+create function public.dame_shortcuts_list() returns jsonb
+language plpgsql volatile security definer set search_path = '' as $$
+declare
+  v_uid uuid := core.require_user();
+begin
+  return (select coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
+            'space', t.space, 'space_name', sp.name, 'id', t.id, 'name', t.name,
+            'icon', t.icon, 'colour', t.colour) order by s.added_at, t.name), '[]'::jsonb)
+            from core.shortcuts s
+            join core.tools t on t.space = s.space and t.id = s.tool
+            join core.spaces sp on sp.id = t.space
+           where s.user_id = v_uid and core.tool_level(v_uid, t.space, t.id) is not null);
+end $$;
+
+-- Pins a tool to the caller's hub, or takes the pin away. Only a tool he can open; at most 12.
+create function public.dame_shortcut_set(p_space text, p_tool text, p_on boolean) returns jsonb
+language plpgsql volatile security definer set search_path = '' as $$
+declare
+  v_uid uuid := core.require_user();
+begin
+  if p_on is null then
+    perform core.fail('bad_request', 'Pin or unpin?', 400);
+  end if;
+  if not p_on then
+    delete from core.shortcuts where user_id = v_uid and space = p_space and tool = p_tool;
+    return pg_catalog.jsonb_build_object('on', false);
+  end if;
+  if not core.has_tool(v_uid, p_space, p_tool, 'read') then
+    perform core.fail('not_allowed', 'You do not have this tool. Ask its manager.');
+  end if;
+  if (select count(*) from core.shortcuts s where s.user_id = v_uid) >= 12
+     and not exists (select 1 from core.shortcuts s where s.user_id = v_uid and s.space = p_space and s.tool = p_tool) then
+    perform core.fail('quota_full', 'You have 12 shortcuts. Take one away first.', 400);
+  end if;
+  insert into core.shortcuts (user_id, space, tool) values (v_uid, p_space, p_tool) on conflict do nothing;
+  return pg_catalog.jsonb_build_object('on', true);
+end $$;
+-- SHORTCUTS-END
