@@ -75,6 +75,7 @@
         // To night the dark page opens as a circle from the button (as it always did).
         // To day the same circle runs backwards: the dark page closes into the button
         // and the day page is left. The dark page is the one that moves both ways.
+        // The way back is quicker (0.34 s against 0.48 s) and starts moving at once.
         var box = btn.getBoundingClientRect();
         var x = box.left + box.width / 2;
         var y = box.top + box.height / 2;
@@ -88,7 +89,7 @@
         var move = document.startViewTransition(function () { apply(next); });
         move.ready.then(function () {
           run = root.animate({ clipPath: back ? [full, small] : [small, full] },
-            { duration: 480, easing: back ? 'cubic-bezier(.8,0,.8,.2)' : 'cubic-bezier(.2,.8,.2,1)', fill: back ? 'forwards' : 'none', pseudoElement: back ? '::view-transition-old(root)' : '::view-transition-new(root)' });
+            { duration: back ? 340 : 480, easing: back ? 'cubic-bezier(.3,0,.5,1)' : 'cubic-bezier(.2,.8,.2,1)', fill: back ? 'forwards' : 'none', pseudoElement: back ? '::view-transition-old(root)' : '::view-transition-new(root)' });
         }).catch(function () {});
         if (back) { move.finished.then(done, done); }
       } else {

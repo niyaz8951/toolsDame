@@ -22,7 +22,7 @@ Things the site gives every page and every tool, with no work by the builder.
 ## Day and night
 - The sun and moon button switches the whole site, and a tool that is open follows without losing what was typed.
 - The choice is remembered in the browser. With no choice, the device decides.
-- To night, the dark page opens as a circle from the button and flows down over the page. To day, the same movement runs backwards: the dark page flows back up into the button. A page that opens never moves; it is drawn in the kept theme at once.
+- To night, the dark page opens as a circle from the button and flows down over the page. To day, the same movement runs backwards: the dark page flows back up into the button, a little quicker than it came down. A page that opens never moves; it is drawn in the kept theme at once.
 
 ## Patient with people
 - One question on screen at a time in the builder.

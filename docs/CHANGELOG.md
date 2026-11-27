@@ -5,7 +5,7 @@ Newest first. One entry per delivery: what changed, what the owner must do.
 ## 2026-11-27 - Day and night: the switch to day runs the same movement backwards
 Changed (owner: "for dark mode dark flows downward and in switching to light mode it flows upwards", "it must not change the existing animation")
 - To night: nothing changed. The dark page opens as a circle from the button, same speed, same curve.
-- To day: before, the day page opened with that same circle, so both directions looked alike. Now the dark page lies on top and the circle closes back into the button (same 0.48 s, the same curve mirrored: slow at the far corner, quick into the button), so the dark flows down to night and back up to day.
+- To day: before, the day page opened with that same circle, so both directions looked alike. Now the dark page lies on top and the circle closes back into the button (quicker than the way down: 0.34 s against 0.48 s, moving from the first instant; owner: the first version at equal length "feels slow than dark"), so the dark flows down to night and back up to day.
 - The plain fade (older browsers, devices that ask for less movement) is as before. Display only: no contract, no SQL, no change for tools; a running tool follows as before.
 - Tests: `tests/phase0.mjs` passes. Both directions were run in a real browser and looked at half-way: the theme changes, the choice is kept, no page error. `tests/browser/phase4.mjs` (it holds the check that a running tool follows) stops earlier, at "the tool did not show #fields input", on the build machine with and without this change; the part that passes the theme to a tool was not touched. To be run on the owner's computer.
 
