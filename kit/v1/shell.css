@@ -561,3 +561,6 @@ button.hub-tile { font: inherit; text-align: left; cursor: pointer; width: 100%;
 .hub-ic-leaf { -webkit-mask-image: url("icons/tiles/leaf.svg"); mask-image: url("icons/tiles/leaf.svg"); }
 .hub-ic-sun { -webkit-mask-image: url("icons/tiles/sun.svg"); mask-image: url("icons/tiles/sun.svg"); }
 .hub-ic-scale { -webkit-mask-image: url("icons/tiles/scale.svg"); mask-image: url("icons/tiles/scale.svg"); }
+
+/* The tool's strip: where you are on the left, "Tool admin" at the right edge. */
+.hub-strip #admin { margin-left: auto; }

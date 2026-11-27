@@ -3,6 +3,7 @@
 The running log of the site. Newest first. Every change to the site adds a line here and updates the chapter it touches.
 
 ## 2026-11-27
+- Tool page: "Tool admin" moved to the right end of the strip; the way back (Hub / space / tool) stays on the left.
 - Space admin follows the same rule as IT admin: "Add a tool", tiles, and a window per tool. A new tool opens its window at once with "Build and access" in front.
 - Icons are picked from 90 pictures kept in the site (Lucide, ISC); the database still keeps one short text (`i-fan`), so nothing changed there.
 - Back buttons go to the page the person came from. A tool's manager is never pointed to the space admin page. The tab keeps a trail of page addresses for this, nothing else.

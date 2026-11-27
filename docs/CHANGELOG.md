@@ -2,6 +2,12 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - Tool page: "Tool admin" at the right edge
+Changed (owner: "more natural on the right side")
+- On a tool's page the "Tool admin" button now sits at the right end of the strip under the bar; Hub / space / tool stay on the left. Look only.
+
+Files: `kit/v1/shell.css`. SQL to paste: none.
+
 ## 2026-11-27 - Space admin as tiles, icons to pick, Back goes where you came from
 Changed (owner: "inside the space it doesn't keep the same design language"; "keep open source icons users can select"; "from tool admin it must go back to the tool: a tool's admin may not have space admin rights")
 - **Space admin, Tools:** "Add a tool" on top, one tile per tool in its colour, and a window per tool: "Build and access" as the main button, name and look, managers, switch off, delete. A new tool opens its window at once, so the next step is in front of the person. The level for everyone is asked only after "Open to everyone" is ticked.
