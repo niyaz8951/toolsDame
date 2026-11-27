@@ -39,7 +39,10 @@
     (spaces || []).forEach(function (s) { box.appendChild(tile(s)); });
     $('empty').hidden = (spaces || []).length > 0;
 
-    // The chapters of the site book, as shortcuts. The hub works without them.
+    // The site book is shown to IT admins only: its card, and its chapters as shortcuts.
+    // The hub works without them.
+    if (!me.is_it) { return; }
+    $('book-card').hidden = false;
     fetch(api.href('book/index.json'), { cache: 'no-cache', credentials: 'omit' }).then(function (res) { return res.ok ? res.json() : null; }).then(function (index) {
       var chips = ui.clear($('book-chapters'));
       ((index && index.chapters) || []).filter(function (c) { return !c.part; }).forEach(function (c, i) {

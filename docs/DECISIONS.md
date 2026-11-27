@@ -145,6 +145,14 @@
 - What this does not do: the check reads the page as text. Code that builds its look or its storage calls in a hidden way is not seen. That stays accepted: the check keeps the site aligned and saves time; the sealed frame and the database protect (see "The check is help, not the wall").
 - 3000 characters is a first number (the largest example page has 328). Say if it should move.
 
+## Owner, 2026-11-27 (what the database is for; the site book is shown to IT admins only)
+- Owner: "the whole site design is on the assumption that the IT team will anyway move the whole site to their servers and inside domains; keep the book in the repo, no need to move it to the database; accordingly ensure database usage."
+- **The rule, for every later choice.** The database holds what people enter and what must be checked per person on every request: accounts, rights, the rows of tools, table definitions, versions, the audit, settings. Everything the site itself is made of stays a file of the site: pages, the kit, help texts, the starter kit for the AI, examples, the site book. On IT's servers, inside the company's domains, the web server decides who reaches a file; putting site content into tables would be work IT has to undo.
+- **The site book stays in `book/`.** The hub shows its card to IT admins only; `book.html` opens the book for IT admins only and loads no chapter for anyone else.
+- **Said plainly: in the demo this is show and hide, not a lock.** The demo is a public test site; a chapter is a file with an address, as every page and every document in `docs/` is. The book holds no key and no data. On the target IT closes `book/` (and, if it wishes, `docs/`) with one web-server rule; that step is in the hand-over list.
+- **Withdrawn the same day:** a version that moved the book's text into the database (`011_book.sql`, two functions, a book file loaded on the page). It was built on a branch, never merged, and its SQL was never part of `main`. If it was pasted into the Supabase project by any chance, say so: a small file removes it.
+- **The book was reread against the repo** and grew a part "What a reviewer asks": threats one by one, who can give what to whom, where data lives and what happens to it, running it. Limits found while writing it and recorded as gaps: a tool's manager decides the code that acts as each user (so "private" rows do not hold against him); a manager may give his tool to anyone on the site; removing a member leaves access given by name; a delete is final; nothing has a retention period; a push is live with no review; a tool's request limit sits in the shell, not in the database; an IT admin who resets a password could sign in as that person (audited, and the person is told).
+
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |
 |---|---|---|

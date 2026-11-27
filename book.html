@@ -1,13 +1,17 @@
 <!doctype html>
 <!--
-  book.html - the site book: the whole site explained, to read chapter by
-  chapter or to show as a presentation.
+  book.html - the site book: the whole site explained for IT, to read chapter
+  by chapter or to show as a presentation. Shown to IT admins only.
   Serves: "On every page" (help) and the owner's wish of 2026-11-26 that the
   site explains itself, with no separate presentation.
   Must not change: the text lives in book/*.md and book/index.json, is written
   to the page as text (never as HTML), and holds no key, address or personal
-  data. Only signed-in, approved people can open it. The security policy stays
-  the first element of the head.
+  data. The page opens the book for IT admins only; for anyone else it says so
+  and loads no chapter. That is show and hide, not a lock: the chapters are
+  files of the site, like its pages. The site is built to be moved to IT's own
+  servers inside the company's domains, where the web server closes book/ to
+  everyone but IT (owner, 2026-11-27; docs/DECISIONS.md). The security policy
+  stays the first element of the head.
 -->
 <html lang="en">
 <head>
@@ -32,19 +36,24 @@
   <div class="hub-hero">
     <a class="dame-btn hub-small hub-back" href="hub.html">Back to the hub</a>
     <h1>Site book</h1>
-    <p>The whole site explained. First an overview for everyone; then, for IT, how each thing is done, why it was decided that way, what was left out, and its limits. Read it, or show it as a presentation.</p>
-    <div class="dame-row hub-hero-row">
+    <p>For IT admins. The whole site explained: an overview to present, how each thing is done and why, the questions a reviewer asks about security, the database and the sharing of rights, and every open gap.</p>
+    <div class="dame-row hub-hero-row" id="present-row" hidden>
       <button class="dame-btn dame-btn-primary" type="button" id="present-all">Present the overview</button>
-      <button class="dame-btn" type="button" id="present-detail">Present the detail for IT</button>
+      <button class="dame-btn" type="button" id="present-detail">Present the detail</button>
       <button class="dame-btn" type="button" id="present-one">Present this chapter</button>
     </div>
   </div>
   <p class="dame-card hub-msg" id="msg" role="alert" hidden></p>
-  <div class="hub-book">
+  <div class="dame-card" id="closed" hidden>
+    <h2>This book is for IT admins</h2>
+    <p>The site book explains how the site is built and protected. It is written for IT. How to use a page is behind the information button (i) of that page.</p>
+    <a class="dame-btn dame-btn-primary" href="hub.html">Back to the hub</a>
+  </div>
+  <div class="hub-book" id="book" hidden>
     <nav class="hub-book-nav" aria-label="Chapters"><ol id="chapters"></ol></nav>
     <article class="dame-card hub-book-page" id="page" aria-live="polite"></article>
   </div>
-  <div class="dame-row hub-book-foot">
+  <div class="dame-row hub-book-foot" id="foot" hidden>
     <button class="dame-btn" type="button" id="prev">Previous chapter</button>
     <button class="dame-btn dame-btn-primary" type="button" id="next">Next chapter</button>
   </div>

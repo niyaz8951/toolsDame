@@ -2,6 +2,17 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - The site book: shown to IT admins only, reread against the repo, what a reviewer asks
+Changed (owner: "update the site book as per the current repo and ensure it is only available to the IT admins; rethink all scenarios an IT manager would be interested in"; then: "keep it in the repo; the whole design assumes IT moves the site to their servers and domains; accordingly ensure database usage")
+- **Hub:** the Site book card is shown to IT admins only, under the IT admin card.
+- **Book page:** opens the book for IT admins only. Anyone else reads "This book is for IT admins" and the page loads no chapter.
+- **Said plainly:** this is show and hide. The book stays a set of files in `book/`; on the public demo a chapter can be fetched by its address, like any page. It holds no key and no data. On IT's servers the web server closes `book/`. The rule behind it is now written in DECISIONS, SECURITY and STATUS: the database is for what people enter and what must be checked per person; what the site is made of stays a file.
+- **The book, reread against the repo:** 27 chapters in four parts. 64 functions (was 58), ten SQL files, 1,024 database cases, the account functions and every audit action listed; a rendering slip in "The database" fixed. New part **"What a reviewer asks"**: Threats, one by one (stranger, signed-in person, department admin, a tool's own code, an IT admin, the two accounts behind the site); Who can give what to whom (the chain, joiner, mover, leaver, contractor, sharing across departments, where to see who has what); Where data lives and what happens to it (every store, the browser, personal data, ways out, what a delete does, backups, retention, limits); Running it (who changes the site, keys, watching, each kind of incident, third-party code). "Questions IT will ask" rewritten in nine groups; decisions and gaps extended. "Present the detail" now covers both detail parts.
+- **Limits written down for the first time** (book, DECISIONS, IT-REVIEW): a tool's manager decides the code that acts as each user, so "private" rows do not hold against him; a manager may give his tool to anyone on the site; removing a member leaves access given by name; a delete is final; nothing has a retention period; a push is live with no review; a tool's request limit sits in the shell; an IT admin who resets a password could sign in as that person.
+- Tests: the book part of `tests/browser/company.mjs` rewritten (131 checks in all); 4 new checks in phase 0. All ten SQL test files, seven browser tests and the hostile-tool test pass locally.
+
+Files: `book/` (15 chapters changed, 4 new, `index.json`), `book.html`, `pages/book.js`, `hub.html`, `pages/hub.js`, `help/book.md`, `help/hub.md`, `tests/phase0.mjs`, `tests/browser/company.mjs`, docs.
+SQL to paste: none.
 ## 2026-11-27 - Day and night: the switch to day runs the same movement backwards
 Changed (owner: "for dark mode dark flows downward and in switching to light mode it flows upwards", "it must not change the existing animation")
 - To night: nothing changed. The dark page opens as a circle from the button, same speed, same curve.

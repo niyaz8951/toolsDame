@@ -1,9 +1,11 @@
 /*
  * pages/book.js - the site book: chapters to read, and the same text as a
- * presentation (one part of a chapter per slide).
+ * presentation (one part of a chapter per slide). Shown to IT admins only.
  * Serves: "On every page" (help). Must not change: chapters come from
  * book/index.json and book/*.md of this site only; their text is written to
- * the page with DameShell.rich (as text, never as HTML).
+ * the page with DameShell.rich (as text, never as HTML); for a person who is
+ * not an IT admin the page loads no chapter. That is show and hide: on IT's
+ * own servers the folder book/ is closed by the web server.
  */
 (function () {
   'use strict';
@@ -42,11 +44,13 @@
     }
   }
 
+  function inOverview(c) { return !parts[c.part] || parts[c.part].present; }
+
   // A chapter as slides: its title with the opening lines, then one slide per "## " part.
   function slidesOf(c, n) {
     var parts = c.body.split(/\n(?=## )/);
     var head = parts.shift().replace(/^# .*\n?/, '').trim();
-    var dense = c.part === 1;   // the chapters for IT hold more per slide: smaller letters, and the slide scrolls
+    var dense = !inOverview(c);   // the chapters of detail hold more per slide: smaller letters, and the slide scrolls
     var out = [{ kind: 'title', chapter: n + 1, title: c.title, body: head || c.text }];
     parts.forEach(function (p) {
       var title = (/^## (.*)/.exec(p) || [])[1] || '';
@@ -120,15 +124,19 @@
   function slides(test) {
     return chapters.reduce(function (out, c, n) { return test(c) ? out.concat(slidesOf(c, n)) : out; }, []);
   }
-  function overview() { return slides(function (c) { return !parts[c.part] || parts[c.part].present; }); }
-  function detail() { return slides(function (c) { return c.part === 1; }); }
+  function overview() { return slides(inOverview); }
+  // The detail: every part that is not in the overview, without the last part (the log).
+  function detail() { return slides(function (c) { return !inOverview(c) && c.part < parts.length - 1; }); }
 
   async function start() {
-    var asked = text('book/index.json');
-    asked.catch(function () {});
-    await ui.guard();
+    var me = await ui.guard();
     $('main').hidden = false;
-    var index = JSON.parse(await asked);
+    // The book is for IT admins. For anyone else the page says so and loads no chapter.
+    if (!me.is_it) { $('closed').hidden = false; return; }
+    $('book').hidden = false;
+    $('foot').hidden = false;
+    $('present-row').hidden = false;
+    var index = JSON.parse(await text('book/index.json'));
     var bodies = await Promise.all(index.chapters.map(function (c) { return text('book/' + c.file); }));
     parts = (index.parts || []).map(function (p) { return { title: String(p.title), text: String(p.text || ''), present: !!p.present }; });
     chapters = index.chapters.map(function (c, i) { return { file: String(c.file), title: String(c.title), text: String(c.text || ''), body: bodies[i], part: Number(c.part) || 0 }; });

@@ -20,6 +20,8 @@ Each line: the question, what was chosen, and why. The full record with dates is
 | Delete accounts? | No, switch off | The audit and row owners must always point at someone |
 | Is IT admin a master key to data? | No | Running the site and reading a department's rows are separate rights |
 | May IT name itself space admin? | Yes, audited | Otherwise a one-person demo cannot start. IT may forbid it on the target |
+| Who may a manager give his tool to? | Any approved person, by name | A tool is often needed by one person of another department. Each grant is audited; a rule "members only" is one check if IT wants it |
+| Does leaving a space remove named access? | No | Membership and named access are separate lists; the person window shows both |
 
 ## Access and data
 | Question | Chosen | Why |
@@ -32,6 +34,7 @@ Each line: the question, what was chosen, and why. The full record with dates is
 | Row rules as policies or code? | Code in one row service | Tables appear on the fly; one tested rule beats many generated ones |
 | May a column be removed? | Not yet | Removing silently destroys data; it waits for an export |
 | Row history? | Not kept; each row knows who changed it last | Keeps the audit readable; can be added |
+| Is a delete final? | Yes, after the id is typed | No hidden copy outlives the owner's wish. The safety net is export and IT's backups, not built in the demo |
 
 ## Uploaded code
 | Question | Chosen | Why |
@@ -61,3 +64,12 @@ Each line: the question, what was chosen, and why. The full record with dates is
 | Who changes the database? | The owner, by pasting numbered files he has read | No pipeline secret; exact history |
 | Other sites on the same GitHub address? | Accepted for a demo with sample data | The risk does not exist on IT's own address |
 | The look? | Taken from the earlier DAME hub | Owner's wish; no code or data was taken |
+
+## What goes into the database, and what stays a file
+| Question | Chosen | Why |
+|---|---|---|
+| What is the database for? | What people enter and what must be enforced per person: accounts, rights, tools' rows, table definitions, versions, the audit | Those need a check on every request, and only the database can make it |
+| What stays a file of the site? | Everything the site itself is made of: pages, the kit, help texts, the starter kit for the AI, examples, this book | The whole site moves to IT's own servers, inside the company's domains (owner, 2026-11-27). There the web server decides who reaches a file. Copying site content into tables would be work IT has to undo |
+| Who reads the site book? | IT admins: the hub shows its card to them only, and the book page opens for them only (owner, 2026-11-27) | It is written for IT. Other people have the information button of each page |
+| Is that access control? | In the demo, no: it is show and hide. On a public test address a chapter is a file anyone could fetch by its address, like every page of the site | The book holds no key, no data and nothing the public repository does not already say in `docs/`. On IT's servers the folder `book/` is closed by the web server to everyone but IT, with one rule |
+| Was the database considered for it? | Yes, built and withdrawn the same day | It closed the demo's gap but put site content into the database, against the line above |

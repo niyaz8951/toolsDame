@@ -25,10 +25,12 @@ The site assumes that every uploaded tool might be hostile, by mistake or on pur
 |---|---|
 | The hostile tool | 33 attack attempts from inside a tool: session, storage, network, other frames, file drops, flooding. All blocked. Control runs prove the test notices a leak. |
 | The company rehearsal | 7 departments, 14 tools, 1,260 attempts by one department against another. All refused; nothing changed. |
-| SQL tests | Nine files with allowed and refused cases for every function. |
+| SQL tests | Ten files, 1,024 cases: for every function the allowed case and the refused ones. |
 
 > All of this was run locally against the real database code. On the live demo, the parts not yet confirmed are listed in "Where we are".
 
 ## What no site can prevent
 - A tool can **draw** anything, for example a fake form. The bar above it always shows the real tool and space. A second person reviewing before go-live is planned.
 - Keys: the repository holds only the project address and the publishable key, which are public by design. A test fails on anything else.
+- The people above the rules: whoever can change the page code or owns the database account. In the demo that is the owner; on the target it is IT's pipeline and administration.
+- A tool's manager decides what his tool's code does with the rows of the people who use it. Versions are kept and named; a second reviewer is planned.

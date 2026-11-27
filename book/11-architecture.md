@@ -7,7 +7,7 @@ This part of the book is for IT. Every chapter says how a thing is done, why it 
 ## The five pieces
 | Piece | Where it lives | What it holds | What it never holds |
 |---|---|---|---|
-| Platform pages | Repository, served by GitHub Pages | `index.html`, `hub.html`, `space.html`, `tool.html`, `frame.html`, `book.html`, the three admin pages, the kit in `kit/v1/` | Data, keys other than the publishable one |
+| Platform pages | Repository, served by GitHub Pages | `index.html`, `hub.html`, `space.html`, `tool.html`, `frame.html`, `book.html`, `account.html`, the three admin pages, the kit in `kit/v1/`, the help texts in `help/` and this book in `book/` | Data, keys other than the publishable one |
 | Sign-in service | Supabase Auth | Accounts, passwords (hashed), tokens | Roles, spaces, access: those are ours |
 | Core | Schema `core` in the Supabase database | People, sessions, spaces, tools, roles, access, versions, table definitions, settings, audit | Anything a browser can reach directly |
 | Tool data | One schema per tool, `t_<space>__<tool>`, and its preview copy `p_<space>__<tool>` | The rows of that tool's tables | Rows of any other tool |
@@ -32,7 +32,7 @@ This part of the book is for IT. Every chapter says how a thing is done, why it 
 ## Why it is cut this way
 - **The browser is never trusted.** Pages show and hide; the database decides. A person who edits the page in his browser gains nothing.
 - **A tool is never trusted.** It has no network and no token, so the worst it can do is ask the shell for things its user may do anyway.
-- **One small surface.** 58 functions are the whole API. No table, view or sequence is exposed. Reviewing the API is reading those functions.
+- **One small surface.** 64 functions are the whole API. No table, view or sequence is exposed. Reviewing the API is reading those functions.
 - **Everything derives from ids.** A tool's schema name, file path and address come from the space id and tool id. Nothing of that is stored twice, so nothing can drift apart.
 
 ## What was considered and not done

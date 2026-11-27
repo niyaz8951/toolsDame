@@ -283,15 +283,15 @@ try {
   check(/Each tile is a space/.test(await DEPTS[0].user.page.textContent('.hub-sheet')), 'every hub page has the information button with its own steps');
   await DEPTS[0].user.page.keyboard.press('Escape');
 
-  // ------------------------------------------------------------------ the site book: read it, or present it
-  const reader = DEPTS[0].user.page;
+  // ------------------------------------------------------------------ the site book: shown to IT admins only
+  const reader = it.page;
   await reader.goto(SITE + 'hub.html');
   await reader.waitForSelector('#book-chapters a');
-  check((await reader.locator('#book-chapters a').count()) === 9, 'the hub offers the site book with the nine chapters of its overview');
+  check((await reader.locator('#book-chapters a').count()) === 9, 'IT: the hub offers the site book with the nine chapters of its overview');
   await reader.click('a:has-text("Read the site book")');
   await reader.waitForSelector('#chapters button');
   check(/What DAME is/.test(await reader.textContent('#page')) && (await reader.locator('#page script, #page img, #page a').count()) === 0, 'the book opens on its first chapter, written to the page as text');
-  check((await reader.locator('#chapters .hub-book-link').count()) === 23 && (await reader.locator('#chapters .hub-book-part').count()) === 3, 'the book has 23 chapters in three parts: the overview, the detail for IT, the log');
+  check((await reader.locator('#chapters .hub-book-link').count()) === 27 && (await reader.locator('#chapters .hub-book-part').count()) === 4, 'the book has 27 chapters in four parts: the overview, the detail, what a reviewer asks, the log');
   await reader.click('#chapters .hub-book-link >> nth=5');
   check(/sealed frame/.test(await reader.textContent('#page')) && (await reader.locator('#page table').count()) === 1 && (await reader.locator('#page .hub-flow span').count()) === 4, 'a chapter shows its steps, lists and tables (Security)');
   await reader.click('#present-one');
@@ -311,8 +311,27 @@ try {
     'a chapter for IT says how it is done, why, and what was considered and not done (The database)');
   await reader.click('#present-detail');
   await reader.waitForSelector('.hub-present');
-  check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 90, 'the detail for IT as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
+  check(parseInt((await reader.textContent('.hub-present-count')).split(' of ')[1], 10) >= 90, 'the detail as a presentation has ' + (await reader.textContent('.hub-present-count')).split(' of ')[1] + ' slides');
   await reader.keyboard.press('Escape');
+
+  await reader.click('#chapters .hub-book-link >> nth=19');
+  check(/A stranger on the internet/.test(await reader.textContent('#page')) && (await reader.locator('#page table').count()) >= 6, 'the part "What a reviewer asks" opens with the threats, one table per kind of person');
+
+  // Everyone else: the card is not shown, and the book page says who the book is for and loads no chapter.
+  const other = DEPTS[0].user.page;
+  await other.goto(SITE + 'hub.html');
+  await other.waitForSelector('#spaces a');
+  check(await other.locator('#book-card').isHidden() && (await other.locator('#book-chapters a').count()) === 0, 'a user: the hub does not show the site book');
+  const fetched = [];
+  const watch = (r) => { if (/\/book\//.test(r.url())) { fetched.push(r.url()); } };
+  other.on('request', watch);
+  await other.goto(SITE + 'book.html');
+  await other.waitForSelector('#closed:not([hidden])');
+  await DEPTS[0].lead.page.goto(SITE + 'book.html');
+  await DEPTS[0].lead.page.waitForSelector('#closed:not([hidden])');
+  other.off('request', watch);
+  check(await other.locator('#book').isHidden() && await other.locator('#present-row').isHidden() && (await other.locator('#chapters li').count()) === 0 && fetched.length === 0, 'a user who types the address of the book page is told "This book is for IT admins"; the page loads no chapter');
+  check(await DEPTS[0].lead.page.locator('#book').isHidden() && (await DEPTS[0].lead.page.locator('#chapters li').count()) === 0, 'a department admin gets the same');
 
   // ------------------------------------------------------------------ one department against another: 7 x 6 pairs
   let memberProbes = 0;

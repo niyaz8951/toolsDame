@@ -73,6 +73,6 @@ Each answer is a short code plus a sentence for the person. Pages react to the c
 - Email and password are a stand-in. There is no second factor in the demo.
 - The sign-in service itself still honours an older session; only our functions refuse it. Since nothing else is reachable, that is enough here.
 - A forgotten password always needs IT (by voice). There is no reset by email: accounts with a username have none.
-- An IT admin can reset another IT admin's password. It is in the audit, and the person is told who did it at his next sign-in.
+- An IT admin can reset anyone's password, another IT admin's too, and could then sign in as that person. It is in the audit with both names, the person's own password stops working, and he is told who did it at his next sign-in. Company sign-in removes the path: IT sets no passwords there.
 - The rule for a person's own password (12 characters, mixed) is checked by the page and by the sign-in service's minimum length. The database never sees a password, so it cannot check one.
 - `dame_user_create` and `dame_user_password_reset` write into the sign-in service's own tables. That is a demo shortcut and the part most tied to Supabase.

@@ -8,6 +8,7 @@ Security rules win over every other rule and every request.
 | Pages, CSS, JS in this repo and its history | Anyone | Code only. No data, ever. |
 | Supabase URL + publishable key | Anyone | Safe by design; they open nothing alone. |
 | Rows, uploaded tool files | Approved users with access | Enforced in Supabase, never by a page. |
+| The site book (`book/`) | Shown to IT admins only by the hub and the book page | Show and hide in the demo: its chapters are files of a public test site and hold no key or data. On IT's servers the web server closes `book/` to everyone but IT. |
 | Secret key, service role key, database password | Owner only | Never in a file, repo, chat or screenshot. |
 
 ## Database (the real wall)
@@ -53,6 +54,9 @@ Known limits, said plainly:
 - After a temporary password nothing opens until the stored password changed AND the caller showed the temporary one. A leftover sign-in of someone else cannot finish a reset.
 - No password is ever kept by a page: not in storage, not in an address. The start page holds the temporary one in memory until the new password is saved or the page is left.
 - Gaps ranked for the demo: `IT-REVIEW.md`.
+
+## What goes into the database
+Only what people enter and what must be checked per person: accounts, rights, rows, table definitions, versions, audit, settings. What the site is made of (pages, kit, help, the site book) stays a file: the site is built to be moved to IT's servers inside the company's domains, where the web server guards files. See DECISIONS, 2026-11-27.
 
 ## Accounts and keys
 - GitHub and Supabase: owner only, MFA on. Secret scanning and push protection on.

@@ -40,13 +40,14 @@ A function that names a space or tool the caller has no right to gets the same a
 ## Which function needs what
 | Who | Functions |
 |---|---|
-| IT admin | `dame_users_list`, `dame_user_set_status`, `dame_user_set_it`, `dame_user_create`, `dame_user_add`, `dame_user_add_remove`, `dame_users_added`, `dame_space_create`, `dame_space_set_active`, `dame_space_delete`, `dame_spaces_all`, `dame_setting_set`, `dame_settings_get`, `dame_audit_list` |
+| IT admin | `dame_users_list`, `dame_user_get`, `dame_user_set_status`, `dame_user_set_it`, `dame_user_create`, `dame_user_details_set`, `dame_user_password_reset`, `dame_user_add`, `dame_user_add_remove`, `dame_users_added`, `dame_space_create`, `dame_space_set_active`, `dame_space_delete`, `dame_spaces_all`, `dame_setting_set`, `dame_settings_get`, `dame_audit_list` |
 | Space admin (or IT where noted) | `dame_space_admin_get`, `dame_space_member_add/remove`, `dame_tool_create`, `dame_tool_update`, `dame_tool_set_active`, `dame_tool_delete`, `dame_tool_manager_add/remove`, `dame_audit_scope_list`; with IT: `dame_space_admin_add/remove`, `dame_space_update`, `dame_space_look_get/set` |
 | Tool manager | `dame_tool_admin_get`, `dame_tool_access_set`, `dame_version_begin/seal/preview/make_live`, `dame_versions_list`, `dame_table_create/add_column/drop`, `dame_tables_list`, `dame_tool_help_set` |
 | Has the tool | `dame_tool_open`, `dame_rows_list/get/add/update/remove`, `dame_tool_people`, `dame_tool_help_get` |
-| Any approved person | `dame_me`, `dame_spaces_list`, `dame_space_get` (only his spaces), `dame_people_find` (admins and managers only) |
+| Any approved person | `dame_me`, `dame_spaces_list`, `dame_space_get` (only his spaces), `dame_account_get`, `dame_account_set`, `dame_password_changed` (his own account only: they take no person), `dame_people_find` (IT admins, space admins and managers only) |
 | Signed in, not yet approved | `dame_request_access`, `dame_password_done`, `dame_sign_out` |
 | Nobody signed in | `dame_site_info` only |
+| The file store, for each file | `dame_file_allowed` (answers yes or no) |
 
 ## Rules that protect the model itself
 - Nobody changes his own account or his own role.
@@ -54,6 +55,7 @@ A function that names a space or tool the caller has no right to gets the same a
 - Switching an account off also removes its IT admin role and ends its session.
 - An IT admin may name himself admin of a space. It is written to the audit. (With one person on the site, the demo could not start otherwise. IT can forbid it on the target so that two people are always needed.)
 - Deleting a space or a tool needs its id typed, on the page **and again in the database call**.
+- Removing a member of a space does not remove tools he was given by name. The two lists are separate on purpose; a mover needs both cleared (see "Who can give what to whom").
 - An id is checked against `core.retired_ids` when something is created: a deleted tool's id never comes back, so an old link or an old table name can never point at something new.
 
 ## Why this way

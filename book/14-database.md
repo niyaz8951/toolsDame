@@ -3,11 +3,11 @@
 The database is the wall. Everything else on the site is convenience.
 
 ## What can be reached from outside
-- The data API exposes one schema, `public`, and `public` holds **only functions named `dame_*`**: 58 of them. No table, no view, no sequence.
+- The data API exposes one schema, `public`, and `public` holds **only functions**, all named `dame_*`: 64 of them. No table, no view, no sequence.
 - All real data is in other schemas (`core`, and one per tool). The site's database roles (`anon`, `authenticated`) have no right to enter those schemas or touch their tables.
 - A visitor who is not signed in can run exactly one function, `dame_site_info`.
 
-So the complete list of things the internet can ask this database to do is a list of 58 named functions. That list is in the access chapter.
+So the complete list of things the internet can ask this database to do is a list of 64 named functions. That list is in the access chapter.
 
 ## The rules every function follows
 1. `security definer`: it runs with the rights of its owner, not of the caller. That is the only way anything reaches a table.
@@ -37,7 +37,7 @@ A space id and a tool id together may have 59 characters, because a schema name 
 - The page reads the code to decide what to do (for example: back to the start page) and shows the sentence to the person as written. No technical text reaches a person.
 
 ## How the database is changed
-- Core SQL lives in numbered files, `db/core/001_init.sql` to `009_new_user.sql`. The owner reads a file, pastes it into the Supabase SQL editor and runs it. Nobody else pastes SQL, ever.
+- Core SQL lives in numbered files, `db/core/001_init.sql` to `010_accounts.sql`. The owner reads a file, pastes it into the Supabase SQL editor and runs it. Nobody else pastes SQL, ever.
 - Each file is one transaction: it finishes completely or changes nothing.
 - Each file first checks that the file before it was run and that it was **not** already run itself, and stops with a sentence if not.
 - A file that was run is never edited. A correction is a new file. So the files in the repository are the exact history of the database.

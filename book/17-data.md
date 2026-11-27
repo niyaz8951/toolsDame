@@ -49,6 +49,8 @@ Each call does this, in order:
 
 For a private table, a row that is not yours answers "not found", the same as a row that does not exist. Nobody can test whether someone else has rows.
 
+> What "private" does not promise: the tool's code runs with the rights of whoever has the tool open, and the tool's manager decides that code. A manager could publish a version that copies each person's private rows into a shared table of the same tool. Every version is kept unchanged with the name of who made it live; review by a second person before go-live closes this.
+
 ## Why the rules live in one function and not in row policies
 - Tables are made on the fly by tile admins. With policies, each new table would need generated policies that must be exactly right; a wrong one is a silent leak.
 - Here the rule is the same few lines for every table, read once, tested once (157 cases), and a new table cannot have a different one.

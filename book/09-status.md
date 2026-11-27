@@ -8,7 +8,7 @@
 - The guided builder: two ways, one step at a time, the starter kit for the AI, the check, the complete fix request (rules, database rules and the page).
 - Tables from the site, the review window, the data service, the three sharing rules.
 - The information button, usage guides, day and night, the look.
-- This site book: an overview, and a part for IT with the detail of every mechanism and decision.
+- This site book, shown to IT admins only: an overview to present, the detail of every mechanism, what a reviewer asks (threats, sharing of rights, data handling, operations), every decision and gap.
 
 ## Proven where
 | What | Locally | On the live demo |
@@ -31,4 +31,4 @@
 ## What the owner does next
 1. Paste the SQL files that are not run yet, in number order, each followed by its test.
 2. Try "New user" once on the live demo: it is the part most tied to the sign-in service.
-3. Walk IT through the part "In detail, for IT" of this book. "Questions IT will ask" and "Open gaps and hand-over" are the two chapters to open first.
+3. Walk IT through this book. "Threats, one by one", "Questions IT will ask" and "Open gaps and hand-over" are the three chapters to open first.

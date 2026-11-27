@@ -6,4 +6,4 @@
 
 Missing a space: ask that space's admin, or IT.
 
-The **Site book** card explains the whole site, to read or to show as a presentation.
+IT admins also see two cards here: **IT admin**, and the **Site book**, which explains how the site is built and protected.

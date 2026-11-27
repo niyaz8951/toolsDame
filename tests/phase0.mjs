@@ -25,7 +25,8 @@ const ASSETS = ['kit/v1/dame.css', 'kit/v1/dame.js', 'kit/v1/shell.css', 'kit/v1
   'book/index.json', 'book/01-what.md', 'book/02-structure.md', 'book/03-people.md', 'book/04-building.md', 'book/05-data.md',
   'book/06-security.md', 'book/07-it.md', 'book/08-every-page.md', 'book/09-status.md', 'book/10-notes.md',
   'book/11-architecture.md', 'book/12-identity.md', 'book/13-access.md', 'book/14-database.md', 'book/15-frame.md', 'book/16-releases.md',
-  'book/17-data.md', 'book/18-builder.md', 'book/19-audit.md', 'book/20-tests.md', 'book/21-decisions.md', 'book/22-questions.md', 'book/23-gaps.md'];
+  'book/17-data.md', 'book/18-builder.md', 'book/19-audit.md', 'book/20-tests.md', 'book/21-decisions.md', 'book/22-questions.md', 'book/23-gaps.md',
+  'book/24-threats.md', 'book/25-sharing.md', 'book/26-data-handling.md', 'book/27-operations.md'];
 
 let failed = 0;
 function check(ok, what) {
@@ -172,6 +173,19 @@ try {
     check(!/<\/script/i.test(text) && !/\beval\(/.test(text), lib.name + ' holds no closing script tag and no eval');
     check(lib.line === '<script src="/_dame/v1/lib/' + lib.id + '.js"></script>' && /^[a-z0-9-]{2,30}$/.test(lib.id) && lib.how.length > 0 && !!lib.licence, lib.name + ' has its line, licence and how-to');
   }
+}
+
+// 8. The site book is shown to IT admins only, and every chapter it lists is there.
+{
+  const bookJs = await readFile(join(ROOT, 'pages/book.js'), 'utf8');
+  const hubJs = await readFile(join(ROOT, 'pages/hub.js'), 'utf8');
+  check(bookJs.indexOf('if (!me.is_it)') > 0 && bookJs.indexOf('if (!me.is_it)') < bookJs.indexOf("text('book/index.json')"), 'the book page asks who the person is before it loads the book, and loads nothing for a person who is not an IT admin');
+  check(hubJs.indexOf('if (!me.is_it) { return; }') > 0 && hubJs.indexOf('if (!me.is_it) { return; }') < hubJs.indexOf('book/index.json'), 'the hub shows the site book card to IT admins only');
+  const index = JSON.parse(await readFile(join(ROOT, 'book/index.json'), 'utf8'));
+  const { existsSync } = await import('node:fs');
+  check(index.chapters.length >= 27 && index.chapters.every((c) => existsSync(join(ROOT, 'book', c.file)) && c.part < index.parts.length), 'every chapter the book lists is a file, in a part that exists (' + index.chapters.length + ' chapters, ' + index.parts.length + ' parts)');
+  const all = (await Promise.all(index.chapters.map((c) => readFile(join(ROOT, 'book', c.file), 'utf8')))).join('\n');
+  check(!/\*\*[^*\n]*`[^`\n]*\*[^`\n]*`[^*\n]*\*\*/.test(all), 'no chapter holds bold text around code with a star in it (the page would show the stars)');
 }
 
 console.log(failed ? '\n' + failed + ' check(s) FAILED' : '\nAll checks passed');

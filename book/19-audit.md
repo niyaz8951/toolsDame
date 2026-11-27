@@ -8,7 +8,7 @@ Contract 7: append-only. Who, when, what.
 ## What is written
 | Area | Actions |
 |---|---|
-| People | `user.requested`, `user.added`, `user.add_removed`, `user.created`, `user.password_chosen`, `user.status_changed` (approve, switch off, switch on), `user.email_changed`, `user.signed_in`, `user.first_admin`, IT admin given or taken |
+| People | `user.requested`, `user.approved`, `user.refused`, `user.switched_off`, `user.switched_on`, `user.added`, `user.add_removed`, `user.created`, `user.password_chosen`, `user.password_changed`, `user.password_reset`, `user.details_changed`, `user.details_set`, `user.email_changed`, `user.signed_in`, `user.first_admin`, `user.it_admin_on`, `user.it_admin_off` |
 | Site | `setting.changed` |
 | Spaces | `space.created`, `space.changed`, `space.deleted`, `space.admin_added`, `space.admin_removed`, `space.member_added`, `space.member_removed`, switched on or off |
 | Tools | `tool.created`, `tool.changed`, `tool.deleted`, `tool.manager_added`, `tool.manager_removed`, `tool.access_set`, `tool.access_removed`, `tool.help_set`, switched on or off |
@@ -19,7 +19,7 @@ Every one is written **inside the same database function that does the action**,
 
 ## What is not written, on purpose
 - **Row changes inside a tool.** A busy tracker would bury everything else. Each row carries `updated_by` and `updated_at` instead. If IT wants a full row history, it is one more table and a few lines in the row service.
-- **Reads.** Nobody's reading of rows is logged.
+- **Reads.** Nobody's reading of rows is logged, and neither is reading this book or saving a file from a tool.
 - **Refused attempts.** A refusal changes nothing and is not recorded. (For the target: the server's own log has them.)
 - **Secrets.** A temporary password, a usage guide's text, a row's content are never in the audit; only that it happened and how big it was.
 

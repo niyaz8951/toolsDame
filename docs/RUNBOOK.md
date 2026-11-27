@@ -24,6 +24,8 @@ node tests/browser/phase1.mjs
 node tests/browser/phase2.mjs
 node tests/browser/phase3.mjs     (includes the hostile-tool test)
 node tests/browser/phase4.mjs
+node tests/browser/accounts.mjs
+node tests/browser/company.mjs    (the rehearsal)
 ```
 
 ## Switch on GitHub Pages (once)

@@ -31,5 +31,8 @@ The seven contracts in `BEDROCK.md`: ids, roles and levels, the two kit lines, t
 - Only the Supabase URL and publishable key are in the repo.
 - The GitHub account should serve no other Pages site that loads outside code: every Pages site of one account shares one address with DAME.
 
+## Files that IT closes on its own servers
+The demo is a public test site, so every file of the repo can be fetched by its address. Two folders are written for IT and are only *shown* to IT admins in the demo: `book/` (the site book) and `docs/`. On IT's servers one web-server rule closes them to everyone but IT. Nothing in them is a key or data.
+
 ## Hand-over to IT
 Export: `core` tables, each tool's tables (ordinary PostgreSQL), each tool's files (the uploaded versions), the audit. IT builds the target; tools are re-uploaded as they are.

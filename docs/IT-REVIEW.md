@@ -69,3 +69,19 @@ Result: 103 checks, all passed. Together with the other tests: five SQL test fil
 - `004_tables.sql`, `005_hardening.sql`, `006_help.sql`, `007_add_people.sql`, `008_space_look.sql` and `009_new_user.sql` have not been run there. 009 is the one most tied to Supabase itself: it must be tried there before it is relied on.
 - The Supabase Security Advisor after 004 and 005.
 Until these three are done, "works" means "works locally".
+
+## Added 2026-11-27: limits found while rereading the site book
+The site book (`book/`, shown to IT admins only) has a new part "What a reviewer asks": threats by actor, the sharing of rights, data handling, operations. Limits recorded there for the first time, all accepted for a demo with sample data:
+
+| Gap | Closed by |
+|---|---|
+| A tool's manager decides the code that acts as each user inside the tool; "private" rows do not hold against him | Review by a second person before go-live; versions are kept with who made them live |
+| A manager may give his tool to any approved person, also outside his department | Audited today; a "members only" check if IT wants it |
+| Removing a member of a space leaves tools given to him by name | One action that clears both; the person window lists what is left |
+| A delete (row, table, tool, space) is final: no bin, no backup of the site's own | Export, IT's backups |
+| Nothing has a retention period | A policy set by IT |
+| A push to the repository is live with no review or staging | IT's pipeline |
+| A tool's request limit sits in the shell, not in the database | A limit in the database or at IT's gateway |
+| An IT admin who resets a password could sign in as that person (audited; the person is told) | Company sign-in |
+| No end date on an account or an access; no regular review | End dates, a review reminder, the directory |
+| The book and `docs/` are files of a public test site: shown to IT only, not locked | IT's web server, inside the company's domains |
