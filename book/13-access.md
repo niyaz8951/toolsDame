@@ -32,7 +32,7 @@ This is `core.tool_level(person, space, tool)`, in this order:
 | `core.require_space(space, 'admin')` | Also: admin of that space |
 | `core.require_space_or_it(space)` | Admin of that space, or IT admin |
 | `core.require_tool(space, tool, level)` | Has that tool at that level or higher |
-| `core.require_tool_manager(space, tool)` | Manager of that tool, or admin of its space |
+| `core.require_tool_manager(space, tool)` | Manager of that tool, or admin of its space (named, or an IT admin) |
 | `core.require_tool_of_space(space, tool)` | Admin of the tool's space |
 
 A function that names a space or tool the caller has no right to gets the same answer whether the thing exists or not (`not_allowed`). Nobody can probe which ids exist.
@@ -53,14 +53,14 @@ A function that names a space or tool the caller has no right to gets the same a
 - Nobody changes his own account or his own role.
 - A space always has one approved admin: the last one cannot be removed.
 - Switching an account off also removes its IT admin role and ends its session.
-- An IT admin may name himself admin of a space. It is written to the audit. (With one person on the site, the demo could not start otherwise. IT can forbid it on the target so that two people are always needed.)
+- An IT admin acts as admin of every space without being named (`core.can_admin_space`: named admin or IT admin; every gate uses it). He is not counted among a space's admins, so the last named admin still cannot be removed. Opening a tool he is not named in writes `it.tool_opened` to the audit.
 - Deleting a space or a tool needs its id typed, on the page **and again in the database call**.
 - Removing a member of a space does not remove tools he was given by name. The two lists are separate on purpose; a mover needs both cleared (see "Who can give what to whom").
 - An id is checked against `core.retired_ids` when something is created: a deleted tool's id never comes back, so an old link or an old table name can never point at something new.
 
 ## Why this way
 - **Roles are rows, not flags in a token.** A change takes effect at the next click, with no waiting for a token to expire.
-- **Being IT admin is not a master key to data.** Running the site and reading a department's rows are different rights. Taking the second leaves a trace.
+- **IT admin reaches every space, and leaves a trace.** The owner chose this on 2026-11-27: IT could already name itself admin of any space in one step, so the default removes the step, not a barrier, and the audit keeps what the step gave. Private rows stay with their owner. To keep IT out of department data instead, only `core.can_admin_space` and one line of `core.tool_level` change.
 - **A space member gets nothing by being a member** except tools marked open to the space. Sensitive tools are given by name.
 
 ## Considered and not done

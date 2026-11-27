@@ -184,13 +184,21 @@ $$;
 -- 3. Spaces
 -- ---------------------------------------------------------------------------
 
--- Is this person an admin of this space?
+-- Is this person named admin of this space? (Named only: counts and lists.)
 create function core.is_space_admin(p_uid uuid, p_space text) returns boolean
 language sql stable set search_path = '' as $$
   select exists (select 1 from core.space_admins a where a.space = p_space and a.user_id = p_uid);
 $$;
 
--- p_role: 'admin' = an admin of this space; 'member' = anyone who belongs to it.
+-- May this person act as admin of this space? Its named admins, and every
+-- IT admin on every space (owner, 2026-11-27). Every gate uses this one.
+create function core.can_admin_space(p_uid uuid, p_space text) returns boolean
+language sql stable set search_path = '' as $$
+  select core.is_space_admin(p_uid, p_space) or core.is_it(p_uid);
+$$;
+
+-- p_role: 'admin' = may act as admin of this space (named admin or IT admin);
+-- 'member' = anyone who belongs to it.
 create function core.require_space(p_space text, p_role text default 'admin') returns uuid
 language plpgsql volatile set search_path = '' as $$
 declare
@@ -204,7 +212,7 @@ begin
   if v_active is null then
     perform core.fail('not_allowed', 'You do not have this space. Ask its admin.');
   end if;
-  if core.is_space_admin(v_uid, p_space) then
+  if core.can_admin_space(v_uid, p_space) then
     return v_uid;
   end if;
   if p_role = 'member' and v_active
@@ -236,9 +244,10 @@ end $$;
 -- 4. Tools: the level of a person on a tool
 -- ---------------------------------------------------------------------------
 
--- The highest level a user has on a tool, or null.
--- Space admins and the tool's managers have the top level.
-create function core.tool_level(p_uid uuid, p_space text, p_tool text) returns text
+-- The highest level a user has on a tool by being named, or null: as named
+-- admin of the space, as the tool's manager, by access or as a member of a
+-- space whose tool is open to it. Leaves IT out (for the account card).
+create function core.named_tool_level(p_uid uuid, p_space text, p_tool text) returns text
 language plpgsql stable set search_path = '' as $$
 declare
   v_tool   core.tools;
@@ -271,6 +280,17 @@ begin
                      when 3 then 'edit' when 4 then 'approve' end;
 end $$;
 
+-- The highest level a user has on a tool, or null. Whoever may act as admin
+-- of the space (its named admins, every IT admin) and the tool's managers
+-- have the top level.
+create function core.tool_level(p_uid uuid, p_space text, p_tool text) returns text
+language sql stable set search_path = '' as $$
+  select case
+           when not exists (select 1 from core.tools t where t.space = p_space and t.id = p_tool) then null
+           when core.is_it(p_uid) then 'approve'
+           else core.named_tool_level(p_uid, p_space, p_tool) end;
+$$;
+
 -- Has this person at least this level on the tool?
 create function core.has_tool(p_uid uuid, p_space text, p_tool text, p_level text) returns boolean
 language sql stable set search_path = '' as $$
@@ -295,19 +315,19 @@ end $$;
 -- Is this person one of the tool's managers?
 create function core.is_tool_manager(p_uid uuid, p_space text, p_tool text) returns boolean
 language sql stable set search_path = '' as $$
-  select core.is_space_admin(p_uid, p_space)
+  select core.can_admin_space(p_uid, p_space)
       or exists (select 1 from core.tool_managers m
                   where m.space = p_space and m.tool = p_tool and m.user_id = p_uid);
 $$;
 
--- An admin of the tool's space, or one of the tool's managers.
+-- Whoever may act as admin of the tool's space, or one of the tool's managers.
 create function core.require_tool_manager(p_space text, p_tool text) returns uuid
 language plpgsql volatile set search_path = '' as $$
 declare
   v_uid uuid := core.require_user();
 begin
   if exists (select 1 from core.tools t where t.space = p_space and t.id = p_tool)
-     and (core.is_space_admin(v_uid, p_space)
+     and (core.can_admin_space(v_uid, p_space)
           or exists (select 1 from core.tool_managers m
                      where m.space = p_space and m.tool = p_tool and m.user_id = v_uid)) then
     return v_uid;

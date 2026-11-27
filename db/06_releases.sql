@@ -257,6 +257,11 @@ begin
            when v_manager then 'Nothing is live yet. Upload a version on the tool''s admin page, try the preview, then press Make live.'
            else 'This tool is not published yet. Ask its manager.' end, 400);
   end if;
+  -- An IT admin may open every tool; where he is not named, the audit says so.
+  if core.is_it(v_uid) and core.named_tool_level(v_uid, p_space, p_tool) is null then
+    perform core.audit_add(v_uid, 'it.tool_opened', null,
+      pg_catalog.jsonb_build_object('version', v_version, 'preview', coalesce(p_preview, false)), p_space, p_tool);
+  end if;
   return (
     select pg_catalog.jsonb_build_object(
       'space', v_tool.space, 'tool', v_tool.id, 'name', v_tool.name, 'icon', v_tool.icon, 'colour', v_tool.colour,

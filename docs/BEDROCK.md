@@ -18,10 +18,10 @@ Every tool is built against these and nothing else. The demo (GitHub Pages + Sup
 | Approve users, disable a user | yes | - | - | - |
 | Create, switch off, delete a space; name its first admin | yes | - | - | - |
 | Name or remove admins of his space | yes | yes | - | - |
-| Create, switch off, delete a tool in his space; name its managers | - | yes | - | - |
-| Give and take access to a tool | - | yes | his tool | - |
-| Upload, preview, make live, roll back | - | yes | his tool | - |
-| Create and change tables | - | yes | his tool | - |
+| Create, switch off, delete a tool in his space; name its managers | every space | yes | - | - |
+| Give and take access to a tool | every tool | yes | his tool | - |
+| Upload, preview, make live, roll back | every tool | yes | his tool | - |
+| Create and change tables | every tool | yes | his tool | - |
 | Read the audit | all | his space | his tool | - |
 | Site settings (AI, quotas) | yes | may tighten for his space | - | - |
 
@@ -29,6 +29,7 @@ Every tool is built against these and nothing else. The demo (GitHub Pages + Sup
 - Nobody can raise himself or act outside his space.
 - A disabled account loses everything at the next request.
 - Access to a space does not open its tools; each tool is granted on its own or marked "open to the space".
+- A space admin has the top level on every tool of his space. An IT admin acts as admin of every space (owner, 2026-11-27); opening a tool he is not named in is audited. Private rows stay with their owner for everyone.
 
 ## Tool kit v1
 ```html

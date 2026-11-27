@@ -18,7 +18,8 @@ declare
   u uuid := '00000000-0000-4000-8000-0000000000c3';  -- has "app" at read
   x uuid := '00000000-0000-4000-8000-0000000000d3';  -- approved, has nothing
   o uuid := '00000000-0000-4000-8000-0000000000e3';  -- admin of another space
-  ca jsonb; cm jsonb; cu jsonb; cx jsonb; co jsonb;
+  i uuid := '00000000-0000-4000-8000-0000000000f3';  -- IT admin, named nowhere
+  ca jsonb; cm jsonb; cu jsonb; cx jsonb; co jsonb; ci jsonb;
   s  text := 'zz-test-three';
   s2 text := 'zz-test-four';
   sha text := repeat('ab', 32);
@@ -88,13 +89,14 @@ begin
       (a, 'a3@test.dame', 'Zz Ada', 'active'), (m, 'm3@test.dame', 'Zz Max', 'active'),
       (u, 'u3@test.dame', 'Zz Uma', 'active'), (x, 'x3@test.dame', 'Zz Xan', 'active'),
       (o, 'o3@test.dame', 'Zz Oto', 'active');
+    insert into core.profiles (id, email, name, status, is_it) values (i, 'i3@test.dame', 'Zz Ida IT', 'active', true);
     insert into core.spaces (id, name, created_by) values (s, 'Three', a), (s2, 'Four', o);
     insert into core.space_admins (space, user_id, added_by) values (s, a, a), (s2, o, o);
     insert into core.tools (space, id, name, created_by) values (s, 'app', 'App', a), (s, 'other', 'Other', a), (s2, 'app', 'App four', o);
     insert into core.tool_managers (space, tool, user_id, added_by) values (s, 'app', m, a);
     insert into core.tool_access (space, tool, user_id, level, added_by) values (s, 'app', u, 'read', a);
     ca := dame_test.claims(a, 1); cm := dame_test.claims(m, 2); cu := dame_test.claims(u, 3);
-    cx := dame_test.claims(x, 4); co := dame_test.claims(o, 5);
+    cx := dame_test.claims(x, 4); co := dame_test.claims(o, 5); ci := dame_test.claims(i, 6);
     -- each person has clicked once, so the platform knows his session
     perform dame_test.run(ca, 'select public.dame_me()'); perform dame_test.run(cm, 'select public.dame_me()');
     perform dame_test.run(cu, 'select public.dame_me()'); perform dame_test.run(cx, 'select public.dame_me()');
@@ -231,6 +233,14 @@ begin
     perform dame_test.expect('a person without the tool cannot open it', 'not_allowed',
       dame_test.run(cx, format('select public.dame_tool_open(%L, %L)', s, 'app')));
     perform dame_test.expect('a person without the tool cannot read its files', 'false', dame_test.file(cx, s || '/app/1/index.html', 'read'));
+    perform dame_test.expect('the space admin opens the tool', 'ok', dame_test.run(ca, format('select public.dame_tool_open(%L, %L)', s, 'app')));
+    perform dame_test.expect('a named person opening it leaves no IT line', '0',
+      (select count(*) from core.audit where action = 'it.tool_opened' and space = s)::text);
+    perform dame_test.expect('an IT admin named nowhere opens the tool', '1/approve',
+      dame_test.val(ci, format($q$select (r ->> 'version') || '/' || (r ->> 'level') from public.dame_tool_open(%L, %L, false) r$q$, s, 'app')));
+    perform dame_test.expect('and the audit says IT opened it', '1',
+      (select count(*) from core.audit where action = 'it.tool_opened' and space = s and tool = 'app' and actor = i)::text);
+    perform dame_test.expect('IT may read the tool''s files', 'true', dame_test.file(ci, s || '/app/1/index.html', 'read'));
     perform dame_test.expect('an admin of another space cannot read its files', 'false', dame_test.file(co, s || '/app/1/index.html', 'read'));
     perform dame_test.expect('the same path in another space opens nothing', 'false', dame_test.file(cu, s2 || '/app/1/index.html', 'read'));
 

@@ -195,15 +195,26 @@ begin
     perform dame_test.expect('a space that does not exist looks the same as a refused one', 'not_allowed',
       dame_test.run(cb, $q$select public.dame_space_get('zz-test-none')$q$));
 
-    -- ------------------- 4. IT admin is not a space admin
-    perform dame_test.expect('IT admin cannot create a tool', 'not_allowed',
+    -- ------------------- 4. IT admin acts as admin of every space (owner, 2026-11-27)
+    perform dame_test.expect('IT admin opens a space he is not named in, as admin', 'true/bids,closed',
+      dame_test.val(ca, format($q$select (public.dame_space_get(%L) ->> 'is_admin') || '/' || (select string_agg(t ->> 'id', ',') from jsonb_array_elements(public.dame_space_get(%L) -> 'tools') t)$q$, s1, s1)));
+    perform dame_test.expect('IT admin has the top level on every tool', 'approve/approve',
+      core.tool_level(a, s1, 'bids') || '/' || core.tool_level(a, s1, 'closed'));
+    perform dame_test.expect('IT admin is still not counted as a named admin', 'false',
+      core.is_space_admin(a, s1)::text);
+    perform dame_test.expect('IT admin creates a tool in that space', 'ok',
       dame_test.run(ca, format('select public.dame_tool_create(%L, %L, %L, %L, %L, %L, false, %L)', s1, 'it-tool', 'x', '', '', '', 'read')));
-    perform dame_test.expect('IT admin cannot add a member', 'not_allowed',
-      dame_test.run(ca, format('select public.dame_space_member_add(%L, %L)', s1, f)));
-    perform dame_test.expect('IT admin cannot give access to a tool', 'not_allowed',
-      dame_test.run(ca, format('select public.dame_tool_access_set(%L, %L, %L, %L)', s1, 'bids', a, 'approve')));
-    perform dame_test.expect('IT admin cannot open the space', 'not_allowed',
-      dame_test.run(ca, format('select public.dame_space_get(%L)', s1)));
+    perform dame_test.expect('IT admin opens that tool''s admin page', 'ok',
+      dame_test.run(ca, format('select public.dame_tool_admin_get(%L, %L)', s1, 'it-tool')));
+    perform dame_test.expect('IT admin gives and takes access on a tool', 'ok/ok',
+      dame_test.run(ca, format('select public.dame_tool_access_set(%L, %L, %L, %L)', s1, 'it-tool', f, 'read'))
+      || '/' || dame_test.run(ca, format('select public.dame_tool_access_set(%L, %L, %L, null)', s1, 'it-tool', f)));
+    perform dame_test.expect('IT admin deletes the tool he made', 'ok',
+      dame_test.run(ca, format('select public.dame_tool_delete(%L, %L, %L)', s1, 'it-tool', 'it-tool')));
+    perform dame_test.expect('what IT did is in the space''s audit under his name', 'true',
+      ((select count(*) from core.audit where space = s1 and tool = 'it-tool' and actor = a) >= 4)::text);
+    perform dame_test.expect('IT admin reads the space''s audit', 'ok',
+      dame_test.run(ca, format('select public.dame_audit_scope_list(%L)', s1)));
     perform dame_test.expect('IT admin on a space that does not exist: told so', 'bad_request',
       dame_test.run(ca, format('select public.dame_space_admin_add(%L, %L)', 'zz-test-none', f)));
 

@@ -10,7 +10,7 @@ This folder is **the whole DAME database, once**: every table in its final form 
 | `check.sql` | Asks a database whether it is this final version: one row, yes or no (reads only) |
 | `01_base.sql` | Checks that the database is empty; schema `core`; default rights taken away; small helpers (id rule, levels, refusals, text cleaning); the two trigger functions |
 | `02_tables.sql` | All 16 tables of `core` in their final form, indexes, triggers, the six default settings; row security on and forced on every table, no policies, no rights |
-| `03_access.sql` | The audit and the `core.require_*` checks (who is calling; space and tool roles; a person's level on a tool) |
+| `03_access.sql` | The audit and the `core.require_*` checks (who is calling; space and tool roles; a person's level on a tool). `core.can_admin_space` is the one place that says an IT admin acts as admin of every space |
 | `04_people.sql` | Sign-in, access requests, accounts, temporary passwords, the IT admin's People, site settings, the whole audit |
 | `05_spaces_tools.sql` | Spaces and tools: create, change, on/off, delete with cleanup; admins, members, managers, access; usage guide; finding people; audit of a space or tool |
 | `06_releases.sql` | Versions of a tool (upload, seal, preview, make live, roll back), the private file bucket `tools` and its two policies, opening a tool |
@@ -18,7 +18,7 @@ This folder is **the whole DAME database, once**: every table in its final form 
 | `08_quotas.sql` | The four limits per space (rows, tools, tables, columns), requests and answers |
 | `09_rights.sql` | `core.make_first_admin`, `core.security_check`, and the rights: each `dame_*` function granted by name |
 
-In numbers: 16 tables, 121 functions (72 `dame_*` functions, the API; 49 `core.*` helpers), 2 storage policies, 6 settings.
+In numbers: 16 tables, 123 functions (72 `dame_*` functions, the API; 51 `core.*` helpers), 2 storage policies, 6 settings.
 
 ## How to run
 

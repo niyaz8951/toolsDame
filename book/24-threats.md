@@ -7,7 +7,7 @@ Stranger | Meets a closed door: one harmless function answers
 Signed-in person | Gets only what he was given, checked on every request
 Admin or manager | Acts only inside his own space or tool
 A tool's code | Sealed: no network, no session
-IT admin | Runs the site. Gets no data by that
+IT admin | Runs the site. Reaches every space; each opening of a tool is audited
 Account owner | Above the rules: sign-in with second factor, then IT's pipeline
 :::
 
@@ -61,7 +61,7 @@ This is the case the site is built around: code written by an AI, pasted by a no
 ## An IT admin who misuses the role
 | He tries | What stops him, or shows it | Left over |
 |---|---|---|
-| To read a department's rows | Being IT admin gives no level on any tool. He must name himself admin of the space: `space.admin_added` in the audit, with his name | One person can do it alone. On the target, IT can require two |
+| To read a department's rows | Nothing stops him (owner's choice): he acts as admin of every space. Opening the tool writes `it.tool_opened` with his name; his changes are audited as anyone's | One person can do it alone. On the target, IT can take the IT line out of `core.can_admin_space`
 | To read private rows | Not even as space admin | He could reset that person's password and sign in as him. `user.password_reset` is in the audit with both names, the person's own password stops working, and the start page tells him who reset it. Closed by company sign-in, where IT sets no passwords |
 | To take over another IT admin | The same path, the same trace | Accepted for the demo |
 | To remove the trace | The audit cannot be changed from the site by anyone | Only the owner of the database account can, see below |

@@ -18,8 +18,8 @@ Each line: the question, what was chosen, and why. The full record with dates is
 | How does IT add someone? | A username with a temporary password that must be replaced; or an email approved in advance | Owner's wish for the first; the second for people with a work mailbox |
 | How many sessions? | One per person, 12 hours | Simple, holds on any plan, makes a forgotten sign-in harmless |
 | Delete accounts? | No, switch off | The audit and row owners must always point at someone |
-| Is IT admin a master key to data? | No | Running the site and reading a department's rows are separate rights |
-| May IT name itself space admin? | Yes, audited | Otherwise a one-person demo cannot start. IT may forbid it on the target |
+| Does IT admin reach every space? | Yes (owner, 2026-11-27) | IT could already name itself admin in one step; every change and every opening of a tool IT is not named in is audited; private rows stay with their owner |
+| May IT name itself space admin? | Yes, audited; no longer needed to act in a space | Otherwise a one-person demo cannot start |
 | Who may a manager give his tool to? | Any approved person, by name | A tool is often needed by one person of another department. Each grant is audited; a rule "members only" is one check if IT wants it |
 | Does leaving a space remove named access? | No | Membership and named access are separate lists; the person window shows both |
 

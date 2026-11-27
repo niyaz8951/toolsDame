@@ -70,7 +70,7 @@ end $$;
 -- 2. Spaces: what a person sees
 -- ---------------------------------------------------------------------------
 
--- The spaces the caller may open: as admin, as member, or through a tool.
+-- The spaces the caller may open: as admin (an IT admin: all), as member, or through a tool.
 create function public.dame_spaces_list() returns jsonb
 language plpgsql volatile security definer set search_path = '' as $$
 declare
@@ -80,9 +80,9 @@ begin
     select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
              'id', s.id, 'name', s.name, 'description', s.description,
              'icon', s.icon, 'colour', s.colour, 'active', s.active,
-             'is_admin', core.is_space_admin(v_uid, s.id)) order by s.name)
+             'is_admin', core.can_admin_space(v_uid, s.id)) order by s.name)
       from core.spaces s
-     where core.is_space_admin(v_uid, s.id)
+     where core.can_admin_space(v_uid, s.id)
         or (s.active and (
               exists (select 1 from core.space_members m where m.space = s.id and m.user_id = v_uid)
            or exists (select 1 from core.tool_managers m where m.space = s.id and m.user_id = v_uid)
@@ -100,7 +100,7 @@ declare
   v_tools jsonb;
 begin
   select * into v_space from core.spaces s where s.id = p_space;
-  v_admin := v_space.id is not null and core.is_space_admin(v_uid, p_space);
+  v_admin := v_space.id is not null and core.can_admin_space(v_uid, p_space);
   if v_space.id is not null and (v_admin or v_space.active) then
     select coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
              'id', t.id, 'name', t.name, 'description', t.description, 'icon', t.icon, 'colour', t.colour,
@@ -497,7 +497,7 @@ begin
       'space', t.space, 'space_name', s.name, 'id', t.id, 'name', t.name, 'description', t.description,
       'icon', t.icon, 'colour', t.colour, 'active', t.active, 'space_active', s.active,
       'open_to_space', t.open_to_space, 'open_level', t.open_level,
-      'is_space_admin', core.is_space_admin(v_uid, t.space),
+      'is_space_admin', core.can_admin_space(v_uid, t.space),
       'managers', coalesce((select pg_catalog.jsonb_agg(core.person_json(g.user_id) order by g.added_at)
                               from core.tool_managers g where g.space = t.space and g.tool = t.id), '[]'::jsonb),
       'access', coalesce((select pg_catalog.jsonb_agg(core.person_json(x.user_id) || pg_catalog.jsonb_build_object('level', x.level)

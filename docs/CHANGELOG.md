@@ -2,6 +2,18 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - IT admin reaches every space and tool
+Changed (owner: "IT manager doesn't have access to all spaces and tools by default ... similarly space admin to have access to all tools in that space by default")
+- **An IT admin acts as admin of every space** and has the top level on every tool, without naming himself: every space on the hub (marked admin), its admin page, every tool and its admin page.
+- **Opening a tool he is not named in writes `it.tool_opened`** to the audit (tool, version, preview or not). Everything he changes was already audited under his name.
+- **Unchanged:** private rows stay with their owner, also for IT; "the last admin" counts named admins only; My account and IT's person window show named roles only. An IT admin is told to set limits himself instead of asking for more quota.
+- **Space admins** already had the top level on every tool of their space; now covered by the same tests.
+- Database: new `core.can_admin_space` (named admin or IT admin), used by every gate; `core.tool_level` split into `core.named_tool_level` and a wrapper; new fingerprint in `db/check.sql`. `db/upgrade.sql` brings the live project there **whether or not the previous upgrade (removing a column) ran**; tested from both starting points: every function and right identical to a fresh build, security check empty, `check.sql` yes, a second run refused.
+- Tests: the old "IT is refused" cases turned into "IT is allowed, audited"; new cases for the audit line, private rows and the quota request (1,306 SQL cases, all pass twice); the rehearsal (149 checks), phase0 and all browser tests pass.
+
+Files: `db/03_access.sql`, `db/04_people.sql`, `db/05_spaces_tools.sql`, `db/06_releases.sql`, `db/08_quotas.sql`, `db/check.sql`, `db/upgrade.sql`, `db/README.md`, `admin/it.html` (one sentence), `help/admin-it.md`, tests, docs (BEDROCK roles table, DECISIONS, IT-REVIEW, STATUS), the site book (`00`, `02`, `10-notes`, `13`, `14`, `17`, `20`, `21`, `22`, `24`, `25`).
+SQL to paste: `db/upgrade.sql` (last result must say yes).
+
 ## 2026-11-27 - The Data page as a sheet; removing a column
 New (owner: "regular users can't visualise the existing db table; make it like Excel or a table view where they can add or remove columns easily and understand how data is being saved, without exposing data")
 - **Each table is drawn like a spreadsheet** on a tool's admin page, Data: column letters A, B, C, row numbers, each column's name with its kind under it ("Number", "One of: To do, In progress, Done"), and two made-up rows in grey. The grid is built from the column list; no saved row is read, so nothing is exposed.

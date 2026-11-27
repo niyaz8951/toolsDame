@@ -41,7 +41,7 @@ Tool manager | Builds one tool and gives it to people, at a level
 Member | Uses the tools he was given
 :::
 
-> Being IT admin does not open a department's data. Every right is one row in the database and one line in the audit.
+> IT admin can open every space, and every time IT opens a department's tool the audit says so. Private rows stay with their owner, even for IT. Every right is one row in the database and one line in the audit.
 
 ## From an idea to a live tool
 

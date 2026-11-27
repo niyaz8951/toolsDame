@@ -473,7 +473,10 @@ try {
   // ------------------------------------------------------------------ what IT itself can and cannot do
   const itData = await probes(it, [['dame_space_get', { p_space: 'finance' }], ['dame_rows_list', { p_space: 'finance', p_tool: fin.data, p_table: 'entries', p_options: {}, p_preview: false }],
     ['dame_tool_open', { p_space: 'finance', p_tool: fin.data, p_preview: false }], ['dame_tables_list', { p_space: 'finance', p_tool: fin.data }], ['file', 'finance/' + fin.data + '/1/index.html']]);
-  check(itData.join() === 'not_allowed,not_allowed,not_allowed,not_allowed,file', 'IT admin is not inside a department by being IT admin: its tools, rows and files are refused');
+  check(itData.every((c) => c === 'ALLOWED'), 'IT admin acts as admin of every department: its space, tools, tables and files open (' + itData.join(', ') + ')');
+  check((await rpc(it, 'dame_rows_list', { p_space: 'finance', p_tool: fin.data, p_table: 'entries', p_options: {}, p_preview: false })).value.length === 0, 'Finance (private rows): IT does not see a user\'s rows either');
+  const itOpened = (await rpc(it, 'dame_audit_list', { p_limit: 50, p_before: null })).value.filter((x) => x.action === 'it.tool_opened' && x.space === 'finance');
+  check(itOpened.length >= 1, 'IT opening a department\'s tool it is not named in is written to the audit (it.tool_opened)');
   const all = (await rpc(it, 'dame_spaces_all')).value;
   const audit = (await rpc(it, 'dame_audit_list', { p_limit: 500, p_before: null })).value;
   const count = (action) => audit.filter((x) => x.action === action).length;

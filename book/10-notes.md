@@ -3,6 +3,7 @@
 The running log of the site. Newest first. Every change to the site adds a line here and updates the chapter it touches.
 
 ## 2026-11-27
+- **IT admin reaches every space and tool by default.** Owner: an IT manager without access to all spaces looked like an error. Earlier the rule was the opposite on purpose (IT had to name itself admin, which left an audit line). Now IT acts as admin of every space and has the top level on every tool; opening a tool it is not named in writes `it.tool_opened`; private rows stay with their owner; named admins are still the ones counted. Space admins already had every tool of their space. `db/upgrade.sql` for the live project.
 - **The Data page as a sheet.** Owner: regular users could not picture a table. Each table is now drawn like a spreadsheet: column letters, name and kind of each column, two made-up rows in grey; saved rows are never shown. "+ Column" adds a column; the x on a column removes it after its name is typed (new function, tool managers only, never a standard column; `db/upgrade.sql` for the live project). After a change the site writes the request for the AI.
 - Presenting: a press on the slide goes forward, a press on its left third goes back, also with the laser or spotlight on. Five steps in a row stay on one line.
 - **The book in pictures.** Owner: the people who decide have little time; the book read badly and presented badly. New first chapter "DAME in five minutes": the whole case on eleven slides, almost all pictures, with its own button. Seven kinds of picture (numbers, cards, chain, tree, walls, steps with who acts, compare) are drawn by the site from a few lines of text; they are in the key chapters too.
@@ -37,7 +38,7 @@ The running log of the site. Newest first. Every change to the site adds a line 
 ## Decisions worth remembering
 - Uploaded code is never trusted. The frame and the database are the wall; the upload check is help.
 - Tile admins never paste SQL and never touch the repository.
-- IT admin does not see department data by being IT admin.
+- IT admin acts as admin of every space (2026-11-27; before, it had to name itself); opening a tool it is not named in is audited.
 - The look follows the earlier DAME hub; no code or data was taken from it.
 - Accounts made by IT with a temporary password are a demo stand-in, by the owner's decision; company sign-in replaces them.
 - Charts will be a building block of the kit, not a second library.

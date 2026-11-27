@@ -219,6 +219,9 @@ declare
   v_tools  integer := coalesce(p_tools, l.max_tools);
   v_reason text := pg_catalog.btrim(pg_catalog.regexp_replace(coalesce(p_reason, ''), '[[:cntrl:]]+', ' ', 'g'));
 begin
+  if not core.is_space_admin(v_uid, p_space) then
+    perform core.fail('not_allowed', 'You are an IT admin: change this space''s limits yourself on IT admin > Quotas.');
+  end if;
   perform core.quota_number(p_rows, 100, 10000000, 'Rows in the space');
   perform core.quota_number(p_tables, 1, 100, 'Tables in a tool');
   perform core.quota_number(p_columns, 1, 200, 'Columns in a table');
@@ -249,6 +252,9 @@ declare
   v_uid uuid := core.require_space(p_space, 'admin');
   v_id  bigint;
 begin
+  if not core.is_space_admin(v_uid, p_space) then
+    perform core.fail('not_allowed', 'You are an IT admin: answer the request on IT admin > Quotas.');
+  end if;
   update core.quota_requests set status = 'taken_back', answered_at = pg_catalog.now(), answered_by = v_uid
    where space = p_space and status = 'open' returning id into v_id;
   if v_id is null then

@@ -21,7 +21,7 @@
 
 ## Built in phase 1 (say if any should change)
 - A tool is named by its space and its id together: `core.require_tool(space, tool, level)`, `core.has_tool(user, space, tool, level)`. Tool ids are unique inside a space, not across the site.
-- An IT admin is not a member of any space by being IT admin (BEDROCK roles table). He sees a space on the hub only if he is its admin or member.
+- ~~An IT admin is not a member of any space by being IT admin.~~ Replaced by the owner on 2026-11-27, see below.
 - Nobody changes his own account or role; switching an account off also removes its IT admin role and ends its session at once.
 - Refusing a waiting account switches it off (it can be switched on later). Accounts are never deleted.
 - The first IT admin is made once by the owner in the SQL editor: `select core.make_first_admin('email');`. It refuses when an IT admin exists.
@@ -200,3 +200,13 @@
 - **Removing** is the x next to a column's name, then typing the name, as for deleting a table. New function `dame_table_drop_column` (`db/07_data.sql`; `db/upgrade.sql` for the live project): tool managers only; never one of the five standard columns; a table keeps one column of its own; the name is used in SQL only after it is found in `core.tool_tables`; live and preview copy both; the audit keeps the kind and how many rows had a value. The book used to say removing waits for an export, because it destroys data; it is now handled like deleting a table (typed name, the loss said in plain words, audited). Export stays on the list.
 - A live page that still sends the removed column is refused on save, with a message that names the table's columns; it is not silently ignored. So after an add or a remove the table shows "Copy the request for the AI", which tells the AI exactly what changed.
 - Not done: renaming or retyping a column (needs the values copied; later).
+
+## Owner, 2026-11-27 (IT admin acts as admin of every space)
+- Owner: "IT manager doesn't have access to all spaces and tools by default ... similarly space admin to have access to all tools in that space by default".
+- **An IT admin acts as admin of every space and has the top level ("approve") on every tool**, switched off or not, without naming himself. He sees every space on the hub, opens its admin page and every tool's admin page, makes and deletes tools, gives access, makes tables, uploads and makes live.
+- **Why this does not weaken the site:** an IT admin could already name himself admin of any space in one step. The default removes the step, not a barrier. What the step gave, a trace, is kept: every change is audited under his name as before, and **opening a tool he is not named in writes `it.tool_opened`** (tool, version, preview or not).
+- **What stays as it was:** private rows are seen by their owner only, also by IT. The named admins are a separate list: "the last admin cannot be removed" counts named admins only, and My account / IT's person window show named roles only (`core.named_tool_level`). An IT admin does not ask himself for more quota or take a request back: he sets limits and answers on IT admin > Quotas.
+- **Space admins:** already had the top level on every tool of their space (since phase 2); unchanged, now tested in the same files.
+- In the database it is one function, `core.can_admin_space(user, space)` = named admin or IT admin, used by every gate (`core.require_space`, `core.tool_level`, `core.is_tool_manager`, `core.require_tool_manager`, the hub and space lists, the file rule through `core.is_tool_manager`).
+- Stricter choice for IT on the target: keep IT out of department data (the earlier rule) by removing `or core.is_it(p_uid)` from `core.can_admin_space` and the IT line from `core.tool_level`; nothing else changes. Keep the number of IT admins small either way.
+

@@ -17,7 +17,7 @@
 ## Good to know
 - A full space still reads, changes and deletes; only new rows are refused. A limit below what a space already uses deletes nothing.
 - A "Back to ..." button takes you to the page you came from, on the tab you left it on.
-- Being IT admin does not open a department's data. To look inside a space, name yourself its admin; that is written in the audit.
+- As IT admin you can open every space and every tool and act as their admin, without naming yourself. Everything you change is in the audit under your name, and so is every time you open a tool you are not named in. Private rows stay with their owner, also for you.
 - A person added here still has to prove the email address is his (the confirmation email), unless that was switched off in the sign-in service.
 
 Site rules: `docs/BEDROCK.md`. Security rules: `docs/SECURITY.md`.

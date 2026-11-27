@@ -190,11 +190,11 @@ begin
           or exists (select 1 from core.space_members m where m.space = s.id and m.user_id = p_user)), '[]'::jsonb),
     'tools', coalesce((
       select pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object('space', t.space, 'space_name', s.name, 'tool', t.id, 'name', t.name,
-               'level', core.tool_level(p_user, t.space, t.id),
+               'level', core.named_tool_level(p_user, t.space, t.id),
                'manager', exists (select 1 from core.tool_managers m where m.space = t.space and m.tool = t.id and m.user_id = p_user))
              order by s.name, t.name)
         from core.tools t join core.spaces s on s.id = t.space
-       where core.tool_level(p_user, t.space, t.id) is not null), '[]'::jsonb),
+       where core.named_tool_level(p_user, t.space, t.id) is not null), '[]'::jsonb),
     'sign_ins', coalesce((
       select pg_catalog.jsonb_agg(x.at order by x.id desc)
         from (select a.id, a.at from core.audit a

@@ -23,7 +23,7 @@ Result: 103 checks, all passed. Together with the other tests: five SQL test fil
 | Can one department see or change another's tools, rows, files, people? | No. Every function checks the caller's role on that space or tool first; the file store has its own rule. | company test: 1,260 tries |
 | Do two tables with the same name mix? | No. Each tool has its own schema. | company test |
 | Can a user raise his own rights? An admin act as IT? | No. | company test: 13 and 10 tries |
-| Does being IT admin open every department's data? | No. IT manages people, spaces and settings. To see a department's rows IT must add itself as its admin, and that is written in the audit. | company test |
+| Does being IT admin open every department's data? | Yes, by the owner's choice (2026-11-27): IT acts as admin of every space. Private rows stay with their owner. Every change is audited under IT's name, and opening a tool IT is not named in writes `it.tool_opened`. To keep IT out instead, one function changes (`core.can_admin_space`). | company test, `releases_test.sql` |
 | Private rows (Finance)? | Seen by their owner only, not even by the department's admin. | company test |
 | What happens to a leaver? | Switched off by IT: out at the next click, files too. Rows stay, marked as his. | company test |
 | Can IT add a person directly? | Yes, by email: the address is approved in advance and the person is in at once when he signs up with it. IT never sets or sees a password, and nothing is written into the sign-in service's own tables. | `add_people_test.sql`, company test |

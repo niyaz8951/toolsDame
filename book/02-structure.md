@@ -21,7 +21,7 @@ Three levels, always: the hub, a space, a tool.
 
 ## Four roles
 :::chain
-IT admin | Lets people in, makes spaces, names their admins, sets the site rules, reads the audit and this book
+IT admin | Lets people in, makes spaces, names their admins, sets the site rules, reads the audit and this book; acts as admin of every space
 Space admin | Makes the tools of the space, names their managers, adds people, gives access
 Tool manager | Builds and looks after one tool: its page, its tables, its usage guide, its access
 Member | Uses the tools he was given
@@ -45,5 +45,6 @@ Each level holds everything of the one before it.
 - A manager always has the top level on his tool.
 
 ## Two things that surprise people
-- Being **IT admin does not open a department's data**. To look inside a space, IT must name itself its admin, and that is written in the audit.
+- **IT admin acts as admin of every space** (owner, 2026-11-27), without naming itself. Every change is in the audit under its name, and so is every time it opens a tool it is not named in. Private rows stay with their owner.
+- **A space admin has the top level on every tool of his space.**
 - The pages only show and hide buttons. **The database decides** every single action again. A hidden button that someone finds a way to press is still refused.

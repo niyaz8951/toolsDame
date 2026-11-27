@@ -309,9 +309,9 @@ begin
       dame_test.val('authenticated', cb, $q$select public.dame_spaces_list() -> 0 ->> 'id'$q$));
     perform dame_test.expect('member does not see the other space', '1',
       dame_test.val('authenticated', cb, 'select jsonb_array_length(public.dame_spaces_list())'));
-    perform dame_test.expect('IT admin does not get a space by being IT admin', '0',
+    perform dame_test.expect('IT admin sees every space, as admin, by being IT admin', '2/2',
       dame_test.val('authenticated', ca,
-        $q$select count(*) from jsonb_array_elements(public.dame_spaces_list()) s where s ->> 'id' like 'test-%-zz'$q$));
+        $q$select count(*) || '/' || count(*) filter (where (s ->> 'is_admin')::boolean) from jsonb_array_elements(public.dame_spaces_list()) s where s ->> 'id' like 'test-%-zz'$q$));
 
     perform dame_test.expect('member of the space is let in as member', 'ok',
       dame_test.run('postgres', cb, $q$select core.require_space('test-space-zz', 'member')$q$));

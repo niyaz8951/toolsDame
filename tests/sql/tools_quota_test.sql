@@ -98,9 +98,9 @@ begin
     -- ------------------------------------------------ 1. the default: 10 tools a space
     perform dame_test.expect('a new space may have 10 tools and has none', '10/0/false',
       dame_test.val(ca, format($q$select (j ->> 'max_tools') || '/' || (j ->> 'tools_used') || '/' || (j ->> 'own') from public.dame_quota_get(%L) j$q$, s)));
-    foreach q in array array['cm', 'cx', 'co', 'ci'] loop
-      perform dame_test.expect('only an admin of the space makes a tool: refused for ' || q, 'not_allowed',
-        dame_test.run(case q when 'cm' then cm when 'cx' then cx when 'co' then co else ci end, format(mk, s, 'not-mine')));
+    foreach q in array array['cm', 'cx', 'co'] loop
+      perform dame_test.expect('only an admin of the space (or IT) makes a tool: refused for ' || q, 'not_allowed',
+        dame_test.run(case q when 'cm' then cm when 'cx' then cx else co end, format(mk, s, 'not-mine')));
     end loop;
     for k in 1..10 loop
       got := dame_test.run(ca, format(mk, s, 'tool-' || k));
@@ -112,6 +112,8 @@ begin
       (select count(*) from core.tools where space = s) || '/' || (select count(*) from core.audit where space = s and tool = 'tool-11'));
     perform dame_test.expect('a wrong id is still told as a wrong id, not as a full space', 'bad_request', dame_test.run(ca, format(mk, s, 'Bad Id')));
     perform dame_test.expect('the other space is not held by this one', 'ok', dame_test.run(co, format(mk, s2, 'tool-1')));
+    perform dame_test.expect('IT admin makes a tool in any space, and deletes it', 'ok/ok',
+      dame_test.run(ci, format(mk, s2, 'tool-it')) || '/' || dame_test.run(ci, format('select public.dame_tool_delete(%L, %L, %L)', s2, 'tool-it', 'tool-it')));
     perform dame_test.expect('the admin sees 10 of 10', '10/10', dame_test.val(ca, format($q$select (j ->> 'tools_used') || '/' || (j ->> 'max_tools') from public.dame_quota_get(%L) j$q$, s)));
     perform dame_test.expect('IT sees it in the list of spaces', '10/10',
       dame_test.val(ci, format($q$select (e ->> 'tools_used') || '/' || (e ->> 'max_tools') from jsonb_array_elements(public.dame_quota_list() -> 'spaces') e where e ->> 'space' = %L$q$, s)));

@@ -20,12 +20,12 @@ Member | Uses what he was given. Gives nothing on
 | Manager of a tool | An admin of the tool's space | The same | Any approved person | `tool.manager_added`, `tool.manager_removed` |
 | A tool, by name, at a level | A manager of the tool, or an admin of its space | The same | Any approved person | `tool.access_set` with the old and the new level, `tool.access_removed` |
 
-Nobody gives a right to himself except an IT admin naming himself admin of a space, which leaves the same audit line as for anyone else.
+Nobody gives a right to himself. An IT admin needs none: he acts as admin of every space (see Access).
 
 ## What each right opens, and what it does not
 | Right | Opens | Does not open |
 |---|---|---|
-| IT admin | People, approvals, spaces, site settings, the whole audit, the site book | Any tool, any row. No level on anything |
+| IT admin | People, approvals, spaces, site settings, the whole audit, the site book; every space as its admin, every tool at the top level (opening one he is not named in is audited) | Rows of a "private" table that are not his |
 | Space admin | Everything in that space: all its tools at the top level, their admin pages, the space's audit | Other spaces. Rows of a "private" table that are not his |
 | Tool manager | That tool at the top level: its page, versions, tables, access list, usage guide, audit | The other tools of the space; the space's member list |
 | Member of a space | The tools marked "open to the space", at the level set on each | Tools not marked so. Being a member alone opens nothing |

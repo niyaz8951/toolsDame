@@ -24,7 +24,7 @@ Short answers. Each names the chapter with the detail. Where the honest answer i
 - **Can Finance's rows be read by Marketing?** Only if a Finance manager gave that person the tool. Otherwise no: 1,260 cross-department attempts were refused in the rehearsal. *(Access; Tests)*
 - **Can a manager share his tool with someone outside his department?** Yes, by name, and it is audited. If IT wants "members only", it is one check. *(Who can give what to whom)*
 - **Can a department admin see private rows of his own people?** Not by looking. A manager who rewrites the tool's code could copy them; versions are kept with names, and a second reviewer is planned. *(Threats; Tables and rows)*
-- **Can IT read a department's rows?** Not as IT admin. Only after naming itself admin of that space, which is in the audit. *(Access)*
+- **Can IT read a department's rows?** Yes, team and reference rows: IT acts as admin of every space. Each time IT opens a tool it is not named in, `it.tool_opened` is in the audit. Private rows: no. *(Access)*
 - **A person changes department. What must be done?** The old space's admin removes him as member, and the managers of tools he had by name take those away. Both. IT's person window shows what is left. *(Who can give what to whom)*
 - **Where do I see who has what?** Per tool on its admin page, per space on the space admin page, per person in IT's person window. Who gave it and when: the audit. *(Who can give what to whom)*
 - **Is a removed right gone at once?** Yes. Rights are rows read on every request; nothing waits for a token to expire. *(Access)*
