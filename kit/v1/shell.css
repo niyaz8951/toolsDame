@@ -173,9 +173,12 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .hub-theme[data-night="true"] { color: #F6C64E; }
 .hub-theme[data-night="true"]::before { transform: rotate(120deg) scale(.3); opacity: 0; }
 .hub-theme[data-night="true"]::after { transform: none; opacity: 1; }
-/* The change of theme opens as a circle from the button; elsewhere a plain fade. */
+/* The change of theme: to night the dark page opens as a circle from the button; to day the same
+   circle runs backwards (the old, dark page lies on top and closes into the button). Elsewhere a plain fade. */
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 ::view-transition-old(hub-bar), ::view-transition-new(hub-bar) { animation: none; }
+html.hub-theme-back::view-transition-old(root) { z-index: 1; }
+html.hub-theme-back::view-transition-new(root) { z-index: 0; }
 html.hub-theme-fade, html.hub-theme-fade * { transition: background-color .35s var(--dame-ease), color .35s var(--dame-ease), border-color .35s var(--dame-ease) !important; }
 
 /* Hero band: the top of the hub and of a space. */

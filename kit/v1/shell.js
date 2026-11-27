@@ -72,15 +72,25 @@
       var next = isNight() ? 'day' : 'night';
       var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (document.startViewTransition && !calm) {
-        // The new theme opens as a circle from the button.
+        // To night the dark page opens as a circle from the button (as it always did).
+        // To day the same circle runs backwards: the dark page closes into the button
+        // and the day page is left. The dark page is the one that moves both ways.
         var box = btn.getBoundingClientRect();
         var x = box.left + box.width / 2;
         var y = box.top + box.height / 2;
         var r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
-        document.startViewTransition(function () { apply(next); }).ready.then(function () {
-          root.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + r + 'px at ' + x + 'px ' + y + 'px)'] },
-            { duration: 480, easing: 'cubic-bezier(.2,.8,.2,1)', pseudoElement: '::view-transition-new(root)' });
+        var small = 'circle(0px at ' + x + 'px ' + y + 'px)';
+        var full = 'circle(' + r + 'px at ' + x + 'px ' + y + 'px)';
+        var back = next === 'day';
+        var run = null;
+        var done = function () { root.classList.remove('hub-theme-back'); if (run) { try { run.cancel(); } catch (e) { /* already gone */ } } };
+        if (back) { root.classList.add('hub-theme-back'); }   // shell.css lays the old, dark page on top
+        var move = document.startViewTransition(function () { apply(next); });
+        move.ready.then(function () {
+          run = root.animate({ clipPath: back ? [full, small] : [small, full] },
+            { duration: 480, easing: back ? 'cubic-bezier(.8,0,.8,.2)' : 'cubic-bezier(.2,.8,.2,1)', fill: back ? 'forwards' : 'none', pseudoElement: back ? '::view-transition-old(root)' : '::view-transition-new(root)' });
         }).catch(function () {});
+        if (back) { move.finished.then(done, done); }
       } else {
         root.classList.add('hub-theme-fade');
         apply(next);

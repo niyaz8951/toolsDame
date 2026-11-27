@@ -2,6 +2,17 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - Day and night: the switch to day runs the same movement backwards
+Changed (owner: "for dark mode dark flows downward and in switching to light mode it flows upwards", "it must not change the existing animation")
+- To night: nothing changed. The dark page opens as a circle from the button, same speed, same curve.
+- To day: before, the day page opened with that same circle, so both directions looked alike. Now the dark page lies on top and the circle closes back into the button (same 0.48 s, the same curve mirrored: slow at the far corner, quick into the button), so the dark flows down to night and back up to day.
+- The plain fade (older browsers, devices that ask for less movement) is as before. Display only: no contract, no SQL, no change for tools; a running tool follows as before.
+- Tests: `tests/phase0.mjs` passes. Both directions were run in a real browser and looked at half-way: the theme changes, the choice is kept, no page error. `tests/browser/phase4.mjs` (it holds the check that a running tool follows) stops earlier, at "the tool did not show #fields input", on the build machine with and without this change; the part that passes the theme to a tool was not touched. To be run on the owner's computer.
+
+Files: `kit/v1/shell.js`, `kit/v1/shell.css`, `book/08-every-page.md`.
+SQL to paste: none.
+Owner: reload the live site once (Ctrl+F5) and press the sun and moon button both ways.
+
 ## 2026-11-27 - The full fix request; own designs and own data storage are refused
 Changed (owner: "site must give a detailed prompt to keep site guidelines and database needs and design needs and it must reject any new designs in html")
 - **The fix request is one complete text.** Before: one paragraph ("correct these points, follow the starter kit"). A page brought from outside was made by an AI that never saw the kit, so that could not work. Now `kit/ai-fix.md`: (1) every point the site found, stops and notes; (2) how to rebuild: keep what the tool does, throw the old design away and map each part to a building block, move everything kept or fetched into tables with the right columns, types and sharing; (3) the whole starter kit; (4) the page itself. The AI must answer with the page, the help text, a list of tables and what it left out.
