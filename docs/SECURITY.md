@@ -55,6 +55,14 @@ Known limits, said plainly:
 - No password is ever kept by a page: not in storage, not in an address. The start page holds the temporary one in memory until the new password is saved or the page is left.
 - Gaps ranked for the demo: `IT-REVIEW.md`.
 
+## Relay (work between teams)
+- The one place where work crosses spaces. A stage is a space; its team is the space's admins and members (and IT, marked "(IT)" in the history).
+- Only the person who picked an item up moves it; only to the next stage, past stages marked "if needed", or back to the team that passed it on. The database checks each of these, on a locked row, in `dame_relay_*`; the page only leaves out buttons.
+- Everyone named on a flow sees its items; someone on no stage gets the same refusal whether an item exists or not.
+- The history is append-only (a trigger, also for the owner) and every move is in the audit of the space where it happened.
+- Relay writes only its own four tables. It never touches a space, a tool, a table of a tool or a right.
+- All text is shown as text; titles and notes are cleaned of control characters and cut to length in the database.
+
 ## What goes into the database
 Only what people enter and what must be checked per person: accounts, rights, rows, table definitions, versions, audit, settings. What the site is made of (pages, kit, help, the site book) stays a file: the site is built to be moved to IT's servers inside the company's domains, where the web server guards files. See DECISIONS, 2026-11-27.
 

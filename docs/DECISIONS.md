@@ -210,3 +210,12 @@
 - In the database it is one function, `core.can_admin_space(user, space)` = named admin or IT admin, used by every gate (`core.require_space`, `core.tool_level`, `core.is_tool_manager`, `core.require_tool_manager`, the hub and space lists, the file rule through `core.is_tool_manager`).
 - Stricter choice for IT on the target: keep IT out of department data (the earlier rule) by removing `or core.is_it(p_uid)` from `core.can_admin_space` and the IT line from `core.tool_level`; nothing else changes. Keep the number of IT admins small either way.
 
+
+## Owner, 2026-11-27 (Relay: work passed between teams)
+- Owner: the company works as a value chain; work must pass from team to team, each team seeing what to do once the previous one handed over, and sending it back if something is missing. Name chosen by the owner: **Relay**. "This won't disturb the existing tools and would work independently."
+- **A hub feature owned by IT, not a tool in a space.** A tool belongs to one space and its sharing presets cannot say "only the team holding it may change it". Relay sits beside the spaces, like the IT admin page; Hub > Space > Tool stays three levels, because **a stage is a space** and adds no level and no role.
+- **Each level answers only the level that asked it** (the owner's rule for the MTS/MTO escalation): an item goes back only to the team that passed it on, and lands with the very person who did. Nobody jumps the chain. "Product team and/or Factory as required" is a stage marked "if needed", which the team before may skip.
+- **The checklist before each hand-over** is the answer to "something is missing": "Pass on" stays grey until every line is ticked; "Something is missing" still exists and is counted per stage.
+- **Who acts:** only the person who picked the item up; an admin of the team may take over; IT acts everywhere (it acts as admin of every space) and the history marks it "(IT)". Everyone named on a flow sees its items: the value chain is open to the people on it.
+- **Independent:** one database file, `db/09_relay.sql`; it reads spaces and people and writes only its own tables. A space deleted later leaves the stage without a team (shown to IT) rather than being blocked by Relay.
+- **Not now:** parallel stages, files on an item, mail. Noted in STATUS.

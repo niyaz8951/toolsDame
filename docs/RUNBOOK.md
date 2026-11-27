@@ -46,7 +46,7 @@ node tests/browser/company.mjs    (the rehearsal)
 
 ## The database
 Everything is in `db/`, once: read `db/README.md`.
-- A new, empty database: `psql "<connection>" -f db/install.sql`, or paste `db/01` to `db/09` into the SQL editor in number order. It refuses to run where schema `core` exists. The last result must be an empty table (`core.security_check()`), and `db/check.sql` must say `yes`.
+- A new, empty database: `psql "<connection>" -f db/install.sql`, or paste `db/01` to `db/10` into the SQL editor in number order. It refuses to run where schema `core` exists. The last result must be an empty table (`core.security_check()`), and `db/check.sql` must say `yes`.
 - Is a database the final version: paste `db/check.sql`. One row, `yes` or `no`.
 - Tests: any file of `tests/sql/`, pasted into the SQL editor: first row "N passed, 0 failed". Each test undoes everything it does. Then Advisors > Security: no errors.
 - A change: the file of its subject in `db/` is changed, `db/check.sql` gets the new fingerprint, and the live project gets `db/upgrade.sql` (only the change), removed again by the next delivery.

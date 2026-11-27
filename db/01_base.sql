@@ -29,7 +29,7 @@ create schema core;
 revoke all on schema core from public, anon, authenticated;
 
 -- Supabase gives anon and authenticated rights on everything new in public.
--- Take that away: each dame_* function is granted by name in 09_rights.sql.
+-- Take that away: each dame_* function is granted by name in 10_rights.sql.
 alter default privileges in schema public revoke all on functions from anon, authenticated;
 alter default privileges in schema public revoke all on tables from anon, authenticated;
 alter default privileges in schema public revoke all on sequences from anon, authenticated;

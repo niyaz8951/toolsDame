@@ -6,7 +6,7 @@ This folder is **the whole DAME database, once**: every table in its final form 
 
 | File | What it makes |
 |---|---|
-| `install.sql` | Runs 01 to 09 in one transaction with psql: it finishes completely or changes nothing |
+| `install.sql` | Runs 01 to 10 in one transaction with psql: it finishes completely or changes nothing |
 | `check.sql` | Asks a database whether it is this final version: one row, yes or no (reads only) |
 | `01_base.sql` | Checks that the database is empty; schema `core`; default rights taken away; small helpers (id rule, levels, refusals, text cleaning); the two trigger functions |
 | `02_tables.sql` | All 16 tables of `core` in their final form, indexes, triggers, the six default settings; row security on and forced on every table, no policies, no rights |
@@ -16,9 +16,11 @@ This folder is **the whole DAME database, once**: every table in its final form 
 | `06_releases.sql` | Versions of a tool (upload, seal, preview, make live, roll back), the private file bucket `tools` and its two policies, opening a tool |
 | `07_data.sql` | The table maker and the one data service (`dame_rows_*`) with the three sharing presets |
 | `08_quotas.sql` | The four limits per space (rows, tools, tables, columns), requests and answers |
-| `09_rights.sql` | `core.make_first_admin`, `core.security_check`, and the rights: each `dame_*` function granted by name |
+| `09_relay.sql` | Relay: work passed from team to team along the value chain. Four tables (flows, stages, items, history; the history append-only), fifteen `dame_relay_*` functions. Reads spaces and their people; writes only its own tables |
+| `10_rights.sql` | `core.make_first_admin`, `core.security_check`, and the rights: each `dame_*` function granted by name |
+| `upgrade-relay.sql` | For the live demo only: adds `09_relay.sql` word for word, with its rights, to a database of the version before |
 
-In numbers: 16 tables, 123 functions (72 `dame_*` functions, the API; 51 `core.*` helpers), 2 storage policies, 6 settings.
+In numbers: 20 tables, 152 functions (87 `dame_*` functions, the API; 65 `core.*` helpers), 2 storage policies, 6 settings.
 
 ## How to run
 
@@ -30,7 +32,7 @@ psql "<connection>" -f db/install.sql
 ```
 The last result must be an empty table (`core.security_check()` found nothing). Then `db/check.sql` must say `yes`.
 
-In a SQL editor without `\ir` (for example a fresh Supabase project): paste `01` to `09` in number order, then run `select * from core.security_check();`. Do not open the site before `09` has run.
+In a SQL editor without `\ir` (for example a fresh Supabase project): paste `01` to `10` in number order, then run `select * from core.security_check();`. Do not open the site before `10` has run.
 
 Then, once, after the first IT admin has signed in on the site:
 ```
@@ -43,7 +45,7 @@ Supabase has all of this. On a plain PostgreSQL (tested on 16 and 17), IT provid
 
 | Needed | Used by | In the target (company sign-in) |
 |---|---|---|
-| Roles `anon` (signed out) and `authenticated` (signed in) | rights in `09_rights.sql` | The API's two roles |
+| Roles `anon` (signed out) and `authenticated` (signed in) | rights in `10_rights.sql` | The API's two roles |
 | `auth.jwt()` and `auth.uid()`: the claims of the signed-in person (`sub`, `role`, `session_id`, `email`) | `core.require_login`, `core.peek_user`, `dame_request_access` | Read the company token instead |
 | `auth.users`, `auth.identities`, `auth.sessions` | the functions marked SUPABASE below | Not needed: company sign-in owns passwords |
 | `extensions.crypt`, `extensions.gen_salt` (pgcrypto in schema `extensions`) | temporary passwords | Not needed |

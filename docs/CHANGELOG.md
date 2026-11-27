@@ -2,6 +2,20 @@
 
 Newest first. One entry per delivery: what changed, what the owner must do.
 
+## 2026-11-27 - Relay: work passed between teams
+New (owner: "a tool across all spaces controlled by DAME IT where they see what they have to do on a task once the previous team has handed over ... hand over to the next team and send it back if something is missing"; "Relay works and demo is needed, implement it with basic understanding of the work flow in a company like Daikin")
+- **Relay** (`relay.html`), a hub feature owned by IT, beside the spaces, not a tile in one. A **flow** is stages in order, each done by one team (a space); each stage has a checklist to tick before passing on, a target in hours, and may be marked "if needed" (may be skipped).
+- **People:** "My work" (with you, waiting for your teams, you started); **Pick it up**; tick; **Pass on**; **Answer back** (goes to the team that passed it on, to the very person who did); **Something is missing** (back the same way, with what is missing); **Close** (last stage, or the first team once the answer is back); **Put it back**; an admin of the team **takes over**; who started it, an admin of the first team or IT **cancels** with a reason; anyone on the flow writes a **note**.
+- **Flows** tab: each flow drawn as its chain of teams, yellow to red like the value chain picture, with open, late, the usual time per stage and how often a stage sent something back; the items in a column per stage; the latest finished.
+- **Set up** (IT): "Add a flow", a tile per flow, a window per flow, four examples of a company like Daikin (MTO query, MTS query, Order to delivery, Spare parts request) whose teams are picked by space name. While items are open, stages cannot be added, removed, moved or given to another team. A flow is switched off, never deleted.
+- **Hub:** a Relay card for everyone on a flow and for IT: "2 waiting for your teams, 1 with you".
+- **Nothing else changes:** Relay reads spaces and their people and writes only its four tables. No space, tool, table, row or right is touched.
+- Database: new `db/09_relay.sql` (four tables, fifteen `dame_relay_*` functions); `09_rights.sql` renamed `10_rights.sql` (unchanged); new fingerprint in `db/check.sql`; `db/upgrade-relay.sql` for the live project (tested on the version before: same Relay code and rights as a fresh install, security check empty, `check.sql` yes, a second run refused).
+- Tests: `tests/sql/relay_test.sql` (110 cases); all 14 SQL files pass twice (1,488 cases); new `tests/browser/relay.mjs` (58 checks at desktop and phone); every other browser test, the rehearsal and phase0 pass.
+
+Files: `relay.html`, `pages/relay.js`, `pages/relay.css` (new), `help/relay.md` (new), `hub.html`, `pages/hub.js`, `kit/v1/shell.js` (audit words), `kit/v1/shell.css` (hub card), `db/09_relay.sql` (new), `db/10_rights.sql` (renamed), `db/install.sql`, `db/check.sql`, `db/upgrade-relay.sql` (new), `db/README.md`, tests, docs, the site book (`28-relay.md` new, `index.json`, `10-notes`, `14`, `22`).
+SQL to paste: `db/upgrade-relay.sql` (last result must say yes), then `tests/sql/relay_test.sql`.
+
 ## 2026-11-27 - IT admin reaches every space and tool
 Changed (owner: "IT manager doesn't have access to all spaces and tools by default ... similarly space admin to have access to all tools in that space by default")
 - **An IT admin acts as admin of every space** and has the top level on every tool, without naming himself: every space on the hub (marked admin), its admin page, every tool and its admin page.

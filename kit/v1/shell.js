@@ -624,7 +624,12 @@
     'tool.access_set': 'gave access', 'tool.access_removed': 'took access away',
     'table.created': 'made a table', 'table.column_added': 'added a column', 'table.deleted': 'deleted a table',
     'tool.help_set': 'wrote the usage guide', 'user.created': 'made an account', 'user.password_chosen': 'chose his own password', 'user.password_changed': 'changed his password', 'user.password_reset': 'reset the password of',
-    'user.details_changed': 'changed his work details', 'user.details_set': 'corrected the account of', 'user.status_changed': 'let in', 'user.added': 'added a person', 'user.add_removed': 'took an added person back', 'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back'
+    'user.details_changed': 'changed his work details', 'user.details_set': 'corrected the account of', 'user.status_changed': 'let in', 'user.added': 'added a person', 'user.add_removed': 'took an added person back', 'version.uploaded': 'uploaded a version', 'version.made_live': 'made a version live', 'version.rolled_back': 'rolled back',
+    'relay.started': 'started in Relay', 'relay.picked': 'picked up in Relay', 'relay.released': 'put back in Relay',
+    'relay.taken_over': 'took over in Relay', 'relay.passed': 'passed on in Relay', 'relay.answered': 'answered back in Relay',
+    'relay.sent_back': 'sent back in Relay', 'relay.closed': 'closed in Relay', 'relay.cancelled': 'cancelled in Relay',
+    'relay.flow_created': 'made a Relay flow', 'relay.flow_changed': 'changed a Relay flow',
+    'relay.flow_on': 'switched a Relay flow on', 'relay.flow_off': 'switched a Relay flow off'
   };
 
   // Fills an audit table page by page. fetchPage(beforeId) returns the rows.

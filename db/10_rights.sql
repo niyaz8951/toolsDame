@@ -1,4 +1,4 @@
--- db/09_rights.sql - who may call what, and the checks for the owner.
+-- db/10_rights.sql - who may call what, and the checks for the owner.
 -- Serves: SECURITY "Database": the API exposes only dame_* functions in public,
 -- each security definer with an empty search path; a signed-out visitor runs
 -- only dame_site_info; no table is ever reachable.

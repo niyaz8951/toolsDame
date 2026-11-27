@@ -13,7 +13,7 @@ So the complete list of things the internet can ask this database to do is a lis
 1. `security definer`: it runs with the rights of its owner, not of the caller. That is the only way anything reaches a table.
 2. `set search_path = ''`: every name inside is written in full (`core.profiles`, `pg_catalog.now()`), so nobody can slip a look-alike table or function in front of the real one.
 3. The first thing it does is a `core.require_*` check. Before that line, nothing has been read.
-4. `revoke ... from public, anon`; then `grant execute ... to authenticated`, function by function. `db/09_rights.sql` (and every `db/upgrade.sql`) sets these rights again for **all** `dame_*` functions, so a new function can never be left open by forgetting.
+4. `revoke ... from public, anon`; then `grant execute ... to authenticated`, function by function. `db/10_rights.sql` (and every `db/upgrade*.sql`) sets these rights again for **all** `dame_*` functions, so a new function can never be left open by forgetting.
 5. Values from the caller are passed as parameters, never glued into SQL text.
 
 ## Row security

@@ -749,3 +749,8 @@ button.hub-tile { font: inherit; text-align: left; cursor: pointer; width: 100%;
   .hub-grid-names th { min-width: 110px; }
   .hub-grid th, .hub-grid td { padding: 6px 8px; }
 }
+
+/* The Relay card on the hub (relay.html has its own pages/relay.css). */
+.hub-relay-card { border-left: 5px solid #F2A61C; }
+.hub-relay-count { font-weight: 600; }
+.hub-relay-busy { color: var(--dame-accent); }

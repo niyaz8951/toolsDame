@@ -7,3 +7,5 @@
 Missing a space: ask that space's admin, or IT.
 
 IT admins also see two cards here: **IT admin**, and the **Site book**, which explains how the site is built and protected.
+
+**Relay**: when one of your teams is on a flow, a card shows what waits for your teams and what is with you. Relay carries work from team to team (for example Sales > Application > HQ-AES > Factory); open it to pick up, do your part and pass it on.

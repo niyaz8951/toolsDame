@@ -31,15 +31,22 @@
 - **The site book (2026-11-27):** shown to IT admins only (hub card and book page); stays in `book/`. In pictures: a 5-minute chapter of eleven slides, seven kinds of picture drawn from text (`:::kind` blocks), topic nodes, laser, spotlight and pen while presenting. Reread against the repo: 28 chapters in four parts, with a new part "What a reviewer asks" (threats, sharing of rights, data handling, running it). No SQL.
 - **One database, final version (2026-11-27): `db/`.** Nine files by subject plus `install.sql` (one transaction) and `check.sql` (is a database this version? yes or no). Every function once, every table in its final form, the ten Supabase stand-ins marked `SUPABASE:`. Proved identical to the twelve step files that built the demo before they were removed (they are in the repository's history). The pages lost the "not switched on yet" branches that only served a half-built database. Read `db/README.md`.
 - **The Data page as a sheet (2026-11-27): built and tested locally. Needs `db/upgrade.sql` on the live project.** Each table drawn like a spreadsheet with made-up example rows (saved rows are never shown), "+ Column" at the end, an x on each column to remove it after typing its name (new `dame_table_drop_column`), the five site columns on request, a new table drawn as it is typed, and a request for the AI after each change.
-- Tests, all passing locally: thirteen SQL test files by subject (1,306 cases) on the database built from `db/`, eight browser tests, the hostile-tool test (33 attempts).
+- **Relay (2026-11-27): built and tested locally. Needs `db/upgrade-relay.sql` on the live project.** Work passed from team to team along the value chain: IT sets up flows (stages in order, a space for each, a checklist before each hand-over), people pick up, pass on, answer back, send back, close. A card on the hub, `relay.html`, four Daikin-style examples. Reads spaces; changes nothing else. Read `book/28-relay.md`.
+- Tests, all passing locally: fourteen SQL test files by subject (1,488 cases) on the database built from `db/`, nine browser tests, the hostile-tool test (33 attempts).
 
 **What is most likely to need a fix on the real project:** the first real upload to Supabase Storage (step 6 below). Locally the file store is a stand-in. If "Upload as a new version" fails, send the exact message on screen.
 
 ## The owner does now, in this order
-0. **SQL editor of the live Supabase project:** paste all of `db/upgrade.sql`, Run. The security check must show no rows and the last result must say `yes`. (It gives IT admins every space and tool, and adds removing a column if the last upgrade did not run yet.) Then paste `tests/sql/spaces_tools_test.sql`, Run: first row "... passed, 0 failed". On the site (Ctrl+F5) as IT admin: the hub shows every space.
+Relay first (new, 2026-11-27):
+- R1. **SQL editor:** paste all of `db/upgrade-relay.sql`, Run. The security check must show no rows and the last result must say `yes`. If it says "Run db/upgrade.sql first": do step 0 below, then R1 again.
+- R2. **SQL editor:** paste `tests/sql/relay_test.sql`, Run: first row "... passed, 0 failed".
+- R3. **On the site** (Ctrl+F5): make spaces named Sales, Application, HQ-AES, Product team and Factory (or use yours) and put a trial account in Sales and one in Application. Hub > **Relay** > **Set up** > the example **MTO query** > check the teams > **Create the flow**.
+- R4. As the Sales account: Relay > Flows > **Start a new MTO query**, tick, **Pass on**. As the Application account: **Pick it up**, then **Something is missing** or pass it on. Back as Sales: it is under "With you". If a step fails, send the exact message.
+
+0. **SQL editor of the live Supabase project:** paste all of `db/upgrade.sql`, Run (skip if it ran already: it then says "This upgrade was already run"). The security check must show no rows and the last result must say `yes`. (It gives IT admins every space and tool, and adds removing a column if the last upgrade did not run yet.) Then paste `tests/sql/spaces_tools_test.sql`, Run: first row "... passed, 0 failed". On the site (Ctrl+F5) as IT admin: the hub shows every space.
 1. **SQL editor:** paste all of `db/check.sql`, Run.
    - `yes`: the live database is the final version. Go on with step 2.
-   - `no`: send the row. The live project missed some of the earlier step files. Either I send one `db/upgrade.sql` for exactly what it misses, or, since the demo holds sample data only, start a fresh Supabase project and run `db/01` to `db/09` there (then `select core.make_first_admin('your email');`).
+   - `no`: send the row. The live project missed some of the earlier step files. Either I send one `db/upgrade.sql` for exactly what it misses, or, since the demo holds sample data only, start a fresh Supabase project and run `db/01` to `db/10` there (then `select core.make_first_admin('your email');`).
 2. **SQL editor:** paste any test file of `tests/sql/` (for example `accounts_test.sql`), Run. First row: "... passed, 0 failed". The tests undo everything they do.
 3. **On the site** (Ctrl+F5 first), three things to try: (a) the round button top right > **My account**: save a job title, then change your password; (b) IT admin > Add a person > **New user**, make a trial account; People > **Open** it > **Generate** > **Reset password** twice; (c) in a private window sign in as the trial account with that temporary password and choose a new one. If (b) or (c) fails, send the exact message: these write into Supabase's own sign-in tables. IT admin > **Quotas**: press a tile, set its rows to 100, **Save these limits**, then **Back to the site's default** twice.
 4. **On the site** (Ctrl+F5 first): IT admin > Site settings > **Who may ask for access**: type the work email domain(s), Save. Empty means anyone may ask.
@@ -53,7 +60,7 @@
 If a step fails, send the exact message on screen.
 
 ## With every delivery
-A change to the database: change the file of its subject in `db/`, put the new fingerprint in `db/check.sql`, and bring `db/upgrade.sql` (only the change) for the live project; `node tests/sql/run-local.mjs` must pass. The next delivery after it ran removes `db/upgrade.sql`.
+A change to the database: change the file of its subject in `db/`, put the new fingerprint in `db/check.sql`, and bring `db/upgrade.sql` (only the change) for the live project; `node tests/sql/run-local.mjs` must pass. The next delivery after it ran removes `db/upgrade.sql`. Relay came as its own `db/upgrade-relay.sql`, because it was not known whether `db/upgrade.sql` had run; both are removed once the owner confirms they ran.
 
 Besides this file and the changelog: update the chapter of the site book the change touches (`book/*.md`) and add a line to `book/10-notes.md`.
 
@@ -66,6 +73,8 @@ Besides this file and the changelog: update the chapter of the site book the cha
 
 ## Next
 Phase 5: on every page the info icon, pinned notes, ideas with votes, and the AI prompt setting; the tool's help text; a space admin tightening the AI setting.
+
+Relay, later: parallel stages (Product team and Factory at once), files on an item, mail when something arrives, the shared project and customer list (one number from enquiry to service).
 
 Later, noted (ranked in `docs/IT-REVIEW.md`): a second person approving before Make live; a quota by size and for stored files; a version check when two people save the same row; export; charts as a built-in block of the kit (no library); file columns and `Dame.files`; old `.xls` files; renaming or retyping a column; two pasted code blocks merged.
 

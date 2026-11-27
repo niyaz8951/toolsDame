@@ -29,6 +29,8 @@
     // Asked at the same moment as the sign-in check, so the page waits once, not twice.
     var asked = api.rpc('dame_spaces_list');
     asked.catch(function () {});
+    var relay = api.rpc('dame_relay_home');
+    relay.catch(function () {});
     var me = await ui.guard();
     $('hello').textContent = 'Hello, ' + me.name;
     $('it-card').hidden = !me.is_it;
@@ -38,6 +40,19 @@
     var box = ui.clear($('spaces'));
     (spaces || []).forEach(function (s) { box.appendChild(tile(s)); });
     $('empty').hidden = (spaces || []).length > 0;
+
+    // Relay: shown to everyone on a flow, and to IT. The hub works without it.
+    relay.then(function (r) {
+      if (!r || !(r.is_it || (r.flows || []).length)) { return; }
+      var parts = [];
+      if (Number(r.working)) { parts.push(r.working + ' with you'); }
+      if (Number(r.waiting)) { parts.push(r.waiting + ' waiting for your teams'); }
+      $('relay-count').textContent = parts.length ? parts.join(', ') + '.' : ((r.flows || []).length ? 'Nothing waits for you right now.' : 'No flow yet: set one up.');
+      $('relay-count').classList.toggle('hub-relay-busy', parts.length > 0);
+      $('relay-link').textContent = (r.flows || []).length ? 'Open Relay' : 'Set up a flow';
+      if (!(r.flows || []).length) { $('relay-link').href = api.href('relay.html') + '#set-up'; }
+      $('relay-card').hidden = false;
+    }).catch(function () { /* no Relay card */ });
 
     // The site book is shown to IT admins only: its card, and its chapters as shortcuts.
     // The hub works without them.
