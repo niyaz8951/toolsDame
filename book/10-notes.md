@@ -43,6 +43,8 @@ The running log of the site. Newest first. Every change to the site adds a line 
 
 - Builder (2026-11-27): "Create tool" now leads straight to the tool's own admin page, where it is built; the settings window opens from the tile of a tool that exists. "Use a ready-made page" is removed: two ways remain. No SQL.
 
+- Quotas (2026-11-27): each space may use 10,000 rows, 10 tables a tool and 60 columns a table until IT says otherwise. IT admin has a Quotas tab in the look of Spaces: "Change the default" on top, one tile per space, changes and answers only in the space's window. A space admin sees what is used under Quota and asks IT for more. Owner: "this is very important"; rows are limited because rows are what fills a database. SQL: file 011.
+
 ## Ideas noted, not decided
 - Tell the people of a space when a new tool goes live.
 - Show the table list in the review window in even plainer words.

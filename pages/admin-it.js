@@ -1,11 +1,12 @@
 /*
- * pages/admin-it.js - the IT admin page: approvals, people, spaces, settings, audit.
+ * pages/admin-it.js - the IT admin page: approvals, people, spaces, settings, database quotas, audit.
  * Serves: contract 1 (Identity), 2 (Structure), 3 (Access), 7 (Audit).
  * Must not change: everything from the database is written with textContent;
  * each button calls one dame_* function and then reloads the lists, so the
  * page always shows what the database holds, not what the page assumes.
  * Spaces: the page shows "Add a space" and one tile per space; a space is
- * changed or deleted only inside the window its tile opens. People: one line
+ * changed or deleted only inside the window its tile opens. Quotas: the same,
+ * one tile per space and a window for its limits and its request. People: one line
  * per person; an account is changed only inside the window "Open" shows. A
  * temporary password lives in that window's memory until it closes, nowhere else.
  */
@@ -311,6 +312,240 @@
     if (win === w) { w.msg.scrollIntoView({ block: 'nearest' }); }
   }
 
+  // ---- database quotas (db/core/011): one tile per space; a space's limits are changed, and its
+  // request answered, only inside the window its tile opens. The default has its own small window.
+  var quotas = null;   // what dame_quota_list gave, or null until 011 is run
+  var qwin = null;     // the open quota window, or null
+
+  function num(n) { return Number(n || 0).toLocaleString('en'); }
+
+  function quotaOf(id) {
+    return quotas ? quotas.spaces.filter(function (x) { return x.space === id; })[0] : null;
+  }
+
+  // Three boxes as whole numbers above zero, or null when one is not.
+  function whole(values) {
+    var out = values.map(function (v) { return Number(String(v).trim()); });
+    return out.every(function (n) { return Number.isInteger(n) && n > 0; }) ? out : null;
+  }
+
+  function numberField(box, label, id, value, min, max) {
+    var l = ui.el('label', 'hub-field', label);
+    var i = ui.el('input', 'dame-input');
+    i.type = 'number';
+    i.id = id;
+    i.min = min;
+    i.max = max;
+    i.step = 1;
+    i.inputMode = 'numeric';
+    i.autocomplete = 'off';
+    i.value = value;
+    l.appendChild(i);
+    box.appendChild(l);
+    return i;
+  }
+
+  function limits(o) {
+    return num(o.rows) + ' rows in the space, ' + num(o.tables) + ' tables in a tool, ' + num(o.columns) + ' columns in a table';
+  }
+
+  function isFull(q) { return Number(q.rows_used) >= Number(q.max_rows); }
+  function isNear(q) { return !isFull(q) && Number(q.rows_used) >= 0.8 * Number(q.max_rows); }
+
+  // A space's quota is one tile: its name, what it uses, and what needs IT's eye.
+  function quotaTile(q) {
+    var t = ui.el('button', 'hub-tile' + (q.active ? '' : ' hub-tile-off'));
+    t.type = 'button';
+    t.setAttribute('data-quota', q.space);
+    t.appendChild(ui.el('span', 'hub-tile-icon', (q.name.trim().charAt(0) || 'S').toUpperCase()));
+    t.appendChild(ui.el('span', 'hub-tile-name', q.name));
+    t.appendChild(ui.el('span', 'hub-tile-text', num(q.rows_used) + ' of ' + num(q.max_rows) + ' rows used'));
+    if (q.request) { t.appendChild(ui.el('span', 'hub-pill', 'Request waiting')); }
+    if (isFull(q)) { t.appendChild(ui.el('span', 'hub-pill', 'Full')); }
+    else if (isNear(q)) { t.appendChild(ui.el('span', 'hub-pill', 'Nearly full')); }
+    if (q.own) { t.appendChild(ui.el('span', 'hub-pill hub-pill-ok', 'Own limits')); }
+    t.addEventListener('click', function () { openQuota(q.space); });
+    return t;
+  }
+
+  function closeQuota() {
+    if (!qwin) { return; }
+    var id = qwin.id;
+    qwin.back.remove();
+    document.removeEventListener('keydown', qwin.onKey);
+    qwin = null;
+    var tile = document.querySelector('#q-tiles [data-quota="' + id + '"]');
+    if (tile) { tile.focus(); }
+  }
+
+  // One action inside the window: do it, read everything again, draw the window again, say what happened.
+  async function inQuota(name, args, done) {
+    var w = qwin;
+    ui.say(w.msg, '');
+    var failed = null;
+    // What was typed is kept: after a refusal the window is drawn again and the boxes get it back.
+    var typed = {};
+    Array.prototype.forEach.call(w.body.querySelectorAll('input[id]'), function (i) { typed[i.id] = i.value; });
+    try { await api.rpc(name, args); } catch (err) { failed = err; }
+    await load().catch(function () {});
+    if (qwin !== w) { return; }
+    if (failed) {
+      Object.keys(typed).forEach(function (id) { var i = document.getElementById(id); if (i) { i.value = typed[id]; } });
+      ui.sayError(w.msg, failed);
+    } else {
+      ui.say(w.msg, done, 'ok');
+    }
+    w.msg.scrollIntoView({ block: 'center' });
+  }
+
+  function drawQuota(q) {
+    var body = ui.clear(qwin.body);
+    var title = ui.el('h2', null, q.name + ' ');
+    title.appendChild(ui.el('span', 'hub-pill', q.space));
+    title.appendChild(ui.el('span', 'hub-pill' + (q.own ? ' hub-pill-ok' : ''), q.own ? 'Own limits' : 'Site default'));
+    body.appendChild(title);
+    body.appendChild(ui.el('p', 'dame-muted', num(q.rows_used) + ' of ' + num(q.max_rows) + ' rows used' +
+      (isFull(q) ? ': the space is full, its tools take no new rows. ' : '. ') +
+      'It has ' + num(q.tables) + (Number(q.tables) === 1 ? ' table' : ' tables') + '; the tool with most has ' + num(q.most_tables) + ' of ' + num(q.max_tables) + '.'));
+
+    var r = q.request;
+    if (r) {
+      body.appendChild(ui.el('p', 'hub-sub', 'Request from the space\'s admin'));
+      var card = ui.el('div', 'hub-edit');
+      card.setAttribute('data-request', q.space);
+      card.appendChild(ui.el('p', null, r.asked_by.name + ' asked on ' + ui.when(r.asked_at) + ' for ' + limits(r) + '.'));
+      card.appendChild(ui.el('p', null, 'Reason: ' + r.reason));
+      card.appendChild(ui.el('p', 'dame-hint', 'Change a number to give less or more than asked. Granting sets the limits of this space to these three numbers.'));
+      var two = ui.el('div', 'hub-two');
+      var rows = numberField(two, 'Rows to give', 'rq-rows', r.rows, 100, 10000000);
+      var tables = numberField(two, 'Tables in one tool', 'rq-tables', r.tables, 1, 100);
+      var cols = numberField(two, 'Columns in one table', 'rq-columns', r.columns, 1, 200);
+      card.appendChild(two);
+      var noteLabel = ui.el('label', 'hub-field', 'Note to the space\'s admin (needed when you decline)');
+      var note = ui.el('input', 'dame-input');
+      note.type = 'text';
+      note.id = 'rq-note';
+      note.maxLength = 500;
+      note.autocomplete = 'off';
+      noteLabel.appendChild(note);
+      card.appendChild(noteLabel);
+      var answer = ui.el('div', 'dame-row');
+      var grant = ui.confirmButton('Grant', 'dame-btn-primary', function (btn) {
+        var n = whole([rows.value, tables.value, cols.value]);
+        if (!n) { ui.say(qwin.msg, 'Write whole numbers in all three boxes.', 'warn'); btn.disabled = false; btn.textContent = 'Grant'; btn.classList.remove('hub-armed'); return; }
+        inQuota('dame_quota_answer', { p_request: r.id, p_grant: true, p_rows: n[0], p_tables: n[1], p_columns: n[2], p_note: note.value },
+          q.name + ' now has ' + limits({ rows: n[0], tables: n[1], columns: n[2] }) + '.');
+      });
+      grant.id = 'rq-grant';
+      var decline = ui.confirmButton('Decline', '', function () {
+        inQuota('dame_quota_answer', { p_request: r.id, p_grant: false, p_rows: null, p_tables: null, p_columns: null, p_note: note.value },
+          'The request is declined. The admin of ' + q.name + ' reads your note.');
+      });
+      decline.id = 'rq-decline';
+      answer.appendChild(grant);
+      answer.appendChild(decline);
+      card.appendChild(answer);
+      body.appendChild(card);
+    }
+
+    body.appendChild(ui.el('p', 'hub-sub', 'Limits of this space'));
+    body.appendChild(ui.el('p', 'dame-hint', 'A limit below what is used deletes nothing: only new rows, tables or columns are refused until there is room again.'));
+    var form = ui.el('form', 'hub-edit');
+    form.id = 'sq-form';
+    form.noValidate = true;
+    var three = ui.el('div', 'hub-two');
+    var qRows = numberField(three, 'Rows in the space (100 to 10,000,000)', 'sq-rows', q.max_rows, 100, 10000000);
+    var qTables = numberField(three, 'Tables in one tool (1 to 100)', 'sq-tables', q.max_tables, 1, 100);
+    var qCols = numberField(three, 'Columns in one table (1 to 200)', 'sq-columns', q.max_columns, 1, 200);
+    form.appendChild(three);
+    var row = ui.el('div', 'dame-row');
+    var save = ui.el('button', 'dame-btn hub-small', 'Save these limits');
+    save.type = 'submit';
+    row.appendChild(save);
+    if (q.own) {
+      var back = ui.confirmButton('Back to the site\'s default', '', function () {
+        inQuota('dame_quota_set', { p_space: q.space, p_rows: null, p_tables: null, p_columns: null }, q.name + ' is back on the site\'s default.');
+      });
+      back.id = 'sq-default';
+      row.appendChild(back);
+    }
+    form.appendChild(row);
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var n = whole([qRows.value, qTables.value, qCols.value]);
+      if (!n) { ui.say(qwin.msg, 'Write whole numbers in all three boxes.', 'warn'); return; }
+      inQuota('dame_quota_set', { p_space: q.space, p_rows: n[0], p_tables: n[1], p_columns: n[2] }, 'The limits of ' + q.name + ' are saved.');
+    });
+    body.appendChild(form);
+  }
+
+  function openQuota(id) {
+    var q = quotaOf(id);
+    if (!q) { return; }
+    var back = ui.el('div', 'hub-focus-back');
+    var box = ui.el('section', 'hub-focus hub-focus-small');
+    box.id = 'quota-win';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', 'Database quota of ' + q.name);
+    var body = ui.el('div');
+    var msg = ui.el('p', 'hub-msg');
+    msg.id = 'quota-win-msg';
+    msg.hidden = true;
+    msg.setAttribute('role', 'alert');
+    var foot = ui.el('div', 'dame-row hub-focus-foot');
+    var close = ui.el('button', 'dame-btn dame-btn-primary', 'Done');
+    close.type = 'button';
+    close.id = 'quota-win-close';
+    close.addEventListener('click', closeQuota);
+    back.addEventListener('mousedown', function (ev) { if (ev.target === back) { closeQuota(); } });
+    foot.appendChild(close);
+    box.appendChild(body);
+    box.appendChild(msg);
+    box.appendChild(foot);
+    back.appendChild(box);
+    qwin = { id: id, back: back, body: body, msg: msg, onKey: function (ev) { if (ev.key === 'Escape') { closeQuota(); } } };
+    document.addEventListener('keydown', qwin.onKey);
+    drawQuota(q);
+    document.body.appendChild(back);
+    close.focus();
+  }
+
+  function drawQuotas() {
+    $('q-off').hidden = quotas !== null;
+    $('q-body').hidden = quotas === null;
+    if (!quotas) { return; }
+    var d = quotas.defaults;
+    $('q-default-text').textContent = 'Default: ' + limits(d) + '.';
+    var waiting = quotas.spaces.filter(function (q) { return q.request; }).length;
+    $('q-tiles').closest('section').dataset.badge = String(waiting);
+    // Spaces that wait for an answer come first, then full ones, then by name.
+    var order = quotas.spaces.slice().sort(function (x, y) {
+      return (y.request ? 2 : 0) + (isFull(y) ? 1 : 0) - (x.request ? 2 : 0) - (isFull(x) ? 1 : 0) || x.name.localeCompare(y.name);
+    });
+    var box = ui.clear($('q-tiles'));
+    order.forEach(function (q) { box.appendChild(quotaTile(q)); });
+    $('q-tiles-empty').hidden = order.length > 0;
+    // An open window shows what the database holds now; a space that is gone closes its window.
+    if (qwin) {
+      var open = quotaOf(qwin.id);
+      if (open) { drawQuota(open); } else { closeQuota(); }
+    }
+  }
+
+  function showDefault(on) {
+    $('quota-default').hidden = !on;
+    ui.say($('qd-msg'), '');
+    if (on && quotas) {
+      $('qd-rows').value = quotas.defaults.rows;
+      $('qd-tables').value = quotas.defaults.tables;
+      $('qd-columns').value = quotas.defaults.columns;
+      $('qd-rows').focus();
+    } else if (!on) {
+      $('q-default').focus();
+    }
+  }
+
   function drawSpace(s) {
     var body = ui.clear(win.body);
     var title = ui.el('h2', null, s.name + ' ');
@@ -493,7 +728,9 @@
     // All four questions go out together; the page waits for the slowest, not for the sum.
     // "Add a person" needs db/core/007: until it is run, that card says so and the rest of the page works.
     var asked = [api.rpc('dame_users_list', { p_status: null }), api.rpc('dame_spaces_all'), api.rpc('dame_settings_get'),
-      api.rpc('dame_users_added').catch(function () { return null; })];
+      api.rpc('dame_users_added').catch(function () { return null; }),
+      // Quotas need db/core/011: until it is run, that card says so and the rest of the page works.
+      api.rpc('dame_quota_list').catch(function () { return null; })];
     var audit = loadAudit();
     audit.catch(function () {});
     var got = await Promise.all(asked);
@@ -509,6 +746,9 @@
     // The count on the Approvals tab.
     $('waiting').closest('section').dataset.badge = String(nWaiting);
     $('people-empty').hidden = nPeople > 0;
+
+    quotas = got[4];
+    drawQuotas();
 
     spaces = got[1] || [];
     var box = ui.clear($('spaces'));
@@ -571,6 +811,26 @@
     });
 
     $('ai-mode').value = me.ai_mode;
+    $('q-default').addEventListener('click', function () { showDefault(true); });
+    $('qd-cancel').addEventListener('click', function () { showDefault(false); });
+    $('quota-default').addEventListener('mousedown', function (ev) { if (ev.target === $('quota-default')) { showDefault(false); } });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('quota-default').hidden) { showDefault(false); } });
+    $('form-quota').addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      var n = whole([$('qd-rows').value, $('qd-tables').value, $('qd-columns').value]);
+      if (!n) { ui.say($('qd-msg'), 'Write whole numbers in all three boxes.', 'warn'); return; }
+      $('qd-save').disabled = true;
+      try {
+        await api.rpc('dame_quota_default_set', { p_rows: n[0], p_tables: n[1], p_columns: n[2] });
+        showDefault(false);
+        await load();
+        ui.say($('msg'), 'The default is saved. It holds now for every space without limits of its own.', 'ok');
+        $('msg').scrollIntoView({ block: 'nearest' });
+      } catch (err) {
+        ui.sayError($('qd-msg'), err);
+      }
+      $('qd-save').disabled = false;
+    });
     $('domains-save').addEventListener('click', function () {
       act('dame_setting_set', { p_key: 'signup_domains', p_value: $('domains').value }, 'Saved. ' +
         ($('domains').value.trim() ? 'Only these email domains may ask for access now.' : 'Any email address may ask for access.'));

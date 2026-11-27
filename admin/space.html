@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  admin/space.html - space admin: people, admins and tools of one space.
+  admin/space.html - space admin: people, admins, tools and the database quota of one space.
   Serves: contract 2 (Structure) and 3 (Access: an admin acts alone inside his
   space and nowhere else). Must not change: every action is refused by the
   database outside the admin's own space; a tool or space is deleted only
@@ -53,6 +53,57 @@
       <p class="dame-muted">Admins can do everything on this page. A space always has at least one.</p>
       <ul class="hub-list" id="admins"></ul>
       <div id="admin-picker"></div>
+    </section>
+
+    <section class="dame-card" data-nav="Quota">
+      <h2>Database quota of this space</h2>
+      <p class="dame-muted">IT sets how much of the database this space may use. When the rows are used up, the tools still read, change and delete; only new rows are refused, until rows are deleted or IT gives more.</p>
+      <p class="dame-empty" id="q-off" hidden>This part is not switched on yet: the owner pastes db/core/011_quotas.sql into the database first.</p>
+      <div id="q-body" hidden>
+        <div class="dame-stats" id="q-stats"></div>
+        <div class="dame-progress" id="q-bar"><span></span></div>
+        <p class="hub-msg" id="q-state" hidden></p>
+        <div class="hub-block">
+          <h3>Where the rows are</h3>
+          <div class="hub-scroll">
+            <table class="dame-table">
+              <thead><tr><th>Tool</th><th>Rows</th><th>Trial rows of the preview</th><th>Tables</th><th>Most columns in a table</th></tr></thead>
+              <tbody id="q-tools"></tbody>
+            </table>
+          </div>
+          <p class="dame-empty" id="q-tools-empty" hidden>No tool of this space has a table yet.</p>
+        </div>
+        <div class="hub-block" id="q-open" hidden>
+          <h3>Your request is waiting for IT</h3>
+          <p id="q-open-text"></p>
+          <div id="q-open-act"></div>
+        </div>
+        <div class="hub-block" id="q-ask">
+          <h3>Ask IT for more</h3>
+          <p class="dame-muted">Raise only the number you need more of. IT grants, changes or declines; the answer shows here.</p>
+          <form id="form-quota" method="post" novalidate>
+            <div class="hub-two">
+              <label class="hub-field">Rows in the space
+                <input class="dame-input" id="qr-rows" type="number" min="100" max="10000000" step="1" inputmode="numeric" autocomplete="off">
+              </label>
+              <label class="hub-field">Tables in one tool
+                <input class="dame-input" id="qr-tables" type="number" min="1" max="100" step="1" inputmode="numeric" autocomplete="off">
+              </label>
+              <label class="hub-field">Columns in one table
+                <input class="dame-input" id="qr-columns" type="number" min="1" max="200" step="1" inputmode="numeric" autocomplete="off">
+              </label>
+            </div>
+            <label class="hub-field">Why the space needs more (a sentence; IT decides from it)
+              <input class="dame-input" id="qr-reason" type="text" maxlength="500" autocomplete="off">
+            </label>
+            <button class="dame-btn dame-btn-primary" type="submit">Send the request to IT</button>
+          </form>
+        </div>
+        <div class="hub-block" id="q-answers-block" hidden>
+          <h3>IT's last answers</h3>
+          <ul class="hub-list" id="q-answers"></ul>
+        </div>
+      </div>
     </section>
 
     <section class="dame-card" data-nav="Name and look">

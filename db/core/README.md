@@ -16,5 +16,6 @@ After every file: the result shown is an empty table (`core.security_check()` fo
 | `008_space_look.sql` | Icon and colour of a space, changed by its admins and by IT | `tests/sql/008_space_look_test.sql` |
 | `009_new_user.sql` | An IT admin makes an account with a username and a temporary password; nothing opens until the person chose his own | `tests/sql/009_new_user_test.sql` |
 | `010_accounts.sql` | Accounts: a person's own account page (work details, access, sign-ins, changing the password); IT opens a person, corrects the account and resets a password with a temporary one; a temporary password counts 7 days and must be shown again before anything opens | `tests/sql/010_accounts_test.sql` |
+| `011_quotas.sql` | Quotas: rows in a space, tables in a tool, columns in a table; the site's default and a space's own limits set by IT; a space admin's request for more and IT's answer; the row count kept by the row service | `tests/sql/011_quotas_test.sql` |
 
 Owner only, in the SQL editor: `select core.make_first_admin('email');` (once) and `select * from core.security_check();` (any time).

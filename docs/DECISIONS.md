@@ -74,7 +74,7 @@
 - **Levels on the three presets.** Team: read sees all; contribute adds and changes his own; edit changes anyone's; approve deletes. Private: each person only his own rows, also hidden from managers; adding, changing and deleting his own needs contribute. Reference: everyone reads; every change is for the tool's managers and the space admins only.
 - **The preview has its own rows.** Every table exists twice (live and preview copy). In the preview a manager may do everything; nothing there touches real rows.
 - **What a table can and cannot do yet.** Columns can be added. A column cannot be renamed, retyped or removed, and a table cannot change its preset: make a new table. A table is deleted only after its name is typed; its rows go with it.
-- **Limits:** 30 tables a tool, 60 columns a table, text 1,000 characters, long text 20,000, a list returns at most 1,000 rows, filters match exact values only. Empty values sort last.
+- **Limits:** tables a tool and columns a table by the space's quota since file 011 (before: fixed at 30 and 60), text 1,000 characters, long text 20,000, a list returns at most 1,000 rows, filters match exact values only. Empty values sort last.
 - **File columns are refused for now** ("not built yet"), also from a declared list. `Dame.files` still answers "not built".
 - **Rows are not written to the audit one by one.** Each row carries who added it, who changed it last and when. Making, extending and deleting tables is in the audit.
 - **A tool learns the names of the people who have it** (`Dame.people()`: id and name, no email), to show who added a row and to choose a person.
@@ -144,6 +144,15 @@
 - **The fix request is complete in itself** (`kit/ai-fix.md`): the points found, how to rebuild the look and the data, the whole starter kit, the page. It replaces the one-paragraph request, which assumed the AI had seen the kit.
 - What this does not do: the check reads the page as text. Code that builds its look or its storage calls in a hidden way is not seen. That stays accepted: the check keeps the site aligned and saves time; the sealed frame and the database protect (see "The check is help, not the wall").
 - 3000 characters is a first number (the largest example page has 328). Say if it should move.
+
+## Owner, 2026-11-27 (quotas)
+- Owner: "this to be implemented with min quota with IT admin page controlling the quota and space admins can request IT team to increase the quota, this is very important"; "make rows 10,000 as default and 60 columns as default and 10 tables per tool by default"; "quotas design language must be the same tile kind as we use in spaces".
+- **Three limits per space:** rows in the whole space (10,000), tables in one tool (10), columns in one table (60). The owner first thought of tables and columns only; rows were kept because rows are the only thing that fills a database (an empty table is a few kilobytes), and he set the row default himself.
+- **Read as:** the row limit holds for the space as a whole, not per tool. Per tool it would not bound a space, because a space may have any number of tools. Say if it should be per tool.
+- **Fixed limits became quota.** 30 tables a tool is now 10 by default (IT can give up to 100); 60 columns a table stays the default (IT can give up to 200). A tool that already has more than its limit keeps its tables; it can make no new one.
+- **IT sets, the space admin asks.** Two functions with two different checks. A full space still reads, changes and deletes.
+- **The count is one number per space**, kept in the same statement that checks it and counted again whenever someone looks. It is not a count per add over every table: that would slow every save as tables grow.
+- **Not in this delivery:** a quota by size in bytes, a quota on stored files, a limit on tools per space, a message to IT when a request arrives (IT sees a number on the Quotas tab).
 
 ## Open with IT (target; the demo uses the stand-in in `DEMO-STACK.md`)
 | # | Decision | Proposed |

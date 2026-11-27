@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  admin/it.html - IT admin: approvals, people, site settings, spaces, audit.
+  admin/it.html - IT admin: approvals, people, site settings, spaces, database quotas, audit.
   Serves: contract 1 (Identity), 3 (Access) and 7 (Audit). Must not change:
   hiding this page protects nothing; every action is refused by the database
   unless the user is an IT admin. The security policy stays the first element
@@ -112,6 +112,21 @@
       <p class="dame-empty" id="spaces-empty" hidden>No spaces yet. Press "Add a space".</p>
     </section>
 
+    <section class="dame-card" data-nav="Quotas">
+      <h2>Database quotas</h2>
+      <p class="dame-muted">How much of the database a space may use: rows in the whole space, tables in one tool, columns in one table. A full space still reads, changes and deletes; only new rows are refused, with a sentence that says to ask the space's admin.</p>
+      <p class="dame-empty" id="q-off" hidden>This part is not switched on yet: the owner pastes db/core/011_quotas.sql into the database first.</p>
+      <div id="q-body" hidden>
+        <div class="dame-row">
+          <button class="dame-btn dame-btn-primary" type="button" id="q-default">Change the default</button>
+        </div>
+        <p class="dame-hint" id="q-default-text"></p>
+        <p class="dame-muted">Each space is a tile. Press a tile to give that space limits of its own, to put it back on the default, or to answer its admin's request for more.</p>
+        <div class="hub-tiles hub-space-tiles" id="q-tiles"></div>
+        <p class="dame-empty" id="q-tiles-empty" hidden>No spaces yet. Add one under Spaces.</p>
+      </div>
+    </section>
+
     <section class="dame-card">
       <h2>Audit</h2>
       <p class="dame-muted">Who did what, when. Nothing here can be changed or deleted.</p>
@@ -125,6 +140,26 @@
     </section>
   </div>
 </main>
+<div class="hub-focus-back" id="quota-default" hidden>
+  <form class="hub-focus hub-focus-small" id="form-quota" method="post" novalidate role="dialog" aria-modal="true" aria-label="Default quota">
+    <h2>Default for every space</h2>
+    <p class="dame-muted">What a space gets until you give it limits of its own. A change holds at once for every space on the default; spaces with their own limits keep them.</p>
+    <label class="hub-field">Rows in a space, all its tools together (100 to 10,000,000)
+      <input class="dame-input" id="qd-rows" type="number" min="100" max="10000000" step="1" inputmode="numeric" autocomplete="off">
+    </label>
+    <label class="hub-field">Tables in one tool (1 to 100)
+      <input class="dame-input" id="qd-tables" type="number" min="1" max="100" step="1" inputmode="numeric" autocomplete="off">
+    </label>
+    <label class="hub-field">Columns in one table (1 to 200)
+      <input class="dame-input" id="qd-columns" type="number" min="1" max="200" step="1" inputmode="numeric" autocomplete="off">
+    </label>
+    <p class="hub-msg" id="qd-msg" role="alert" hidden></p>
+    <div class="dame-row hub-focus-foot">
+      <button class="dame-btn dame-btn-primary" type="submit" id="qd-save">Save the default</button>
+      <button class="dame-btn" type="button" id="qd-cancel">Cancel</button>
+    </div>
+  </form>
+</div>
 <div class="hub-focus-back" id="space-new" hidden>
   <form class="hub-focus hub-focus-small" id="form-space" method="post" novalidate role="dialog" aria-modal="true" aria-label="Add a space">
     <h2>Add a space</h2>

@@ -29,7 +29,8 @@ Short answers. Each points to the chapter with the detail.
 ## About the database
 - **SQL injection?** Values are parameters. The only names put into SQL are checked against a pattern, looked up in the site's own list, and quoted. Tested with hostile names. *(The database; Tables and rows)*
 - **Who can run SQL?** The owner, in the project's own editor. Nobody else, until the audited per-space console is built. *(Tables and rows)*
-- **Can a tile admin break the database by making tables?** He chooses from eight column kinds and three sharing rules; limits are 30 tables and 60 columns per tool. No defaults, triggers or constraints of his own. *(Tables and rows)*
+- **Can a tile admin break the database by making tables?** He chooses from eight column kinds and three sharing rules; the space's quota limits tables a tool and columns a table (10 and 60 by default, set by IT). No defaults, triggers or constraints of his own. *(Tables and rows)*
+- **Can one department fill the database?** No. Each space has a quota set by IT: rows in the whole space (10,000 by default), tables a tool, columns a table. A full space still reads, changes and deletes; new rows are refused until its admin deletes rows or IT grants more. The admin asks from his page; IT answers on the Quotas tab; every step is in the audit. *(Tables and rows)*
 - **Backups?** Whatever the Supabase plan gives; not something to rely on in the demo. *(Open gaps)*
 
 ## About proof

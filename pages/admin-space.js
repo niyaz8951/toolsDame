@@ -1,5 +1,5 @@
 /*
- * pages/admin-space.js - the space admin page: tools, people, admins, audit.
+ * pages/admin-space.js - the space admin page: tools, people, admins, database quota, audit.
  * Serves: contract 2 (Structure), 3 (Access), 7 (Audit).
  * Must not change: everything from the database is written with textContent;
  * each button calls one dame_* function and then reloads, so the page shows
@@ -263,7 +263,97 @@
     ui.people($('admins'), s.admins, 'No admin.', 'Remove', function (person) {
       act('dame_space_admin_remove', { p_space: space, p_user: person.id }, person.name + ' is no longer an admin.');
     });
+    await loadQuota();
     await audit;
+  }
+
+  // ---- the database quota of the space (db/core/011): what is used, the limits, asking IT for more.
+  var askFor = '';        // the limits the "ask for more" boxes were filled from
+  var askTyped = false;   // the admin changed a number in those boxes
+
+  function num(n) { return Number(n || 0).toLocaleString('en'); }
+
+  function stat(box, value, label) {
+    var d = ui.el('div', 'dame-stat');
+    d.appendChild(ui.el('b', null, value));
+    d.appendChild(ui.el('span', null, label));
+    box.appendChild(d);
+  }
+
+  function limitsText(o) {
+    return num(o.rows) + ' rows in the space, ' + num(o.tables) + ' tables in a tool, ' + num(o.columns) + ' columns in a table';
+  }
+
+  // Until 011 is run the card says so and the rest of the page works.
+  async function loadQuota() {
+    var q = await api.rpc('dame_quota_get', { p_space: space }).catch(function () { return null; });
+    $('q-off').hidden = q !== null;
+    $('q-body').hidden = q === null;
+    if (!q) { return; }
+    var used = Number(q.rows_used);
+    var max = Number(q.max_rows);
+    var share = max > 0 ? used / max : 1;
+    var stats = ui.clear($('q-stats'));
+    stat(stats, num(used) + ' of ' + num(max), 'rows used in this space');
+    stat(stats, num(q.most_tables) + ' of ' + num(q.max_tables), 'tables in the tool that has most');
+    stat(stats, num(q.max_columns), 'columns allowed in one table');
+    $('q-bar').firstElementChild.style.width = (Math.min(1, share) * 100).toFixed(1) + '%';
+    $('q-bar').setAttribute('role', 'progressbar');
+    $('q-bar').setAttribute('aria-label', 'Rows used');
+    $('q-bar').setAttribute('aria-valuemin', '0');
+    $('q-bar').setAttribute('aria-valuemax', '100');
+    $('q-bar').setAttribute('aria-valuenow', String(Math.round(Math.min(1, share) * 100)));
+    if (used >= max) {
+      ui.say($('q-state'), 'The space is full. Nobody can add a row in any of its tools until rows are deleted or IT gives more. Ask IT below.', 'warn');
+    } else if (share >= 0.8) {
+      ui.say($('q-state'), 'More than four fifths of the rows are used: ' + num(max - used) + ' are left. Ask IT for more now, before the tools stop taking new rows.', 'warn');
+    } else {
+      ui.say($('q-state'), (q.own ? 'IT gave this space limits of its own. ' : 'This space has the site\'s default limits. ') + num(max - used) + ' rows are left.', 'ok');
+    }
+    $('q-tools').closest('section').dataset.badge = used >= max ? '!' : '';
+
+    var body = ui.clear($('q-tools'));
+    var shown = 0;
+    (q.tools || []).forEach(function (t) {
+      if (!Number(t.tables)) { return; }
+      shown += 1;
+      ui.addRow(body, [t.name, num(t.rows), num(t.preview_rows), num(t.tables), num(t.most_columns)]);
+    });
+    $('q-tools-empty').hidden = shown > 0;
+    body.closest('.hub-scroll').hidden = shown === 0;
+
+    var r = q.request;
+    $('q-open').hidden = !r;
+    $('q-ask').hidden = !!r;
+    if (r) {
+      $('qr-reason').value = '';
+      askTyped = false;
+      $('q-open-text').textContent = r.asked_by.name + ' asked on ' + ui.when(r.asked_at) + ' for ' + limitsText(r) + '. Reason: ' + r.reason;
+      var box = ui.clear($('q-open-act'));
+      box.appendChild(ui.confirmButton('Take the request back', '', function () {
+        act('dame_quota_request_cancel', { p_space: space }, 'The request is taken back.');
+      }));
+    } else {
+      // The boxes start at what the space has. Numbers the admin typed stay until the limits change.
+      var now = [q.max_rows, q.max_tables, q.max_columns].join('/');
+      if (now !== askFor || !askTyped) {
+        $('qr-rows').value = q.max_rows;
+        $('qr-tables').value = q.max_tables;
+        $('qr-columns').value = q.max_columns;
+        askTyped = false;
+      }
+      askFor = now;
+    }
+
+    var list = ui.clear($('q-answers'));
+    (q.answers || []).forEach(function (a) {
+      var li = ui.el('li');
+      li.appendChild(ui.el('strong', null, (a.status === 'granted' ? 'Granted' : 'Declined') + ' on ' + ui.when(a.answered_at) +
+        (a.answered_by ? ' by ' + a.answered_by.name : '')));
+      li.appendChild(ui.el('span', null, 'Asked: ' + limitsText(a) + '. ' + (a.answer ? 'IT wrote: ' + a.answer : 'No note from IT.')));
+      list.appendChild(li);
+    });
+    $('q-answers-block').hidden = !(q.answers && q.answers.length);
   }
 
   function slug(text) {
@@ -301,6 +391,20 @@
     $('admin-picker').appendChild(ui.picker('Find a person to name as admin', 'Name as admin', function (person) {
       act('dame_space_admin_add', { p_space: space, p_user: person.id }, person.name + ' is now an admin.');
     }));
+
+    ['qr-rows', 'qr-tables', 'qr-columns'].forEach(function (id) {
+      $(id).addEventListener('input', function () { askTyped = true; });
+    });
+    $('form-quota').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var want = { rows: Number($('qr-rows').value), tables: Number($('qr-tables').value), columns: Number($('qr-columns').value) };
+      if (![want.rows, want.tables, want.columns].every(function (n) { return Number.isInteger(n) && n > 0; })) {
+        ui.say($('msg'), 'Write whole numbers in all three boxes. Leave a number as it is if you do not need more of it.', 'warn');
+        return;
+      }
+      act('dame_quota_request', { p_space: space, p_rows: want.rows, p_tables: want.tables, p_columns: want.columns, p_reason: $('qr-reason').value },
+        'The request is sent to IT. The answer shows here.');
+    });
 
     $('form-space').addEventListener('submit', function (ev) {
       ev.preventDefault();
